@@ -7,17 +7,27 @@ export async function summarizeRepo(fileList: string[]): Promise<string> {
     return 'OpenAI API key missing'
   }
   const content = fileList.join('\n')
+  const messages: any = [
+    { role: 'system', content: 'You summarize repository file lists.' },
+    { role: 'user', content }
+  ]
   try {
     const res = await client.chat.completions.create({
       model: 'gpt-5',
-      messages: [
-        { role: 'system', content: 'You summarize repository file lists.' },
-        { role: 'user', content }
-      ],
+      messages
     })
-    return res.choices[0]?.message?.content ?? ''
+    return res.choices[0]?.message?.content?.trim() ?? ''
   } catch (err) {
-    console.error(err)
-    return 'analysis failed'
+    console.warn('gpt-5 failed, falling back to gpt-4o', err)
+    try {
+      const res = await client.chat.completions.create({
+        model: 'gpt-4o',
+        messages
+      })
+      return res.choices[0]?.message?.content?.trim() ?? ''
+    } catch (err2) {
+      console.error(err2)
+      return 'analysis failed'
+    }
   }
 }

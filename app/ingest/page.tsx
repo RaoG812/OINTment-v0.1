@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 export default function IngestPage() {
   const [result, setResult] = useState<any>(null)
+  const [loading, setLoading] = useState(false)
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -10,8 +11,10 @@ export default function IngestPage() {
     if (!file) return
     const form = new FormData()
     form.append('file', file)
+    setLoading(true)
     const res = await fetch('/api/ingest', { method: 'POST', body: form })
     setResult(await res.json())
+    setLoading(false)
   }
 
   return (
@@ -31,11 +34,16 @@ export default function IngestPage() {
           Upload and Analyze
         </button>
       </form>
-      {result && (
-        <pre className="mt-8 text-xs bg-zinc-900 p-4 rounded-xl overflow-auto max-h-96">
-          {JSON.stringify(result, null, 2)}
+      <div className="relative mt-8">
+        <pre className="text-xs bg-zinc-900 p-4 rounded-xl overflow-auto max-h-96 min-h-[200px]">
+          {result ? JSON.stringify(result, null, 2) : ''}
         </pre>
-      )}
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+          </div>
+        )}
+      </div>
     </div>
   )
 }

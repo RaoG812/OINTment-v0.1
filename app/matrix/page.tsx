@@ -44,6 +44,11 @@ export default function MatrixPage(){
     const d = (a[sortKey] as number)-(b[sortKey] as number)
     return asc? d : -d
   }),[rows,sortKey,asc])
+  const readiness = useMemo(()=>{
+    const totals = rows.map(r => (r.impact + r.security + r.ops + r.health + r.coupling + r.upgrade) / 6)
+    return totals.reduce((a,b)=>a+b,0) / (totals.length || 1)
+  },[rows])
+  const weeksRemaining = Math.round(12 * (1 - readiness/100))
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
@@ -89,7 +94,7 @@ export default function MatrixPage(){
           </div>
         </Card>
 
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid md:grid-cols-4 gap-4">
           <Card>
             <div className="text-sm font-semibold mb-2">Risk Highlights</div>
             <div className="text-xs text-zinc-400 flex items-center gap-2"><ShieldAlert className="w-4 h-4"/> 2 pending actions</div>
@@ -101,6 +106,14 @@ export default function MatrixPage(){
           <Card>
             <div className="text-sm font-semibold mb-2">Last Scan</div>
             <div className="text-xs text-zinc-400">commit abc123 • 14m ago</div>
+          </Card>
+          <Card>
+            <div className="text-sm font-semibold mb-2">Timeline</div>
+            <div className="text-xs text-zinc-400 mb-2">{weeksRemaining} weeks remaining</div>
+            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden">
+              <div className="h-full bg-emerald-500" style={{width: `${readiness.toFixed(0)}%`}} />
+            </div>
+            <div className="mt-1 text-[10px] text-right text-zinc-500">Readiness {readiness.toFixed(0)}%</div>
           </Card>
         </div>
       </div>

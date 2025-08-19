@@ -27,4 +27,8 @@ readiness scores.
 
 ## Manual Ingestor
 
-Upload a repository ZIP at `/ingest` to trigger an analysis run. Set `OPENAI_API_KEY` in your environment to enable GPT-5 summaries of the uploaded contents.
+Upload a repository ZIP at `/ingest` to trigger an analysis run. Provide an API
+key for language model analysis via `AIML_API_KEY` (uses
+[aimlapi.com](https://aimlapi.com) by default) or fall back to
+`OPENAI_API_KEY` for the standard OpenAI endpoint. This powers the GPT‑5
+summaries of uploaded contents.

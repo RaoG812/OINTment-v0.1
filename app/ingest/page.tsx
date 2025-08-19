@@ -19,6 +19,7 @@ export default function IngestPage() {
   const [repo, setRepo] = useState('')
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -46,14 +47,15 @@ export default function IngestPage() {
     try {
       const res = await fetch('/api/ingest', { method: 'POST', body: form })
       const data = await res.json()
-      if (!res.ok) {
-        console.error('analysis failed', data)
-      }
+      if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
       localStorage.setItem('ingestResult', JSON.stringify(data))
+      setError('')
     } catch (err) {
       console.error(err)
-      setResult({ files: [], analysis: { overview: '', takeaways: [], metrics: { complexity: 0, documentation: 0, tests: 0 } } })
+      setResult(null)
+      localStorage.removeItem('ingestResult')
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -75,11 +77,15 @@ export default function IngestPage() {
     try {
       const res = await fetch('/api/ingest', { method: 'POST', body: form })
       const data = await res.json()
-      if (!res.ok) console.error('analysis failed', data)
+      if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
       localStorage.setItem('ingestResult', JSON.stringify(data))
+      setError('')
     } catch (err) {
       console.error(err)
+      setResult(null)
+      localStorage.removeItem('ingestResult')
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
     }
@@ -144,6 +150,7 @@ export default function IngestPage() {
       >
         {showConsole ? 'Hide' : 'Show'} Console
       </button>
+      {error && <div className="text-xs text-rose-400">{error}</div>}
       {showConsole && (
         <div className="relative">
           <pre className="text-xs bg-zinc-900 p-4 rounded-xl overflow-auto max-h-96 min-h-[200px]">

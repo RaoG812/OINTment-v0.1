@@ -25,7 +25,7 @@ interface Commit {
 
 export default function TrackingPage() {
   const [repo, setRepo] = useState('')
-  const [branch, setBranch] = useState('main')
+  const [branch, setBranch] = useState('all')
   const [branches, setBranches] = useState<string[]>([])
   const [data, setData] = useState<Record<string, Commit[]>>({})
   const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
@@ -98,7 +98,7 @@ export default function TrackingPage() {
   }, [data])
 
   const catOffset = (cat: string) =>
-    cat === 'backend' ? 3 : cat === 'frontend' ? 1 : cat === 'db' ? -1 : -3
+    cat === 'backend' ? 0.6 : cat === 'frontend' ? 0.2 : cat === 'db' ? -0.2 : -0.6
   const latestSha = sorted.at(-1)?.sha
   const positions = sorted.map((c, i) => ({
     commit: c,
@@ -117,24 +117,39 @@ export default function TrackingPage() {
     return m
   }, [positions])
 
+  const displayPositions = useMemo(
+    () => (branch === 'all' ? positions : positions.filter(p => p.commit.branch === branch)),
+    [positions, branch]
+  )
+
+  const displayPosBySha = useMemo(() => {
+    const m = new Map<string, { x: number; y: number; z: number }>()
+    displayPositions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y, z: p.z }))
+    return m
+  }, [displayPositions])
+
+  const selectedOffset = branch === 'all' ? 0 : branchOffsets.get(branch) || 0
+  const pipes: [string, number][] =
+    branch === 'all' ? Array.from(branchOffsets.entries()) : [[branch, selectedOffset]]
+
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
 
-  function CameraRig({ target, view }: { target: number; view: '3d' | 'top' | 'front' }) {
+  function CameraRig({ target, view, offset }: { target: number; view: '3d' | 'top' | 'front'; offset: number }) {
     const { camera } = useThree()
     useEffect(() => {
       const from = camera.position.clone()
-      let to = new THREE.Vector3(-10, 5, 20)
-      let tgt = new THREE.Vector3(target, 0, 0)
+      let to = new THREE.Vector3(-10, offset, 20)
+      let tgt = new THREE.Vector3(target / 2, offset, 0)
       let rotX = 0
       let rotY = 0
       if (view === 'top') {
-        to = new THREE.Vector3(target / 2, 40, 0)
-        tgt = new THREE.Vector3(target / 2, 0, 0)
+        to = new THREE.Vector3(target / 2, 40, offset)
+        tgt = new THREE.Vector3(target / 2, offset, 0)
         camera.up.set(0, 0, 1)
       } else if (view === 'front') {
-        to = new THREE.Vector3(target / 2, -40, 0)
-        tgt = new THREE.Vector3(target / 2, 0, 0)
+        to = new THREE.Vector3(-40, offset, 0)
+        tgt = new THREE.Vector3(target, offset, 0)
         camera.up.set(0, 0, 1)
       } else {
         camera.up.set(0, 1, 0)
@@ -154,7 +169,7 @@ export default function TrackingPage() {
         if (t < 1) requestAnimationFrame(anim)
       }
       anim()
-    }, [view, target, camera])
+    }, [view, target, offset, camera])
     return null
   }
 
@@ -203,11 +218,11 @@ export default function TrackingPage() {
         {p.current && (
           <>
             <mesh>
-              <ringGeometry args={[p.size + 0.2, p.size + 0.35, 32]} />
+              <ringGeometry args={[p.size + 0.1, p.size + 0.2, 32]} />
               <meshBasicMaterial color="#fff" />
             </mesh>
-            <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
-              <div className="text-[10px] bg-emerald-600/80 text-white px-1 py-0.5 rounded">WE ARE HERE</div>
+            <Html distanceFactor={10} position={[0, p.size + 0.3, 0]}>
+              <div className="text-[6px] bg-emerald-600/80 text-white px-1 py-0.5 rounded">WE ARE HERE</div>
             </Html>
           </>
         )}
@@ -238,6 +253,7 @@ export default function TrackingPage() {
             onChange={e => setBranch(e.target.value)}
             className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
           >
+            <option value="all">all</option>
             {branches.map(b => (
               <option key={b} value={b}>
                 {b}
@@ -272,16 +288,16 @@ export default function TrackingPage() {
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           <Canvas>
             {view === '3d' ? (
-              <PerspectiveCamera makeDefault position={[-10, 5, 20]} fov={50} />
+              <PerspectiveCamera makeDefault position={[-10, selectedOffset, 20]} fov={50} />
             ) : (
               <OrthographicCamera
                 makeDefault
-                position={view === 'top' ? [positions.length * 1.5, 40, 0] : [positions.length * 1.5, -40, 0]}
+                position={view === 'top' ? [displayPositions.length * 1.5, 40, selectedOffset] : [-40, selectedOffset, 0]}
                 zoom={40}
               />
             )}
-            <OrbitControls ref={controlsRef} enableRotate={view === '3d'} />
-            <CameraRig target={positions.length * 3} view={view} />
+            <OrbitControls ref={controlsRef} enableRotate={false} />
+            <CameraRig target={displayPositions.length * 3} view={view} offset={selectedOffset} />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
@@ -289,30 +305,46 @@ export default function TrackingPage() {
               <Bloom luminanceThreshold={0.4} intensity={0.8} />
             </EffectComposer>
             <group ref={groupRef}>
-              {Array.from(branchOffsets.entries()).map(([b, y]) => (
-                <Line
-                  key={b}
-                  points={[[0, y, 0], [positions.length * 3, y, 0]]}
-                  color={b === 'main' ? '#10b981' : '#d1d5db'}
-                  lineWidth={b === 'main' ? 3 : 2}
-                  transparent
-                  opacity={0.6}
-                  toneMapped={false}
-                />
+              {pipes.map(([b, y]) => (
+                <>
+                  <mesh
+                    key={`${b}-pipe`}
+                    position={[displayPositions.length * 1.5, y, 0]}
+                    rotation={[0, 0, Math.PI / 2]}
+                  >
+                    <cylinderGeometry args={[0.8, 0.8, displayPositions.length * 3, 32]} />
+                    <meshPhysicalMaterial
+                      color="#a855f7"
+                      transparent
+                      opacity={0.2}
+                      roughness={0}
+                      metalness={0}
+                      transmission={1}
+                      thickness={0.2}
+                    />
+                  </mesh>
+                  <Line
+                    key={`${b}-core`}
+                    points={[[0, y, 0], [displayPositions.length * 3, y, 0]]}
+                    color="#a855f7"
+                    lineWidth={2}
+                    transparent
+                    opacity={0.8}
+                    toneMapped={false}
+                  />
+                  {branch === 'all' && (
+                    <Html key={`${b}-label`} position={[0, y + 0.3, 0]}>
+                      <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
+                    </Html>
+                  )}
+                </>
               ))}
-              {Array.from(branchOffsets.entries()).map(([b, y]) => (
-                <Html key={`${b}-label`} position={[0, y + 0.3, 0]}>
-                  <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">
-                    {b}
-                  </div>
-                </Html>
-              ))}
-              {positions.map(p => (
+              {displayPositions.map(p => (
                 <CommitSphere key={p.commit.sha} p={p} />
               ))}
-              {positions.map(p =>
+              {displayPositions.map(p =>
                 p.commit.parents?.map(par => {
-                  const parent = posBySha.get(par.sha)
+                  const parent = displayPosBySha.get(par.sha)
                   if (!parent) return null
                   return (
                     <Line

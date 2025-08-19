@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { categorizeCommits } from '../../../../lib/openai'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -17,7 +18,7 @@ export async function GET(req: NextRequest) {
   }
   const commitsData = await commitsRes.json()
 
-  const list = await Promise.all(
+  const rawList = await Promise.all(
     commitsData.slice(0, 20).map(async (c: any) => {
       let status = 'unknown'
       let stats: any = undefined
@@ -54,8 +55,16 @@ export async function GET(req: NextRequest) {
     })
   )
 
-  list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  // Ask the LLM to classify commit messages into buckets
+  try {
+    const categories = await categorizeCommits(rawList.map(c => c.message))
+    categories.forEach((cat: string, i: number) => (rawList[i].category = cat || 'other'))
+  } catch {
+    rawList.forEach(r => (r.category = 'other'))
+  }
 
-  return NextResponse.json(list)
+  rawList.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+
+  return NextResponse.json(rawList)
 }
 

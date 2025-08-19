@@ -1,8 +1,9 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import { Canvas, useThree } from '@react-three/fiber'
-import { Line, Html } from '@react-three/drei'
+import { Line, Html, OrbitControls } from '@react-three/drei'
+import * as THREE from 'three'
 
 interface Commit {
   sha: string
@@ -10,21 +11,15 @@ interface Commit {
   date: string
   stats?: { total: number }
   parents: { sha: string }[]
-}
-
-function categoryOf(message: string) {
-  const m = message.toLowerCase()
-  if (m.includes('backend')) return 'backend'
-  if (m.includes('frontend') || m.includes('ui')) return 'frontend'
-  if (m.includes('db') || m.includes('database')) return 'db'
-  return 'other'
+  category?: string
+  branch?: string
 }
 
 export default function TrackingPage() {
   const [repo, setRepo] = useState('')
   const [branch, setBranch] = useState('main')
   const [branches, setBranches] = useState<string[]>([])
-  const [commits, setCommits] = useState<Commit[]>([])
+  const [data, setData] = useState<Record<string, Commit[]>>({})
   const [topView, setTopView] = useState(false)
 
   // Load stored repo/branch on mount
@@ -60,46 +55,83 @@ export default function TrackingPage() {
 
   const load = async () => {
     if (!repo) return
-    const res = await fetch(`/api/github/commits?repo=${repo}&branch=${branch}`)
-    const data = await res.json()
-    setCommits(Array.isArray(data) ? data : [])
+    const mainData = await fetch(`/api/github/commits?repo=${repo}&branch=${branch}`).then(r => r.json())
+    if (branch === 'main') {
+      const others = await Promise.all(
+        branches.filter(b => b !== branch).slice(0, 3).map(async b => {
+          const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
+          const d = await r.json()
+          return [b, Array.isArray(d) ? d : []] as [string, Commit[]]
+        })
+      )
+      setData(Object.fromEntries([[branch, Array.isArray(mainData) ? mainData : []], ...others]))
+    } else {
+      setData({ [branch]: Array.isArray(mainData) ? mainData : [] })
+    }
   }
+
+  const allCommits = useMemo(() => {
+    const list: Commit[] = []
+    Object.entries(data).forEach(([br, arr]) => {
+      arr.forEach(c => list.push({ ...c, branch: br }))
+    })
+    return list
+  }, [data])
+
   const sorted = useMemo(
-    () => [...commits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
-    [commits]
+    () => [...allCommits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    [allCommits]
   )
+
+  const branchOffsets = useMemo(() => {
+    const names = Object.keys(data)
+    const mainIdx = names.indexOf('main')
+    const map = new Map<string, number>()
+    names.forEach((b, i) => {
+      const offset = (i - (mainIdx === -1 ? 0 : mainIdx)) * 2
+      map.set(b, offset)
+    })
+    return map
+  }, [data])
 
   const positions = sorted.map((c, i) => ({
     commit: c,
     x: i * 3,
-    category: categoryOf(c.message),
-    size: Math.max(0.5, Math.min(2, (c.stats?.total || 1) / 50))
+    y: branchOffsets.get(c.branch || '') || 0,
+    size:
+      Math.max(0.4, Math.min(2, (c.stats?.total || 1) / 50)) * (c.branch === 'main' ? 0.6 : 1),
+    category: c.category || 'other'
   }))
 
   const posBySha = useMemo(() => {
-    const m = new Map<string, { x: number; category: string }>()
-    positions.forEach(p => m.set(p.commit.sha, { x: p.x, category: p.category }))
+    const m = new Map<string, { x: number; y: number }>()
+    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y }))
     return m
   }, [positions])
 
-  const categoryYOffset: Record<string, number> = {
-    backend: 3,
-    frontend: 1,
-    db: -1,
-    other: -3,
-  }
+  const controlsRef = useRef<any>(null)
+  const groupRef = useRef<THREE.Group>(null)
 
-  function CameraRig({ count }: { count: number }) {
+  function CameraRig({ target }: { target: number }) {
     const { camera } = useThree()
     useEffect(() => {
-      if (topView) {
-        camera.position.set(0, 20, 0)
-        camera.lookAt(count * 1.5, 0, 0)
-      } else {
-        camera.position.set(-10, 5, 20)
-        camera.lookAt(count * 1.5, 0, 0)
+      const from = camera.position.clone()
+      const to = topView ? new THREE.Vector3(0, 20, 0) : new THREE.Vector3(-10, 5, 20)
+      const startRot = groupRef.current?.rotation.x || 0
+      const endRot = topView ? -Math.PI / 2 : 0
+      let t = 0
+      const anim = () => {
+        t += 0.05
+        camera.position.lerpVectors(from, to, t)
+        controlsRef.current?.target.lerp(new THREE.Vector3(target, 0, 0), t)
+        controlsRef.current?.update()
+        if (groupRef.current) {
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(startRot, endRot, t)
+        }
+        if (t < 1) requestAnimationFrame(anim)
       }
-    }, [topView, count, camera])
+      anim()
+    }, [topView, target, camera])
     return null
   }
 
@@ -140,14 +172,22 @@ export default function TrackingPage() {
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           <Canvas camera={{ position: [-10, 5, 20], fov: 50 }}>
-            <CameraRig count={positions.length} />
+            <OrbitControls ref={controlsRef} enableRotate={false} />
+            <CameraRig target={positions.length * 1.5} />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
-            <group rotation={[topView ? -Math.PI / 2 : 0, 0, 0]}>
-              <Line points={[[0, 0, 0], [positions.length * 3, 0, 0]]} color="#10b981" lineWidth={1} />
+            <group ref={groupRef}>
+              {Array.from(branchOffsets.entries()).map(([b, y]) => (
+                <Line
+                  key={b}
+                  points={[[0, y, 0], [positions.length * 3, y, 0]]}
+                  color={b === 'main' ? '#10b981' : '#374151'}
+                  lineWidth={1}
+                />
+              ))}
               {positions.map(p => (
-                <mesh key={p.commit.sha} position={[p.x, topView ? categoryYOffset[p.category] : 0, 0]}>
+                <mesh key={p.commit.sha} position={[p.x, p.y, 0]}>
                   <sphereGeometry args={[p.size, 32, 32]} />
                   <meshStandardMaterial
                     color={
@@ -164,7 +204,7 @@ export default function TrackingPage() {
                   />
                   <Html
                     distanceFactor={10}
-                    position={[0, topView ? 0.5 : p.size + 0.5, 0]}
+                    position={[0, p.size + 0.5, 0]}
                   >
                     <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
                       {p.commit.sha.slice(0, 7)} {p.commit.message}
@@ -176,13 +216,11 @@ export default function TrackingPage() {
                 p.commit.parents?.map(par => {
                   const parent = posBySha.get(par.sha)
                   if (!parent) return null
-                  const y1 = topView ? categoryYOffset[p.category] : 0
-                  const y2 = topView ? categoryYOffset[parent.category] : 0
                   return (
                     <Line
                       key={`${p.commit.sha}-${par.sha}`}
-                      points={[[p.x, y1, 0], [parent.x, y2, 0]]}
-                      color="#374151"
+                      points={[[p.x, p.y, 0], [parent.x, parent.y, 0]]}
+                      color="#6b7280"
                       lineWidth={1}
                     />
                   )

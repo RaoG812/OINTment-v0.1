@@ -63,19 +63,14 @@ export default function TrackingPage() {
 
   const load = async () => {
     if (!repo) return
-    const mainData = await fetch(`/api/github/commits?repo=${repo}&branch=${branch}`).then(r => r.json())
-    if (branch === 'main') {
-      const others = await Promise.all(
-        branches.filter(b => b !== branch).slice(0, 3).map(async b => {
-          const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
-          const d = await r.json()
-          return [b, Array.isArray(d) ? d : []] as [string, Commit[]]
-        })
-      )
-      setData(Object.fromEntries([[branch, Array.isArray(mainData) ? mainData : []], ...others]))
-    } else {
-      setData({ [branch]: Array.isArray(mainData) ? mainData : [] })
-    }
+    const entries = await Promise.all(
+      branches.map(async b => {
+        const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
+        const d = await r.json()
+        return [b, Array.isArray(d) ? d : []] as [string, Commit[]]
+      })
+    )
+    setData(Object.fromEntries(entries))
   }
 
   const allCommits = useMemo(() => {
@@ -104,6 +99,7 @@ export default function TrackingPage() {
 
   const catOffset = (cat: string) =>
     cat === 'backend' ? 3 : cat === 'frontend' ? 1 : cat === 'db' ? -1 : -3
+  const latestSha = sorted.at(-1)?.sha
   const positions = sorted.map((c, i) => ({
     commit: c,
     x: i * 3,
@@ -111,7 +107,8 @@ export default function TrackingPage() {
     z: catOffset(c.category || 'other'),
     size:
       Math.max(0.4, Math.min(2, (c.stats?.total || 1) / 50)) * (c.branch === 'main' ? 0.6 : 1),
-    status: c.status || 'unknown'
+    status: c.status || 'unknown',
+    current: c.sha === latestSha
   }))
 
   const posBySha = useMemo(() => {
@@ -136,10 +133,9 @@ export default function TrackingPage() {
         tgt = new THREE.Vector3(target / 2, 0, 0)
         camera.up.set(0, 0, 1)
       } else if (view === 'front') {
-        to = new THREE.Vector3(target / 2, 0, 40)
+        to = new THREE.Vector3(target / 2, -40, 0)
         tgt = new THREE.Vector3(target / 2, 0, 0)
-        rotX = -Math.PI / 2
-        camera.up.set(0, 1, 0)
+        camera.up.set(0, 0, 1)
       } else {
         camera.up.set(0, 1, 0)
       }
@@ -185,21 +181,36 @@ export default function TrackingPage() {
       ref.current?.scale.setScalar(scale.current)
     })
     return (
-      <mesh
-        ref={ref}
-        position={[p.x, p.y, p.z]}
-        onPointerOver={() => setHovered(true)}
-        onPointerOut={() => setHovered(false)}
-      >
-        <sphereGeometry args={[p.size, 16, 16]} />
-        <meshStandardMaterial
-          color={color}
-          emissive={color}
-          emissiveIntensity={0.2}
-          metalness={0.8}
-          roughness={0.2}
-          wireframe
-        />
+      <group position={[p.x, p.y, p.z]}> 
+        <mesh
+          ref={ref}
+          onPointerOver={() => setHovered(true)}
+          onPointerOut={() => setHovered(false)}
+        >
+          <sphereGeometry args={[p.size, 16, 16]} />
+          <meshStandardMaterial
+            color={color}
+            emissive={color}
+            emissiveIntensity={0.6}
+            metalness={0.9}
+            roughness={0.2}
+          />
+        </mesh>
+        <mesh scale={1.5}>
+          <sphereGeometry args={[p.size, 16, 16]} />
+          <meshBasicMaterial color={color} transparent opacity={0.3} blending={THREE.AdditiveBlending} />
+        </mesh>
+        {p.current && (
+          <>
+            <mesh>
+              <ringGeometry args={[p.size + 0.2, p.size + 0.35, 32]} />
+              <meshBasicMaterial color="#fff" />
+            </mesh>
+            <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
+              <div className="text-[10px] bg-emerald-600/80 text-white px-1 py-0.5 rounded">WE ARE HERE</div>
+            </Html>
+          </>
+        )}
         {hovered && (
           <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
             <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
@@ -207,7 +218,7 @@ export default function TrackingPage() {
             </div>
           </Html>
         )}
-      </mesh>
+      </group>
     )
   }
 
@@ -265,7 +276,7 @@ export default function TrackingPage() {
             ) : (
               <OrthographicCamera
                 makeDefault
-                position={view === 'top' ? [positions.length * 1.5, 40, 0] : [positions.length * 1.5, 0, 40]}
+                position={view === 'top' ? [positions.length * 1.5, 40, 0] : [positions.length * 1.5, -40, 0]}
                 zoom={40}
               />
             )}
@@ -275,7 +286,7 @@ export default function TrackingPage() {
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
             <EffectComposer>
-              <Bloom luminanceThreshold={0.4} intensity={0.3} />
+              <Bloom luminanceThreshold={0.4} intensity={0.8} />
             </EffectComposer>
             <group ref={groupRef}>
               {Array.from(branchOffsets.entries()).map(([b, y]) => (

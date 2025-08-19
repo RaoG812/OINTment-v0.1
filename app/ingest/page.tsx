@@ -85,6 +85,8 @@ export default function IngestPage() {
       if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
       localStorage.setItem('ingestResult', JSON.stringify(data))
+      if (repo) localStorage.setItem('repo', repo)
+      if (branch) localStorage.setItem('branch', branch)
       setError('')
     } catch (err) {
       console.error(err)
@@ -129,55 +131,61 @@ export default function IngestPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
-      <div className="space-y-4 max-w-md">
-        <div className="flex gap-2">
-          <input
-            value={repo}
-            onChange={e => setRepo(e.target.value)}
-            placeholder="owner/repo"
-            className="flex-1 px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-          />
+      <div className="space-y-8 max-w-md">
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">GitHub Repository</h2>
+          <div className="flex gap-2">
+            <input
+              value={repo}
+              onChange={e => setRepo(e.target.value)}
+              placeholder="owner/repo"
+              className="flex-1 px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+            />
+            <button
+              type="button"
+              onClick={loadBranches}
+              className="px-3 py-2 bg-zinc-800 rounded text-xs"
+            >
+              Load
+            </button>
+          </div>
+          {branches.length > 0 && (
+            <select
+              value={branch}
+              onChange={e => setBranch(e.target.value)}
+              className="w-full px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+            >
+              <option value="">select branch</option>
+              {branches.map(b => (
+                <option key={b} value={b}>{b}</option>
+              ))}
+            </select>
+          )}
           <button
             type="button"
-            onClick={loadBranches}
-            className="px-3 py-2 bg-zinc-800 rounded text-xs"
+            onClick={analyzeRepo}
+            className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
           >
-            Load
+            Analyze Repo
           </button>
-        </div>
-        {branches.length > 0 && (
-          <select
-            value={branch}
-            onChange={e => setBranch(e.target.value)}
-            className="w-full px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-          >
-            <option value="">select branch</option>
-            {branches.map(b => (
-              <option key={b} value={b}>{b}</option>
-            ))}
-          </select>
-        )}
-        <button
-          type="button"
-          onClick={analyzeRepo}
-          className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-        >
-          Analyze Repo
-        </button>
-        <form onSubmit={onSubmit} className="space-y-4">
-        <input
-          type="file"
-          name="file"
-          accept=".zip"
-          className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
-        />
-        <button
-          type="submit"
-          className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-        >
-          Upload and Analyze
-        </button>
-        </form>
+        </section>
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">Manual ZIP Upload</h2>
+          <form onSubmit={onSubmit} className="space-y-4">
+            <input
+              type="file"
+              name="file"
+              accept=".zip"
+              className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
+            />
+            <button
+              type="submit"
+              className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+            >
+              Upload and Analyze
+            </button>
+          </form>
+        </section>
       </div>
       <button
         onClick={() => setShowConsole(s => !s)}

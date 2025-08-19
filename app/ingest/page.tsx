@@ -16,6 +16,9 @@ export default function IngestPage() {
   const [result, setResult] = useState<Result | null>(null)
   const [loading, setLoading] = useState(false)
   const [showConsole, setShowConsole] = useState(true)
+  const [repo, setRepo] = useState('')
+  const [branches, setBranches] = useState<string[]>([])
+  const [branch, setBranch] = useState('')
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -45,10 +48,71 @@ export default function IngestPage() {
     }
   }
 
+  async function loadBranches() {
+    if (!repo) return
+    const res = await fetch(`/api/github/branches?repo=${repo}`)
+    const data = await res.json()
+    if (Array.isArray(data)) setBranches(data)
+  }
+
+  async function analyzeRepo() {
+    if (!repo || !branch) return
+    const form = new FormData()
+    form.append('repo', repo)
+    form.append('branch', branch)
+    setLoading(true)
+    try {
+      const res = await fetch('/api/ingest', { method: 'POST', body: form })
+      const data = await res.json()
+      if (!res.ok) console.error('analysis failed', data)
+      setResult(data)
+      localStorage.setItem('ingestResult', JSON.stringify(data))
+    } catch (err) {
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
-      <form onSubmit={onSubmit} className="space-y-4 max-w-md">
+      <div className="space-y-4 max-w-md">
+        <div className="flex gap-2">
+          <input
+            value={repo}
+            onChange={e => setRepo(e.target.value)}
+            placeholder="owner/repo"
+            className="flex-1 px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+          />
+          <button
+            type="button"
+            onClick={loadBranches}
+            className="px-3 py-2 bg-zinc-800 rounded text-xs"
+          >
+            Load
+          </button>
+        </div>
+        {branches.length > 0 && (
+          <select
+            value={branch}
+            onChange={e => setBranch(e.target.value)}
+            className="w-full px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+          >
+            <option value="">select branch</option>
+            {branches.map(b => (
+              <option key={b} value={b}>{b}</option>
+            ))}
+          </select>
+        )}
+        <button
+          type="button"
+          onClick={analyzeRepo}
+          className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+        >
+          Analyze Repo
+        </button>
+        <form onSubmit={onSubmit} className="space-y-4">
         <input
           type="file"
           name="file"
@@ -61,7 +125,8 @@ export default function IngestPage() {
         >
           Upload and Analyze
         </button>
-      </form>
+        </form>
+      </div>
       <button
         onClick={() => setShowConsole(s => !s)}
         className="text-xs text-zinc-400 hover:text-zinc-200 transition"

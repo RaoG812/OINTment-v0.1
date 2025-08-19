@@ -1,18 +1,53 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
+import { useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { OrbitControls, Line } from '@react-three/drei'
+
+interface Commit {
+  sha: string
+  message: string
+  date: string
+  stats?: { total: number }
+  parents: { sha: string }[]
+}
+
+function categoryOf(message: string) {
+  const m = message.toLowerCase()
+  if (m.includes('backend')) return 'backend'
+  if (m.includes('frontend') || m.includes('ui')) return 'frontend'
+  if (m.includes('db') || m.includes('database')) return 'db'
+  return 'other'
+}
 
 export default function TrackingPage() {
-  const [repo, setRepo] = useState('');
-  const [branch, setBranch] = useState('main');
-  const [commits, setCommits] = useState<any[]>([]);
+  const [repo, setRepo] = useState('')
+  const [branch, setBranch] = useState('main')
+  const [commits, setCommits] = useState<Commit[]>([])
+  const [topView, setTopView] = useState(false)
 
   const load = async () => {
-    if (!repo) return;
-    const res = await fetch(`/api/github/commits?repo=${repo}&branch=${branch}`);
-    const data = await res.json();
-    setCommits(Array.isArray(data) ? data : []);
-  };
+    if (!repo) return
+    const res = await fetch(`/api/github/commits?repo=${repo}&branch=${branch}`)
+    const data = await res.json()
+    setCommits(Array.isArray(data) ? data : [])
+  }
+
+  const positions = commits.map((c, i) => ({
+    commit: c,
+    x: i * 3,
+    y: 0,
+    z: 0,
+    category: categoryOf(c.message),
+    size: Math.max(0.5, Math.min(2, (c.stats?.total || 1) / 50)),
+  }))
+
+  const categoryYOffset: Record<string, number> = {
+    backend: 3,
+    frontend: 1,
+    db: -1,
+    other: -3,
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
@@ -37,22 +72,32 @@ export default function TrackingPage() {
           >
             Load
           </button>
+          <button
+            onClick={() => setTopView(v => !v)}
+            className="px-3 py-2 rounded bg-zinc-800 text-sm"
+          >
+            {topView ? '3D view' : 'Top view'}
+          </button>
         </div>
-        <div className="relative pl-4 before:absolute before:left-2 before:top-0 before:bottom-0 before:w-px before:bg-zinc-800">
-          {commits.map(c => (
-            <div key={c.sha} className="mb-4 pl-4 relative">
-              <div className="absolute -left-2 top-1 w-3 h-3 rounded-full bg-emerald-500" />
-              <div className="text-sm font-medium">
-                {c.message.split('\n')[0]}
-              </div>
-              <div className="text-xs text-zinc-400">
-                {c.sha.slice(0, 7)} • {new Date(c.date).toLocaleString()} • {c.status}
-              </div>
-            </div>
-          ))}
+        <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden">
+          <Canvas camera={{ position: [0, 5, 20], fov: 50 }}>
+            <color attach="background" args={[0, 0, 0]} />
+            <ambientLight intensity={0.5} />
+            <group rotation={[topView ? -Math.PI / 2 : 0, 0, 0]}
+                   position={[0, topView ? 0 : 0, 0]}>
+              {/* main line */}
+              <Line points={[[0,0,0],[positions.length * 3,0,0]]} color="#0f0" lineWidth={1} />
+              {positions.map((p, i) => (
+                <mesh key={p.commit.sha} position={[p.x, topView ? categoryYOffset[p.category] : 0, 0]}>
+                  <sphereGeometry args={[p.size, 16, 16]} />
+                  <meshStandardMaterial color={p.category === 'backend' ? '#3b82f6' : p.category === 'frontend' ? '#a855f7' : p.category === 'db' ? '#f59e0b' : '#ef4444'} />
+                </mesh>
+              ))}
+            </group>
+            <OrbitControls enablePan enableZoom enableRotate />
+          </Canvas>
         </div>
       </div>
     </div>
-  );
+  )
 }
-

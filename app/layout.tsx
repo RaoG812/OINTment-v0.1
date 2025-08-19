@@ -5,6 +5,7 @@ import Link from 'next/link';
 export const metadata = {
   title: 'PM Control Suite',
   description: 'Integration matrix prototype',
+  icons: { icon: '/favicon.svg' }
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

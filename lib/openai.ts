@@ -4,7 +4,7 @@ const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
 export async function summarizeRepo(fileList: string[]): Promise<string> {
   if (!process.env.OPENAI_API_KEY) {
-    return 'OpenAI API key missing'
+    throw new Error('OpenAI API key missing')
   }
   const content = fileList.join('\n')
   const messages: any = [
@@ -26,8 +26,9 @@ export async function summarizeRepo(fileList: string[]): Promise<string> {
       })
       return res.choices[0]?.message?.content?.trim() ?? ''
     } catch (err2) {
+      const message = err2 instanceof Error ? err2.message : String(err2)
       console.error('OpenAI analysis failed', err2)
-      throw err2
+      throw new Error(`OpenAI analysis failed: ${message}`)
     }
   }
 }

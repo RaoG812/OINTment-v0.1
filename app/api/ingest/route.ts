@@ -15,7 +15,8 @@ export async function POST(req: NextRequest) {
     const analysis = await summarizeRepo(entries)
     return NextResponse.json({ files: entries, analysis })
   } catch (err) {
+    const message = err instanceof Error ? err.message : 'analysis failed'
     console.error('analysis failed', err)
-    return NextResponse.json({ error: 'analysis failed' }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

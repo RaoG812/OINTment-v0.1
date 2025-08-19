@@ -1,6 +1,6 @@
 'use client'
 import * as React from 'react'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import { ArrowUpDown, Search, ShieldAlert, Cpu } from 'lucide-react'
 
@@ -12,20 +12,13 @@ export type Row = {
   logoUrl?: string
   name: string
   category: string
-  impact: number // 0..100
+  impact: number
   security: number
   ops: number
   health: number
   coupling: number
   upgrade: number
 }
-
-const SAMPLE: Row[] = [
-  { logoUrl:'/logos/nextjs.svg', name:'nextjs', category:'Frameworks/Libs', impact:92, security:70, ops:50, health:85, coupling:68, upgrade:40 },
-  { logoUrl:'/logos/supabase.svg', name:'supabase', category:'Data & Storage', impact:80, security:75, ops:60, health:78, coupling:50, upgrade:60 },
-  { logoUrl:'/logos/redis.svg', name:'redis', category:'Data & Storage', impact:76, security:65, ops:55, health:83, coupling:45, upgrade:50 },
-  { logoUrl:'/logos/sentry.svg', name:'sentry', category:'Observability', impact:62, security:72, ops:40, health:88, coupling:30, upgrade:70 },
-]
 
 function scoreColor(v:number){
   if(v>=80) return 'text-emerald-400'
@@ -35,15 +28,19 @@ function scoreColor(v:number){
 
 export default function MatrixPage(){
   const [query, setQuery] = useState('')
-  const rows = useMemo(()=>SAMPLE.filter(r=>
+  const [rows, setRows] = useState<Row[]>([])
+  useEffect(()=>{
+    fetch('/api/components').then(r=>r.json()).then(setRows).catch(()=>setRows([]))
+  },[])
+  const filtered = useMemo(()=>rows.filter(r=>
     r.name.includes(query) || r.category.toLowerCase().includes(query.toLowerCase())
-  ),[query])
+  ),[rows,query])
   const [sortKey, setSortKey] = useState<keyof Row>('impact')
   const [asc, setAsc] = useState(false)
-  const sorted = useMemo(()=>[...rows].sort((a,b)=>{
+  const sorted = useMemo(()=>[...filtered].sort((a,b)=>{
     const d = (a[sortKey] as number)-(b[sortKey] as number)
     return asc? d : -d
-  }),[rows,sortKey,asc])
+  }),[filtered,sortKey,asc])
   const readiness = useMemo(()=>{
     const totals = rows.map(r => (r.impact + r.security + r.ops + r.health + r.coupling + r.upgrade) / 6)
     return totals.reduce((a,b)=>a+b,0) / (totals.length || 1)

@@ -26,8 +26,8 @@ export async function summarizeRepo(fileList: string[]): Promise<string> {
       })
       return res.choices[0]?.message?.content?.trim() ?? ''
     } catch (err2) {
-      console.error(err2)
-      return 'analysis failed'
+      console.error('OpenAI analysis failed', err2)
+      throw err2
     }
   }
 }

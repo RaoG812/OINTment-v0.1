@@ -11,6 +11,11 @@ export async function POST(req: NextRequest) {
   const buffer = Buffer.from(await file.arrayBuffer())
   const zip = new AdmZip(buffer)
   const entries = zip.getEntries().map(e => e.entryName)
-  const analysis = await summarizeRepo(entries)
-  return NextResponse.json({ files: entries, analysis })
+  try {
+    const analysis = await summarizeRepo(entries)
+    return NextResponse.json({ files: entries, analysis })
+  } catch (err) {
+    console.error('analysis failed', err)
+    return NextResponse.json({ error: 'analysis failed' }, { status: 500 })
+  }
 }

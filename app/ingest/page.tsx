@@ -5,17 +5,27 @@ export default function IngestPage() {
   const [result, setResult] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
-  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    const file = (e.currentTarget.elements.namedItem('file') as HTMLInputElement).files?.[0]
-    if (!file) return
-    const form = new FormData()
-    form.append('file', file)
-    setLoading(true)
-    const res = await fetch('/api/ingest', { method: 'POST', body: form })
-    setResult(await res.json())
-    setLoading(false)
-  }
+    async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+      e.preventDefault()
+      const file = (e.currentTarget.elements.namedItem('file') as HTMLInputElement).files?.[0]
+      if (!file) return
+      const form = new FormData()
+      form.append('file', file)
+      setLoading(true)
+      try {
+        const res = await fetch('/api/ingest', { method: 'POST', body: form })
+        const data = await res.json()
+        if (!res.ok) {
+          console.error('analysis failed', data)
+        }
+        setResult(data)
+      } catch (err) {
+        console.error(err)
+        setResult({ error: 'network error' })
+      } finally {
+        setLoading(false)
+      }
+    }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10">

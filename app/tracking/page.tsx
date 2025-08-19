@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
-import { Canvas } from '@react-three/fiber'
-import { OrbitControls, Line } from '@react-three/drei'
+import { useEffect, useMemo, useState } from 'react'
+import { Canvas, useThree } from '@react-three/fiber'
+import { Line, Html } from '@react-three/drei'
 
 interface Commit {
   sha: string
@@ -23,8 +23,17 @@ function categoryOf(message: string) {
 export default function TrackingPage() {
   const [repo, setRepo] = useState('')
   const [branch, setBranch] = useState('main')
+  const [branches, setBranches] = useState<string[]>([])
   const [commits, setCommits] = useState<Commit[]>([])
   const [topView, setTopView] = useState(false)
+
+  useEffect(() => {
+    if (!repo) return
+    fetch(`/api/github/branches?repo=${repo}`)
+      .then(r => r.json())
+      .then((b: string[]) => setBranches(b))
+      .catch(() => setBranches([]))
+  }, [repo])
 
   const load = async () => {
     if (!repo) return
@@ -32,21 +41,43 @@ export default function TrackingPage() {
     const data = await res.json()
     setCommits(Array.isArray(data) ? data : [])
   }
+  const sorted = useMemo(
+    () => [...commits].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()),
+    [commits]
+  )
 
-  const positions = commits.map((c, i) => ({
+  const positions = sorted.map((c, i) => ({
     commit: c,
     x: i * 3,
-    y: 0,
-    z: 0,
     category: categoryOf(c.message),
-    size: Math.max(0.5, Math.min(2, (c.stats?.total || 1) / 50)),
+    size: Math.max(0.5, Math.min(2, (c.stats?.total || 1) / 50))
   }))
+
+  const posBySha = useMemo(() => {
+    const m = new Map<string, { x: number; category: string }>()
+    positions.forEach(p => m.set(p.commit.sha, { x: p.x, category: p.category }))
+    return m
+  }, [positions])
 
   const categoryYOffset: Record<string, number> = {
     backend: 3,
     frontend: 1,
     db: -1,
     other: -3,
+  }
+
+  function CameraRig({ count }: { count: number }) {
+    const { camera } = useThree()
+    useEffect(() => {
+      if (topView) {
+        camera.position.set(0, 20, 0)
+        camera.lookAt(count * 1.5, 0, 0)
+      } else {
+        camera.position.set(-10, 5, 20)
+        camera.lookAt(count * 1.5, 0, 0)
+      }
+    }, [topView, count, camera])
+    return null
   }
 
   return (
@@ -60,12 +91,17 @@ export default function TrackingPage() {
             placeholder="owner/repo"
             className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
           />
-          <input
+          <select
             value={branch}
             onChange={e => setBranch(e.target.value)}
-            placeholder="branch"
             className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-          />
+          >
+            {branches.map(b => (
+              <option key={b} value={b}>
+                {b}
+              </option>
+            ))}
+          </select>
           <button
             onClick={load}
             className="px-3 py-2 rounded bg-emerald-600 text-sm hover:bg-emerald-500"
@@ -79,23 +115,64 @@ export default function TrackingPage() {
             {topView ? '3D view' : 'Top view'}
           </button>
         </div>
-        <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden">
-          <Canvas camera={{ position: [0, 5, 20], fov: 50 }}>
+        <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
+          <Canvas camera={{ position: [-10, 5, 20], fov: 50 }}>
+            <CameraRig count={positions.length} />
             <color attach="background" args={[0, 0, 0]} />
-            <ambientLight intensity={0.5} />
-            <group rotation={[topView ? -Math.PI / 2 : 0, 0, 0]}
-                   position={[0, topView ? 0 : 0, 0]}>
-              {/* main line */}
-              <Line points={[[0,0,0],[positions.length * 3,0,0]]} color="#0f0" lineWidth={1} />
-              {positions.map((p, i) => (
+            <ambientLight intensity={0.4} />
+            <pointLight position={[0, 5, 10]} intensity={1} />
+            <group rotation={[topView ? -Math.PI / 2 : 0, 0, 0]}>
+              <Line points={[[0, 0, 0], [positions.length * 3, 0, 0]]} color="#10b981" lineWidth={1} />
+              {positions.map(p => (
                 <mesh key={p.commit.sha} position={[p.x, topView ? categoryYOffset[p.category] : 0, 0]}>
-                  <sphereGeometry args={[p.size, 16, 16]} />
-                  <meshStandardMaterial color={p.category === 'backend' ? '#3b82f6' : p.category === 'frontend' ? '#a855f7' : p.category === 'db' ? '#f59e0b' : '#ef4444'} />
+                  <sphereGeometry args={[p.size, 32, 32]} />
+                  <meshStandardMaterial
+                    color={
+                      p.category === 'backend'
+                        ? '#3b82f6'
+                        : p.category === 'frontend'
+                        ? '#a855f7'
+                        : p.category === 'db'
+                        ? '#f59e0b'
+                        : '#ef4444'
+                    }
+                    emissive="#ffffff"
+                    emissiveIntensity={0.1}
+                  />
+                  <Html
+                    distanceFactor={10}
+                    position={[0, topView ? 0.5 : p.size + 0.5, 0]}
+                  >
+                    <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
+                      {p.commit.sha.slice(0, 7)} {p.commit.message}
+                    </div>
+                  </Html>
                 </mesh>
               ))}
+              {positions.map(p =>
+                p.commit.parents?.map(par => {
+                  const parent = posBySha.get(par.sha)
+                  if (!parent) return null
+                  const y1 = topView ? categoryYOffset[p.category] : 0
+                  const y2 = topView ? categoryYOffset[parent.category] : 0
+                  return (
+                    <Line
+                      key={`${p.commit.sha}-${par.sha}`}
+                      points={[[p.x, y1, 0], [parent.x, y2, 0]]}
+                      color="#374151"
+                      lineWidth={1}
+                    />
+                  )
+                })
+              )}
             </group>
-            <OrbitControls enablePan enableZoom enableRotate />
           </Canvas>
+          <div className="absolute top-2 right-2 text-[10px] space-y-1">
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span>Backend</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a855f7]"></span>Frontend</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span>DB</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span>Other</div>
+          </div>
         </div>
       </div>
     </div>

@@ -176,7 +176,7 @@ export default function TrackingPage() {
     }, [p.status])
     useFrame(({ clock }) => {
       const t = clock.getElapsedTime()
-      const intensity = 0.4 + Math.sin(t * 3) * 0.3
+      const intensity = 0.1 + Math.sin(t * 3) * 0.1
       const mat = ref.current?.material as THREE.MeshStandardMaterial
       if (mat) mat.emissiveIntensity = intensity
     })
@@ -188,13 +188,14 @@ export default function TrackingPage() {
         onPointerOut={() => setHovered(false)}
         scale={hovered ? 1.3 : 1}
       >
-        <icosahedronGeometry args={[p.size, 1]} />
+        <sphereGeometry args={[p.size, 16, 16]} />
         <meshStandardMaterial
           color={color}
           emissive={color}
-          emissiveIntensity={0.6}
+          emissiveIntensity={0.2}
           metalness={0.8}
           roughness={0.2}
+          wireframe
         />
         {hovered && (
           <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
@@ -267,15 +268,18 @@ export default function TrackingPage() {
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
             <EffectComposer>
-              <Bloom luminanceThreshold={0.2} intensity={1.5} />
+              <Bloom luminanceThreshold={0.4} intensity={0.3} />
             </EffectComposer>
             <group ref={groupRef}>
               {Array.from(branchOffsets.entries()).map(([b, y]) => (
                 <Line
                   key={b}
                   points={[[0, y, 0], [positions.length * 3, y, 0]]}
-                  color={b === 'main' ? '#10b981' : '#374151'}
-                  lineWidth={1}
+                  color={b === 'main' ? '#10b981' : '#d1d5db'}
+                  lineWidth={b === 'main' ? 3 : 2}
+                  transparent
+                  opacity={0.6}
+                  toneMapped={false}
                 />
               ))}
               {positions.map(p => (
@@ -289,8 +293,11 @@ export default function TrackingPage() {
                     <Line
                       key={`${p.commit.sha}-${par.sha}`}
                       points={[[p.x, p.y, p.z], [parent.x, parent.y, parent.z]]}
-                      color="#6b7280"
-                      lineWidth={1}
+                      color="#e5e7eb"
+                      lineWidth={2}
+                      transparent
+                      opacity={0.5}
+                      toneMapped={false}
                     />
                   )
                 })

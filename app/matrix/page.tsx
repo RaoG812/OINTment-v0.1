@@ -109,10 +109,19 @@ export default function MatrixPage(){
     rows.forEach(r=>{ map[r.category]=(map[r.category]||0)+1 })
     return map
   },[rows])
-  const pieData = useMemo(()=>({
-    labels:Object.keys(categoryCounts),
-    datasets:[{ data:Object.values(categoryCounts), backgroundColor:['#4ade80','#60a5fa','#f472b6','#facc15','#a78bfa','#f87171'] }]
-  }),[categoryCounts])
+  const pieData = useMemo(
+    () => ({
+      labels: Object.keys(categoryCounts),
+      datasets: [
+        {
+          data: Object.values(categoryCounts),
+          backgroundColor: ['#10b981', '#3b82f6', '#a855f7', '#f59e0b', '#ef4444', '#f472b6'],
+          borderColor: 'transparent'
+        }
+      ]
+    }),
+    [categoryCounts]
+  )
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
@@ -141,23 +150,30 @@ export default function MatrixPage(){
             )}
           </div>
           <div className="divide-y divide-zinc-900/60">
-            {sorted.map((r)=> (
-              <div
+            {sorted.map(r => (
+              <button
+                type="button"
                 key={r.name}
-                className="grid grid-cols-[auto_1fr_repeat(6,96px)] items-center gap-3 py-3 hover:bg-zinc-900/40 rounded-xl cursor-pointer"
-                onClick={()=>showDetails(r)}
+                onClick={() => showDetails(r)}
+                className="grid w-full grid-cols-[auto_1fr_repeat(6,96px)] items-center gap-3 py-3 hover:bg-zinc-900/40 rounded-xl text-left cursor-pointer"
               >
                 <div className="pl-2 flex items-center gap-3">
                   <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center">
-                    {r.logoUrl? <Image src={r.logoUrl} alt={r.name} width={18} height={18}/> : <Cpu className="w-4 h-4 text-zinc-500"/>}
+                    {r.logoUrl ? (
+                      <Image src={r.logoUrl} alt={r.name} width={18} height={18} />
+                    ) : (
+                      <Cpu className="w-4 h-4 text-zinc-500" />
+                    )}
                   </div>
                   <div className="text-sm text-zinc-200">{r.name}</div>
                 </div>
                 <div className="text-xs text-zinc-400"><Pill>{r.category}</Pill></div>
-                {[r.impact, r.security, r.ops, r.health, r.coupling, r.upgrade].map((v,i)=>
-                  <div key={i} className={`text-sm font-semibold tabular-nums ${scoreColor(v)} text-center`}>{v}</div>
-                )}
-              </div>
+                {[r.impact, r.security, r.ops, r.health, r.coupling, r.upgrade].map((v, i) => (
+                  <div key={i} className={`text-sm font-semibold tabular-nums ${scoreColor(v)} text-center`}>
+                    {v}
+                  </div>
+                ))}
+              </button>
             ))}
           </div>
         </Card>
@@ -179,7 +195,11 @@ export default function MatrixPage(){
           </ExpandableCard>
           <Card>
             <div className="text-sm font-semibold mb-2">Category Breakdown</div>
-            {Object.keys(categoryCounts).length>0 ? <Pie data={pieData} width={200} height={200}/> : <div className="text-xs text-zinc-400">No data</div>}
+            {Object.keys(categoryCounts).length > 0 ? (
+              <Pie data={pieData} options={{ plugins: { legend: { display: false } } }} />
+            ) : (
+              <div className="text-xs text-zinc-400">No data</div>
+            )}
           </Card>
         </div>
 

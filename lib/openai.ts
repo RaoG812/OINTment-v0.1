@@ -34,7 +34,8 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
     { role: 'user', content }
   ]
 
-  async function run(model: string) {
+  const model = process.env.LLM_MODEL || 'gpt-5'
+  try {
     const res = await client.chat.completions.create({
       model,
       messages,
@@ -43,19 +44,10 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
     } as any)
     const txt = res.choices[0]?.message?.content ?? '{}'
     return JSON.parse(txt)
-  }
-
-  try {
-    return await run(process.env.LLM_MODEL_PRIMARY || 'gpt-5')
   } catch (err) {
-    console.warn('primary model failed, falling back', err)
-    try {
-      return await run(process.env.LLM_MODEL_FALLBACK || 'gpt-4o')
-    } catch (err2) {
-      const message = err2 instanceof Error ? err2.message : String(err2)
-      console.error('LLM analysis failed', err2)
-      throw new Error(`LLM analysis failed: ${message}`)
-    }
+    const message = err instanceof Error ? err.message : String(err)
+    console.error('LLM analysis failed', err)
+    throw new Error(`LLM analysis failed: ${message}`)
   }
 }
 

@@ -10,10 +10,11 @@ export async function GET(req: NextRequest) {
     headers: { Accept: 'application/vnd.github+json' }
   });
   if (!res.ok) {
-    return NextResponse.json({ error: 'github fetch failed' }, { status: res.status });
+    // Return an empty array with 200 status so the client can handle missing repos gracefully
+    return NextResponse.json([]);
   }
   const data = await res.json();
-  const branches = data.map((b: any) => b.name);
+  const branches = Array.isArray(data) ? data.map((b: any) => b.name) : [];
   return NextResponse.json(branches);
 }
 

@@ -27,12 +27,35 @@ export default function TrackingPage() {
   const [commits, setCommits] = useState<Commit[]>([])
   const [topView, setTopView] = useState(false)
 
+  // Load stored repo/branch on mount
   useEffect(() => {
-    if (!repo) return
-    fetch(`/api/github/branches?repo=${repo}`)
-      .then(r => r.json())
-      .then((b: string[]) => setBranches(b))
-      .catch(() => setBranches([]))
+    const storedRepo = localStorage.getItem('repo')
+    const storedBranch = localStorage.getItem('branch')
+    if (storedRepo) setRepo(storedRepo)
+    if (storedBranch) setBranch(storedBranch)
+  }, [])
+
+  // Persist repo and branch selections
+  useEffect(() => {
+    if (repo) localStorage.setItem('repo', repo)
+  }, [repo])
+  useEffect(() => {
+    if (branch) localStorage.setItem('branch', branch)
+  }, [branch])
+
+  // Fetch branches only when repo looks valid
+  useEffect(() => {
+    const handle = setTimeout(() => {
+      if (/^[\w.-]+\/[\w.-]+$/.test(repo)) {
+        fetch(`/api/github/branches?repo=${repo}`)
+          .then(r => (r.ok ? r.json() : []))
+          .then(data => setBranches(Array.isArray(data) ? data : []))
+          .catch(() => setBranches([]))
+      } else {
+        setBranches([])
+      }
+    }, 300)
+    return () => clearTimeout(handle)
   }, [repo])
 
   const load = async () => {

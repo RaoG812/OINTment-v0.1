@@ -23,7 +23,18 @@ export default function IngestPage() {
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
     if (stored) setResult(JSON.parse(stored))
+    const storedRepo = localStorage.getItem('repo')
+    const storedBranch = localStorage.getItem('branch')
+    if (storedRepo) setRepo(storedRepo)
+    if (storedBranch) setBranch(storedBranch)
   }, [])
+
+  useEffect(() => {
+    if (repo) localStorage.setItem('repo', repo)
+  }, [repo])
+  useEffect(() => {
+    if (branch) localStorage.setItem('branch', branch)
+  }, [branch])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
@@ -51,8 +62,8 @@ export default function IngestPage() {
   async function loadBranches() {
     if (!repo) return
     const res = await fetch(`/api/github/branches?repo=${repo}`)
-    const data = await res.json()
-    if (Array.isArray(data)) setBranches(data)
+    const data = await (res.ok ? res.json() : Promise.resolve([]))
+    setBranches(Array.isArray(data) ? data : [])
   }
 
   async function analyzeRepo() {

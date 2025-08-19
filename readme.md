@@ -32,11 +32,11 @@ of integration categories.
 
 Upload a repository ZIP or point to a GitHub repo/branch at `/ingest` to trigger
 an analysis run. Provide an API key for language model analysis via
-`AIML_API_KEY` (uses [aimlapi.com](https://aimlapi.com) by default) or fall back
-to `OPENAI_API_KEY` for the standard OpenAI endpoint. The last ingest result is
-cached in the browser so you can navigate away and return without losing the
-console output. Below the console, AI‑extracted takeaways and metrics render in
-animated widgets.
+`AIML_API_KEY` (uses [aimlapi.com](https://aimlapi.com) by default); the app now
+targets the `gpt-5` chat model without falling back to older models. The last
+ingest result along with your selected repo and branch are cached in the browser
+so you can navigate away and return without losing context. Below the console,
+AI‑extracted takeaways and metrics render in animated widgets.
 
 Click a row on the Matrix page to drill into indicator explanations, improvement
 tips and code references gathered from the repo.

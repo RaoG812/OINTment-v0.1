@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState, useRef } from 'react'
-import { Canvas, useThree } from '@react-three/fiber'
+import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import { Line, Html, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
 
@@ -13,6 +13,7 @@ interface Commit {
   parents: { sha: string }[]
   category?: string
   branch?: string
+  status?: string
 }
 
 export default function TrackingPage() {
@@ -20,7 +21,7 @@ export default function TrackingPage() {
   const [branch, setBranch] = useState('main')
   const [branches, setBranches] = useState<string[]>([])
   const [data, setData] = useState<Record<string, Commit[]>>({})
-  const [topView, setTopView] = useState(false)
+  const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
 
   // Load stored repo/branch on mount
   useEffect(() => {
@@ -94,45 +95,89 @@ export default function TrackingPage() {
     return map
   }, [data])
 
+  const catOffset = (cat: string) =>
+    cat === 'backend' ? 3 : cat === 'frontend' ? 1 : cat === 'db' ? -1 : -3
   const positions = sorted.map((c, i) => ({
     commit: c,
     x: i * 3,
     y: branchOffsets.get(c.branch || '') || 0,
+    z: catOffset(c.category || 'other'),
     size:
       Math.max(0.4, Math.min(2, (c.stats?.total || 1) / 50)) * (c.branch === 'main' ? 0.6 : 1),
-    category: c.category || 'other'
+    status: c.status || 'unknown'
   }))
 
   const posBySha = useMemo(() => {
-    const m = new Map<string, { x: number; y: number }>()
-    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y }))
+    const m = new Map<string, { x: number; y: number; z: number }>()
+    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y, z: p.z }))
     return m
   }, [positions])
 
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
 
-  function CameraRig({ target }: { target: number }) {
+  function CameraRig({ target, view }: { target: number; view: '3d' | 'top' | 'front' }) {
     const { camera } = useThree()
     useEffect(() => {
       const from = camera.position.clone()
-      const to = topView ? new THREE.Vector3(0, 20, 0) : new THREE.Vector3(-10, 5, 20)
-      const startRot = groupRef.current?.rotation.x || 0
-      const endRot = topView ? -Math.PI / 2 : 0
+      let to = new THREE.Vector3(-10, 5, 20)
+      let rotX = 0
+      let rotY = 0
+      if (view === 'top') {
+        to = new THREE.Vector3(0, 20, 0)
+        rotX = -Math.PI / 2
+      } else if (view === 'front') {
+        to = new THREE.Vector3(0, 5, 20)
+        rotY = -Math.PI / 2
+      }
+      const startX = groupRef.current?.rotation.x || 0
+      const startY = groupRef.current?.rotation.y || 0
       let t = 0
       const anim = () => {
         t += 0.05
         camera.position.lerpVectors(from, to, t)
-        controlsRef.current?.target.lerp(new THREE.Vector3(target, 0, 0), t)
+        const tgt = view === 'front' ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(target, 0, 0)
+        controlsRef.current?.target.lerp(tgt, t)
         controlsRef.current?.update()
         if (groupRef.current) {
-          groupRef.current.rotation.x = THREE.MathUtils.lerp(startRot, endRot, t)
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(startX, rotX, t)
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(startY, rotY, t)
         }
         if (t < 1) requestAnimationFrame(anim)
       }
       anim()
-    }, [topView, target, camera])
+    }, [view, target, camera])
     return null
+  }
+
+  function CommitSphere({ p }: { p: typeof positions[0] }) {
+    const ref = useRef<THREE.Mesh>(null)
+    const color = useMemo(() => {
+      return p.status === 'success'
+        ? '#10b981'
+        : p.status === 'pending'
+        ? '#f59e0b'
+        : p.status === 'failure' || p.status === 'error'
+        ? '#ef4444'
+        : '#6b7280'
+    }, [p.status])
+    useFrame(({ clock }) => {
+      const t = clock.getElapsedTime()
+      const intensity = 0.4 + Math.sin(t * 3) * 0.3
+      const mat = ref.current?.material as THREE.MeshStandardMaterial
+      if (mat) mat.emissiveIntensity = intensity
+    })
+    return (
+      <mesh ref={ref} position={[p.x, p.y, p.z]}>
+        <sphereGeometry args={[p.size, 32, 32]} />
+        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} />
+        <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
+          <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
+            {p.commit.sha.slice(0, 7)} {p.commit.message}
+          </div>
+        </Html>
+      </mesh>
+    )
   }
 
   return (
@@ -164,16 +209,28 @@ export default function TrackingPage() {
             Load
           </button>
           <button
-            onClick={() => setTopView(v => !v)}
-            className="px-3 py-2 rounded bg-zinc-800 text-sm"
+            onClick={() => setView('3d')}
+            className={`px-3 py-2 rounded text-sm ${view === '3d' ? 'bg-emerald-600' : 'bg-zinc-800'}`}
           >
-            {topView ? '3D view' : 'Top view'}
+            3D
+          </button>
+          <button
+            onClick={() => setView('top')}
+            className={`px-3 py-2 rounded text-sm ${view === 'top' ? 'bg-emerald-600' : 'bg-zinc-800'}`}
+          >
+            Top
+          </button>
+          <button
+            onClick={() => setView('front')}
+            className={`px-3 py-2 rounded text-sm ${view === 'front' ? 'bg-emerald-600' : 'bg-zinc-800'}`}
+          >
+            Front
           </button>
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           <Canvas camera={{ position: [-10, 5, 20], fov: 50 }}>
-            <OrbitControls ref={controlsRef} enableRotate={false} />
-            <CameraRig target={positions.length * 1.5} />
+            <OrbitControls ref={controlsRef} enableRotate={view === '3d'} />
+            <CameraRig target={positions.length * 1.5} view={view} />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
@@ -187,30 +244,7 @@ export default function TrackingPage() {
                 />
               ))}
               {positions.map(p => (
-                <mesh key={p.commit.sha} position={[p.x, p.y, 0]}>
-                  <sphereGeometry args={[p.size, 32, 32]} />
-                  <meshStandardMaterial
-                    color={
-                      p.category === 'backend'
-                        ? '#3b82f6'
-                        : p.category === 'frontend'
-                        ? '#a855f7'
-                        : p.category === 'db'
-                        ? '#f59e0b'
-                        : '#ef4444'
-                    }
-                    emissive="#ffffff"
-                    emissiveIntensity={0.1}
-                  />
-                  <Html
-                    distanceFactor={10}
-                    position={[0, p.size + 0.5, 0]}
-                  >
-                    <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
-                      {p.commit.sha.slice(0, 7)} {p.commit.message}
-                    </div>
-                  </Html>
-                </mesh>
+                <CommitSphere key={p.commit.sha} p={p} />
               ))}
               {positions.map(p =>
                 p.commit.parents?.map(par => {
@@ -219,7 +253,7 @@ export default function TrackingPage() {
                   return (
                     <Line
                       key={`${p.commit.sha}-${par.sha}`}
-                      points={[[p.x, p.y, 0], [parent.x, parent.y, 0]]}
+                      points={[[p.x, p.y, p.z], [parent.x, parent.y, parent.z]]}
                       color="#6b7280"
                       lineWidth={1}
                     />
@@ -229,10 +263,10 @@ export default function TrackingPage() {
             </group>
           </Canvas>
           <div className="absolute top-2 right-2 text-[10px] space-y-1">
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#3b82f6]"></span>Backend</div>
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#a855f7]"></span>Frontend</div>
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span>DB</div>
-            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span>Other</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10b981]"></span>Success</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span>Pending</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span>Failure</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6b7280]"></span>Unknown</div>
           </div>
         </div>
       </div>

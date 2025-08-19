@@ -24,7 +24,8 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
     throw new Error('LLM API key missing')
   }
 
-  const content = fileList.join('\n')
+  // Large repositories can exceed token limits; only send the first 200 entries
+  const content = fileList.slice(0, 200).join('\n')
   const messages: any = [
     {
       role: 'system',
@@ -44,10 +45,12 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
     } as any)
     const txt = res.choices[0]?.message?.content ?? '{}'
     return JSON.parse(txt)
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err)
+  } catch (err: any) {
+    const status = err?.status || err?.response?.status
+    const body = err?.response?.data
+    const detail = status ? `${status}${body ? ` ${JSON.stringify(body)}` : ''}` : err?.message
     console.error('LLM analysis failed', err)
-    throw new Error(`LLM analysis failed: ${message}`)
+    throw new Error(`LLM analysis failed: ${detail}`)
   }
 }
 

@@ -2,7 +2,14 @@
 
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
-import { Line, Html, OrbitControls } from '@react-three/drei'
+import {
+  Line,
+  Html,
+  OrbitControls,
+  PerspectiveCamera,
+  OrthographicCamera
+} from '@react-three/drei'
+import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
 
 interface Commit {
@@ -121,14 +128,20 @@ export default function TrackingPage() {
     useEffect(() => {
       const from = camera.position.clone()
       let to = new THREE.Vector3(-10, 5, 20)
+      let tgt = new THREE.Vector3(target, 0, 0)
       let rotX = 0
       let rotY = 0
       if (view === 'top') {
-        to = new THREE.Vector3(0, 20, 0)
-        rotX = -Math.PI / 2
+        to = new THREE.Vector3(target / 2, 40, 0)
+        tgt = new THREE.Vector3(target / 2, 0, 0)
+        camera.up.set(0, 0, 1)
       } else if (view === 'front') {
         to = new THREE.Vector3(0, 5, 20)
+        tgt = new THREE.Vector3(0, 0, 0)
         rotY = -Math.PI / 2
+        camera.up.set(0, 1, 0)
+      } else {
+        camera.up.set(0, 1, 0)
       }
       const startX = groupRef.current?.rotation.x || 0
       const startY = groupRef.current?.rotation.y || 0
@@ -136,7 +149,6 @@ export default function TrackingPage() {
       const anim = () => {
         t += 0.05
         camera.position.lerpVectors(from, to, t)
-        const tgt = view === 'front' ? new THREE.Vector3(0, 0, 0) : new THREE.Vector3(target, 0, 0)
         controlsRef.current?.target.lerp(tgt, t)
         controlsRef.current?.update()
         if (groupRef.current) {
@@ -152,6 +164,7 @@ export default function TrackingPage() {
 
   function CommitSphere({ p }: { p: typeof positions[0] }) {
     const ref = useRef<THREE.Mesh>(null)
+    const [hovered, setHovered] = useState(false)
     const color = useMemo(() => {
       return p.status === 'success'
         ? '#10b981'
@@ -168,14 +181,28 @@ export default function TrackingPage() {
       if (mat) mat.emissiveIntensity = intensity
     })
     return (
-      <mesh ref={ref} position={[p.x, p.y, p.z]}>
-        <sphereGeometry args={[p.size, 32, 32]} />
-        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={0.6} />
-        <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
-          <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
-            {p.commit.sha.slice(0, 7)} {p.commit.message}
-          </div>
-        </Html>
+      <mesh
+        ref={ref}
+        position={[p.x, p.y, p.z]}
+        onPointerOver={() => setHovered(true)}
+        onPointerOut={() => setHovered(false)}
+        scale={hovered ? 1.3 : 1}
+      >
+        <icosahedronGeometry args={[p.size, 1]} />
+        <meshStandardMaterial
+          color={color}
+          emissive={color}
+          emissiveIntensity={0.6}
+          metalness={0.8}
+          roughness={0.2}
+        />
+        {hovered && (
+          <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
+            <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
+              {p.commit.sha.slice(0, 7)} {p.commit.message}
+            </div>
+          </Html>
+        )}
       </mesh>
     )
   }
@@ -228,12 +255,20 @@ export default function TrackingPage() {
           </button>
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
-          <Canvas camera={{ position: [-10, 5, 20], fov: 50 }}>
+          <Canvas>
+            {view === 'top' ? (
+              <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={40} />
+            ) : (
+              <PerspectiveCamera makeDefault position={[-10, 5, 20]} fov={50} />
+            )}
             <OrbitControls ref={controlsRef} enableRotate={view === '3d'} />
-            <CameraRig target={positions.length * 1.5} view={view} />
+            <CameraRig target={positions.length * 3} view={view} />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
+            <EffectComposer>
+              <Bloom luminanceThreshold={0.2} intensity={1.5} />
+            </EffectComposer>
             <group ref={groupRef}>
               {Array.from(branchOffsets.entries()).map(([b, y]) => (
                 <Line

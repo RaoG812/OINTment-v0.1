@@ -19,11 +19,32 @@ const baseURL = process.env.AIML_API_KEY
 
 const client = new OpenAI({ apiKey, baseURL })
 
-export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
-  if (!apiKey) {
-    throw new Error('LLM API key missing')
+async function chat(messages: any[], response_format: any) {
+  if (!apiKey) throw new Error('LLM API key missing')
+  const primary = process.env.LLM_MODEL || 'gpt-5'
+  const models = [primary, 'gpt-4o'].filter((v, i, a) => a.indexOf(v) === i)
+  let lastErr: any
+  for (const m of models) {
+    try {
+      const res = await client.chat.completions.create({
+        model: m,
+        messages,
+        reasoning: m.startsWith('gpt-5') ? ({ effort: 'medium' } as any) : undefined,
+        response_format
+      } as any)
+      return res.choices[0]?.message?.content ?? '{}'
+    } catch (err) {
+      lastErr = err
+    }
   }
+  const status = lastErr?.status || lastErr?.response?.status
+  const body = lastErr?.response?.data
+  const detail = status ? `${status}${body ? ` ${JSON.stringify(body)}` : ''}` : lastErr?.message
+  console.error('LLM analysis failed', lastErr)
+  throw new Error(`LLM analysis failed: ${detail}`)
+}
 
+export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
   // Large repositories can exceed token limits; only send the first 200 entries
   const content = fileList.slice(0, 200).join('\n')
   const messages: any = [
@@ -35,35 +56,15 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
     { role: 'user', content }
   ]
 
-  const model = process.env.LLM_MODEL || 'gpt-5'
-  try {
-    const res = await client.chat.completions.create({
-      model,
-      messages,
-      reasoning: { effort: 'medium' } as any,
-      response_format: { type: 'json_object' }
-    } as any)
-    const txt = res.choices[0]?.message?.content ?? '{}'
-    return JSON.parse(txt)
-  } catch (err: any) {
-    const status = err?.status || err?.response?.status
-    const body = err?.response?.data
-    const detail = status ? `${status}${body ? ` ${JSON.stringify(body)}` : ''}` : err?.message
-    console.error('LLM analysis failed', err)
-    throw new Error(`LLM analysis failed: ${detail}`)
-  }
+  const txt = await chat(messages, { type: 'json_object' })
+  return JSON.parse(txt)
 }
 
 // Categorize commit messages into high-level buckets using the configured LLM.
 export async function categorizeCommits(messages: string[]): Promise<string[]> {
-  if (!apiKey) {
-    throw new Error('LLM API key missing')
-  }
   const prompt = messages.map((m, i) => `${i + 1}. ${m}`).join('\n')
-  const model = process.env.LLM_MODEL || 'gpt-5'
-  const res = await client.chat.completions.create({
-    model,
-    messages: [
+  const txt = await chat(
+    [
       {
         role: 'system',
         content:
@@ -71,9 +72,8 @@ export async function categorizeCommits(messages: string[]): Promise<string[]> {
       },
       { role: 'user', content: prompt }
     ],
-    response_format: { type: 'json_object' }
-  } as any)
-  const txt = res.choices[0]?.message?.content ?? '{"categories": []}'
+    { type: 'json_object' }
+  )
   try {
     const parsed = JSON.parse(txt)
     return Array.isArray(parsed.categories) ? parsed.categories : []

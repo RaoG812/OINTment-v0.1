@@ -19,7 +19,8 @@
     "react-dom": "18.2.0",
     "three": "^0.160.0",
     "@react-three/fiber": "^8.15.10",
-    "@react-three/drei": "^9.99.4"
+    "@react-three/drei": "^9.99.4",
+    "@react-three/postprocessing": "^2.15.8"
   },
   "devDependencies": {
     "@types/adm-zip": "^0.5.7",

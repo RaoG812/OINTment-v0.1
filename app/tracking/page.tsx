@@ -136,9 +136,9 @@ export default function TrackingPage() {
         tgt = new THREE.Vector3(target / 2, 0, 0)
         camera.up.set(0, 0, 1)
       } else if (view === 'front') {
-        to = new THREE.Vector3(0, 5, 20)
-        tgt = new THREE.Vector3(0, 0, 0)
-        rotY = -Math.PI / 2
+        to = new THREE.Vector3(target / 2, 0, 40)
+        tgt = new THREE.Vector3(target / 2, 0, 0)
+        rotX = -Math.PI / 2
         camera.up.set(0, 1, 0)
       } else {
         camera.up.set(0, 1, 0)
@@ -165,6 +165,7 @@ export default function TrackingPage() {
   function CommitSphere({ p }: { p: typeof positions[0] }) {
     const ref = useRef<THREE.Mesh>(null)
     const [hovered, setHovered] = useState(false)
+    const scale = useRef(1)
     const color = useMemo(() => {
       return p.status === 'success'
         ? '#10b981'
@@ -179,6 +180,9 @@ export default function TrackingPage() {
       const intensity = 0.1 + Math.sin(t * 3) * 0.1
       const mat = ref.current?.material as THREE.MeshStandardMaterial
       if (mat) mat.emissiveIntensity = intensity
+      const target = hovered ? 1.3 : 1
+      scale.current = THREE.MathUtils.lerp(scale.current, target, 0.1)
+      ref.current?.scale.setScalar(scale.current)
     })
     return (
       <mesh
@@ -186,7 +190,6 @@ export default function TrackingPage() {
         position={[p.x, p.y, p.z]}
         onPointerOver={() => setHovered(true)}
         onPointerOut={() => setHovered(false)}
-        scale={hovered ? 1.3 : 1}
       >
         <sphereGeometry args={[p.size, 16, 16]} />
         <meshStandardMaterial
@@ -257,10 +260,14 @@ export default function TrackingPage() {
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           <Canvas>
-            {view === 'top' ? (
-              <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={40} />
-            ) : (
+            {view === '3d' ? (
               <PerspectiveCamera makeDefault position={[-10, 5, 20]} fov={50} />
+            ) : (
+              <OrthographicCamera
+                makeDefault
+                position={view === 'top' ? [positions.length * 1.5, 40, 0] : [positions.length * 1.5, 0, 40]}
+                zoom={40}
+              />
             )}
             <OrbitControls ref={controlsRef} enableRotate={view === '3d'} />
             <CameraRig target={positions.length * 3} view={view} />
@@ -281,6 +288,13 @@ export default function TrackingPage() {
                   opacity={0.6}
                   toneMapped={false}
                 />
+              ))}
+              {Array.from(branchOffsets.entries()).map(([b, y]) => (
+                <Html key={`${b}-label`} position={[0, y + 0.3, 0]}>
+                  <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">
+                    {b}
+                  </div>
+                </Html>
               ))}
               {positions.map(p => (
                 <CommitSphere key={p.commit.sha} p={p} />

@@ -188,10 +188,25 @@ export default function MatrixPage(){
             <div>• 12 manifests parsed</div>
           </ExpandableCard>
           <ExpandableCard title="Timeline" summary={`${weeksRemaining} weeks remaining`}>
-            <div className="w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-2">
-              <div className="h-full bg-emerald-500" style={{width: `${readiness.toFixed(0)}%`}} />
+            <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-2">
+              <div
+                className="h-full bg-emerald-500 transition-all duration-700"
+                style={{ width: `${readiness}%` }}
+              />
+              <div
+                className="absolute top-0 -translate-x-1/2"
+                style={{ left: `${readiness}%` }}
+              >
+                <div className="w-px h-2 bg-emerald-400" />
+                <div className="text-[10px] text-emerald-400 mt-1 animate-pulse">WE ARE HERE</div>
+              </div>
             </div>
-            <div className="mt-1 text-[10px] text-right text-zinc-500">Readiness {readiness.toFixed(0)}%</div>
+            <div className="mt-1 text-[10px] text-right text-zinc-500">
+              Readiness {readiness.toFixed(0)}%
+            </div>
+            <div className="mt-1 text-[10px] text-zinc-400">
+              Estimate based on average integration readiness across the project
+            </div>
           </ExpandableCard>
           <Card>
             <div className="text-sm font-semibold mb-2">Category Breakdown</div>

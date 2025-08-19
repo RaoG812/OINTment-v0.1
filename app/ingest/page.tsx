@@ -18,7 +18,7 @@ function Gauge({ value }: { value: number }) {
   const offset = circumference - (value / 100) * circumference
   const color = value >= 80 ? '#10b981' : value >= 60 ? '#f59e0b' : '#ef4444'
   return (
-    <svg viewBox="0 0 52 26" className="w-full">
+    <svg viewBox="0 0 52 26" className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
       <path
         d="M2 24 A 24 24 0 0 1 50 24"
         stroke="#27272a"
@@ -49,7 +49,8 @@ function Gauge({ value }: { value: number }) {
 export default function IngestPage() {
   const [result, setResult] = useState<Result | null>(null)
   const [loading, setLoading] = useState(false)
-  const [showConsole, setShowConsole] = useState(true)
+  // hide console by default; users can reveal as needed
+  const [showConsole, setShowConsole] = useState(false)
   const [repo, setRepo] = useState('')
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
@@ -209,13 +210,15 @@ export default function IngestPage() {
             </ul>
           </Card>
           {(['complexity', 'documentation', 'tests'] as const).map(key => (
-            <Card key={key}>
-              <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
+          <Card key={key}>
+            <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
+            <div className="max-w-[100px] mx-auto">
               <Gauge value={result.analysis.metrics[key]} />
-            </Card>
-          ))}
-        </div>
-      )}
-    </div>
+            </div>
+          </Card>
+        ))}
+      </div>
+    )}
+  </div>
   )
 }

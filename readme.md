@@ -15,7 +15,6 @@ The home page now links to key interfaces:
 - **View Matrix** &mdash; integration matrix prototype at `/matrix`
 - **Track Commits** &mdash; 3D commit map at `/tracking`
 
-
 `npm test` runs a TypeScript type check.
 
 *Binary assets such as `.ico` files are intentionally excluded.*
@@ -46,4 +45,3 @@ tips and code references gathered from the repo.
 The code reference API now searches the entire workspace using `ripgrep`,
 surfacing up to twenty matching lines across TypeScript, JavaScript, and JSON
 files instead of only showing `package.json` entries.
-

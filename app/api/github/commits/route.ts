@@ -80,6 +80,7 @@ export async function GET(req: NextRequest) {
       const idx = parseInt(r.sha.slice(-1), 16)
       r.type = typeFallbacks[idx % typeFallbacks.length]
       r.domain = domainFallbacks[idx % domainFallbacks.length]
+
     })
   }
 

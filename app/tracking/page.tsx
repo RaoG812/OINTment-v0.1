@@ -132,6 +132,7 @@ export default function TrackingPage() {
   const load = async () => {
     if (!repo) return
     setLoading(true)
+
     const entries = await Promise.all(
       branches.map(async b => {
         const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)

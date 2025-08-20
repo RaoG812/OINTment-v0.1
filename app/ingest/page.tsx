@@ -83,6 +83,7 @@ export default function IngestPage() {
     }
   }
 
+
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
     if (stored) setResult(JSON.parse(stored))
@@ -115,6 +116,7 @@ export default function IngestPage() {
       if (repo) localStorage.setItem('repo', repo)
       if (branch) localStorage.setItem('branch', branch)
       if (repo) prefetchTracking(repo)
+
       setError('')
     } catch (err) {
       console.error(err)
@@ -150,6 +152,7 @@ export default function IngestPage() {
       setResult(data)
       localStorage.setItem('ingestResult', JSON.stringify(data))
       if (repo) prefetchTracking(repo)
+
       setError('')
     } catch (err) {
       console.error(err)

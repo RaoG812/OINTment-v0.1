@@ -22,7 +22,7 @@ interface Commit {
   type?: string
   branch?: string
   status?: string
-  offset?: { y: number; z: number }
+  offset?: { x: number; y: number; z: number }
 }
 
 interface DisplayPos {
@@ -226,14 +226,18 @@ export default function TrackingPage() {
     return positions
       .filter(p => branch === 'all' || p.commit.branch === branch)
       .map(p => {
-        const offset = p.commit.offset || { y: 0, z: 0 }
+        const offset = p.commit.offset || { x: 0, y: 0, z: 0 }
         const scale = branch === 'all' ? 1 : view === 'front' ? 1 : 0.3
         const seed = parseInt(p.commit.sha.slice(0, 4), 16)
+        const jitterX = (((Math.floor(seed / 10000)) % 100) / 100 - 0.5) * 0.2
         const jitterY = ((seed % 100) / 100 - 0.5) * 0.2
         const jitterZ = (((Math.floor(seed / 100)) % 100) / 100 - 0.5) * 0.2
         return {
           commit: p.commit,
-          x: Math.round(p.x / GRID_X) * GRID_X,
+          x:
+            Math.round(p.x / GRID_X) * GRID_X +
+            (branch === 'all' ? offset.x * GRID_X : offset.x * GRID_X * 0.3) +
+            jitterX,
           y:
             (branch === 'all'
               ? p.yBase + offset.y
@@ -255,10 +259,16 @@ export default function TrackingPage() {
       if (b === 'main' || arr.length === 0) return
       const parentSha = arr[0].parents?.[0]?.sha
       const parentPos = parentSha ? posBySha.get(parentSha) : undefined
-      if (parentPos) map.set(b, parentPos)
+      if (parentPos) {
+        map.set(b, parentPos)
+      } else {
+        const idx = sorted.findIndex(s => s.sha === arr[0].sha)
+        const x = idx * GRID_X - GRID_X
+        map.set(b, { x, y: 0, z: 0 })
+      }
     })
     return map
-  }, [data, posBySha])
+  }, [data, posBySha, sorted])
 
   const selectCommit = async (c: Commit) => {
     setSelectedCommit(c)
@@ -299,8 +309,8 @@ export default function TrackingPage() {
       if (range) {
         const center = (range.start + range.end) / 2
         if (view === 'top') {
-          to = new THREE.Vector3(center, offset, 40)
-          tgt = new THREE.Vector3(center, offset, 0)
+          to = new THREE.Vector3(center, 0, 40)
+          tgt = new THREE.Vector3(center, 0, 0)
           camera.up.set(0, 1, 0)
         } else if (view === 'front') {
           to = new THREE.Vector3(range.start - 10, offset, 0)
@@ -313,8 +323,8 @@ export default function TrackingPage() {
         }
       } else {
         if (view === 'top') {
-          to = new THREE.Vector3(target / 2, offset, 40)
-          tgt = new THREE.Vector3(target / 2, offset, 0)
+          to = new THREE.Vector3(target / 2, 0, 40)
+          tgt = new THREE.Vector3(target / 2, 0, 0)
           camera.up.set(0, 1, 0)
         } else if (view === 'front') {
           to = new THREE.Vector3(-40, offset, 0)
@@ -526,11 +536,7 @@ export default function TrackingPage() {
             ) : (
               <OrthographicCamera
                 makeDefault
-                position={
-                  view === 'top'
-                    ? [displayPositions.length * 1.5, 0, 40]
-                    : [-40, 0, 0]
-                }
+                position={view === 'top' ? [0, 0, 40] : [-40, 0, 0]}
                 zoom={view === 'front' ? 30 : 40}
               />
             )}

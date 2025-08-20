@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
   const commitsData = await commitsRes.json()
 
   const rawList = await Promise.all(
-    commitsData.slice(0, 20).map(async (c: any) => {
+    commitsData.slice(0, 50).map(async (c: any) => {
       let status = 'unknown'
       let stats: any = undefined
       let parents: { sha: string }[] = []
@@ -78,7 +78,7 @@ export async function GET(req: NextRequest) {
     })
   } catch {
     rawList.forEach(r => {
-      r.offset = { y: 0, z: 0 }
+      r.offset = { x: 0, y: 0, z: 0 }
     })
   }
 

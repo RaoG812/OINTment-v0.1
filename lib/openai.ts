@@ -92,18 +92,18 @@ export async function categorizeCommits(
 }
 
 // Generate small jitter offsets for commits so the 3D view can distribute
-// spheres organically. Returns arrays of y and z offsets in the same order
+// spheres organically. Returns arrays of x, y and z offsets in the same order
 // as the provided commit messages. Values are in the range [-1,1].
 export async function jitterOffsets(
   messages: string[]
-): Promise<{ y: number; z: number }[]> {
+): Promise<{ x: number; y: number; z: number }[]> {
   const prompt = messages.map((m, i) => `${i + 1}. ${m}`).join('\n')
   const txt = await chat(
     [
       {
         role: 'system',
         content:
-          'For each commit message return a pair of numbers {"ys":number[],"zs":number[]} where each value is a float between -1 and 1 representing small offsets for y and z axes. Output JSON only.'
+          'For each commit message return three arrays {"xs":number[],"ys":number[],"zs":number[]} where each value is a float between -1 and 1 representing small offsets for the x, y and z axes. Output JSON only.'
       },
       { role: 'user', content: prompt }
     ],
@@ -111,14 +111,16 @@ export async function jitterOffsets(
   )
   try {
     const parsed = JSON.parse(txt)
+    const xs = Array.isArray(parsed.xs) ? parsed.xs : []
     const ys = Array.isArray(parsed.ys) ? parsed.ys : []
     const zs = Array.isArray(parsed.zs) ? parsed.zs : []
     return messages.map((_, i) => ({
+      x: typeof xs[i] === 'number' ? xs[i] : 0,
       y: typeof ys[i] === 'number' ? ys[i] : 0,
       z: typeof zs[i] === 'number' ? zs[i] : 0
     }))
   } catch {
-    return messages.map(() => ({ y: 0, z: 0 }))
+    return messages.map(() => ({ x: 0, y: 0, z: 0 }))
   }
 }
 

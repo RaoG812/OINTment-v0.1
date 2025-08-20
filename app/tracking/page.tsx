@@ -18,9 +18,20 @@ interface Commit {
   date: string
   stats?: { total: number }
   parents: { sha: string }[]
-  category?: string
+  domain?: string
+  type?: string
   branch?: string
   status?: string
+}
+
+interface DisplayPos {
+  commit: Commit
+  x: number
+  y: number
+  z: number
+  size: number
+  status: string
+  current: boolean
 }
 
 export default function TrackingPage() {
@@ -29,6 +40,7 @@ export default function TrackingPage() {
   const [branches, setBranches] = useState<string[]>([])
   const [data, setData] = useState<Record<string, Commit[]>>({})
   const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
+  const [showLayers, setShowLayers] = useState(false)
 
   // Load stored repo/branch on mount
   useEffect(() => {
@@ -97,30 +109,65 @@ export default function TrackingPage() {
     return map
   }, [data])
 
-  const catOffset = (cat: string) =>
-    cat === 'backend' ? 0.6 : cat === 'frontend' ? 0.2 : cat === 'db' ? -0.2 : -0.6
+  const domainOffset = (d: string) =>
+    d === 'backend' ? 0.6 : d === 'frontend' ? 0.2 : d === 'db' ? -0.2 : -0.6
+  const typeOffsets: Record<string, { y: number; z: number }> = {
+    feature: { y: 0, z: 0.5 },
+    fix: { y: 0.5, z: 0.5 },
+    infra: { y: 0.5, z: 0 },
+    refactor: { y: 0.5, z: -0.5 },
+    test: { y: 0, z: -0.5 },
+    docs: { y: -0.5, z: -0.5 },
+    security: { y: -0.5, z: 0 },
+    data: { y: -0.5, z: 0.5 },
+    other: { y: 0, z: 0 }
+  }
   const latestSha = sorted.at(-1)?.sha
-  const positions = sorted.map((c, i) => ({
-    commit: c,
-    x: i * 3,
-    y: branchOffsets.get(c.branch || '') || 0,
-    z: catOffset(c.category || 'other'),
-    size:
-      Math.max(0.4, Math.min(2, (c.stats?.total || 1) / 50)) * (c.branch === 'main' ? 0.6 : 1),
-    status: c.status || 'unknown',
-    current: c.sha === latestSha
-  }))
+  const positions = sorted.map((c, i) => {
+    const baseY = branchOffsets.get(c.branch || '') || 0
+    const domZ = domainOffset(c.domain || 'other')
+    const type = typeOffsets[c.type || 'other']
+    return {
+      commit: c,
+      x: i * 3,
+      yBase: baseY,
+      domainZ: domZ,
+      typeY: type.y,
+      typeZ: type.z,
+      size:
+        Math.max(0.4, Math.min(2, (c.stats?.total || 1) / 50)) * (c.branch === 'main' ? 0.6 : 1),
+      status: c.status || 'unknown',
+      current: c.sha === latestSha
+    }
+  })
 
-  const posBySha = useMemo(() => {
-    const m = new Map<string, { x: number; y: number; z: number }>()
-    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y, z: p.z }))
-    return m
-  }, [positions])
+  const branchRanges = useMemo(() => {
+    const map = new Map<string, { start: number; end: number }>()
+    Object.entries(data).forEach(([b, arr]) => {
+      const xs = arr
+        .map(c => sorted.findIndex(s => s.sha === c.sha))
+        .filter(i => i >= 0)
+      if (xs.length) map.set(b, { start: Math.min(...xs) * 3, end: Math.max(...xs) * 3 })
+    })
+    return map
+  }, [data, sorted])
 
-  const displayPositions = useMemo(
-    () => (branch === 'all' ? positions : positions.filter(p => p.commit.branch === branch)),
-    [positions, branch]
-  )
+  const displayPositions: DisplayPos[] = useMemo(() => {
+    return positions
+      .filter(p => branch === 'all' || p.commit.branch === branch)
+      .map(p => {
+        const jitter = ((parseInt(p.commit.sha.slice(0, 2), 16) % 20) - 10) / 100
+        return {
+          commit: p.commit,
+          x: p.x,
+          y: branch === 'all' ? p.yBase : p.yBase + p.typeY,
+          z: branch === 'all' ? p.domainZ + jitter : p.typeZ + jitter,
+          size: p.size,
+          status: p.status,
+          current: p.current
+        } as DisplayPos
+      })
+  }, [positions, branch])
 
   const displayPosBySha = useMemo(() => {
     const m = new Map<string, { x: number; y: number; z: number }>()
@@ -130,7 +177,9 @@ export default function TrackingPage() {
 
   const selectedOffset = branch === 'all' ? 0 : branchOffsets.get(branch) || 0
   const pipes: [string, number][] =
-    branch === 'all' ? Array.from(branchOffsets.entries()) : [[branch, selectedOffset]]
+    branch === 'all'
+      ? Array.from(branchOffsets.entries())
+      : ([[branch, selectedOffset]] as [string, number][])
 
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
@@ -173,7 +222,7 @@ export default function TrackingPage() {
     return null
   }
 
-  function CommitSphere({ p }: { p: typeof positions[0] }) {
+  function CommitSphere({ p }: { p: DisplayPos }) {
     const ref = useRef<THREE.Mesh>(null)
     const [hovered, setHovered] = useState(false)
     const scale = useRef(1)
@@ -188,32 +237,25 @@ export default function TrackingPage() {
     }, [p.status])
     useFrame(({ clock }) => {
       const t = clock.getElapsedTime()
-      const intensity = 0.1 + Math.sin(t * 3) * 0.1
-      const mat = ref.current?.material as THREE.MeshStandardMaterial
-      if (mat) mat.emissiveIntensity = intensity
       const target = hovered ? 1.3 : 1
       scale.current = THREE.MathUtils.lerp(scale.current, target, 0.1)
       ref.current?.scale.setScalar(scale.current)
+      const mat = ref.current?.material as THREE.MeshBasicMaterial
+      if (mat) mat.opacity = 0.6 + Math.sin(t * 3) * 0.2
     })
     return (
-      <group position={[p.x, p.y, p.z]}> 
+      <group position={[p.x, p.y, p.z]}>
         <mesh
           ref={ref}
           onPointerOver={() => setHovered(true)}
           onPointerOut={() => setHovered(false)}
         >
           <sphereGeometry args={[p.size, 16, 16]} />
-          <meshStandardMaterial
-            color={color}
-            emissive={color}
-            emissiveIntensity={0.6}
-            metalness={0.9}
-            roughness={0.2}
-          />
+          <meshBasicMaterial color={color} wireframe transparent opacity={0.8} />
         </mesh>
-        <mesh scale={1.5}>
+        <mesh scale={1.2}>
           <sphereGeometry args={[p.size, 16, 16]} />
-          <meshBasicMaterial color={color} transparent opacity={0.3} blending={THREE.AdditiveBlending} />
+          <meshBasicMaterial color={color} transparent opacity={0.2} blending={THREE.AdditiveBlending} />
         </mesh>
         {p.current && (
           <>
@@ -234,6 +276,24 @@ export default function TrackingPage() {
           </Html>
         )}
       </group>
+    )
+  }
+
+  function BranchGrid({ length }: { length: number }) {
+    return (
+      <mesh position={[length / 2, selectedOffset, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[length, 1, Math.max(1, Math.round(length)), 3]} />
+        <meshBasicMaterial color="#334155" wireframe />
+      </mesh>
+    )
+  }
+
+  function AllGrid({ length }: { length: number }) {
+    return (
+      <mesh position={[length / 2, selectedOffset, 0]} rotation={[0, Math.PI / 2, 0]}>
+        <planeGeometry args={[length, 2.4, Math.max(1, Math.round(length)), 4]} />
+        <meshBasicMaterial color="#334155" wireframe />
+      </mesh>
     )
   }
 
@@ -284,6 +344,12 @@ export default function TrackingPage() {
           >
             Front
           </button>
+          <button
+            onClick={() => setShowLayers(s => !s)}
+            className={`px-3 py-2 rounded text-sm ${showLayers ? 'bg-emerald-600' : 'bg-zinc-800'}`}
+          >
+            Layers
+          </button>
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           <Canvas>
@@ -296,7 +362,7 @@ export default function TrackingPage() {
                 zoom={40}
               />
             )}
-            <OrbitControls ref={controlsRef} enableRotate={false} />
+            <OrbitControls ref={controlsRef} enableRotate={view === '3d'} />
             <CameraRig target={displayPositions.length * 3} view={view} offset={selectedOffset} />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
@@ -305,40 +371,60 @@ export default function TrackingPage() {
               <Bloom luminanceThreshold={0.4} intensity={0.8} />
             </EffectComposer>
             <group ref={groupRef}>
-              {pipes.map(([b, y]) => (
-                <>
-                  <mesh
-                    key={`${b}-pipe`}
-                    position={[displayPositions.length * 1.5, y, 0]}
-                    rotation={[0, 0, Math.PI / 2]}
-                  >
-                    <cylinderGeometry args={[0.8, 0.8, displayPositions.length * 3, 32]} />
-                    <meshPhysicalMaterial
+              {view === 'front' && showLayers && (
+                branch === 'all' ? (
+                  <AllGrid length={displayPositions.length * 3} />
+                ) : (
+                  <BranchGrid length={(branchRanges.get(branch)?.end || 0) - (branchRanges.get(branch)?.start || 0)} />
+                )
+              )}
+              {pipes.map(([b, offset]) => {
+                const range = branchRanges.get(b) || { start: 0, end: displayPositions.length * 3 }
+                const len = range.end - range.start
+                const points =
+                  b === 'main'
+                    ? [
+                        new THREE.Vector3(range.start, 0, 0),
+                        new THREE.Vector3(range.end, 0, 0)
+                      ]
+                    : [
+                        new THREE.Vector3(range.start, 0, 0),
+                        new THREE.Vector3(range.start + len * 0.3, offset * 0.3, 0),
+                        new THREE.Vector3(range.start + len * 0.6, offset, 0),
+                        new THREE.Vector3(range.end, offset, 0)
+                      ]
+                const curve = new THREE.CatmullRomCurve3(points)
+                return (
+                  <group key={b}>
+                    {branch === 'all' && (
+                      <mesh onClick={() => setBranch(b)}>
+                        <tubeGeometry args={[curve, 64, 0.6, 16, false]} />
+                        <meshPhysicalMaterial
+                          color="#a855f7"
+                          transparent
+                          opacity={0.25}
+                          roughness={0}
+                          metalness={0}
+                          transmission={1}
+                        />
+                      </mesh>
+                    )}
+                    <Line
+                      points={curve.getPoints(32)}
                       color="#a855f7"
+                      lineWidth={2}
                       transparent
-                      opacity={0.2}
-                      roughness={0}
-                      metalness={0}
-                      transmission={1}
-                      thickness={0.2}
+                      opacity={0.8}
+                      toneMapped={false}
                     />
-                  </mesh>
-                  <Line
-                    key={`${b}-core`}
-                    points={[[0, y, 0], [displayPositions.length * 3, y, 0]]}
-                    color="#a855f7"
-                    lineWidth={2}
-                    transparent
-                    opacity={0.8}
-                    toneMapped={false}
-                  />
-                  {branch === 'all' && (
-                    <Html key={`${b}-label`} position={[0, y + 0.3, 0]}>
-                      <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
-                    </Html>
-                  )}
-                </>
-              ))}
+                    {branch === 'all' && (
+                      <Html position={[range.start, offset + 0.3, 0]}>
+                        <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
+                      </Html>
+                    )}
+                  </group>
+                )
+              })}
               {displayPositions.map(p => (
                 <CommitSphere key={p.commit.sha} p={p} />
               ))}

@@ -60,15 +60,18 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
   return JSON.parse(txt)
 }
 
-// Categorize commit messages into high-level buckets using the configured LLM.
-export async function categorizeCommits(messages: string[]): Promise<string[]> {
+// Categorize commit messages into domain (frontend/backend/db/other) and
+// type (feature/fix/infra/refactor/test/docs/security/data).
+export async function categorizeCommits(
+  messages: string[]
+): Promise<{ domain: string; type: string }[]> {
   const prompt = messages.map((m, i) => `${i + 1}. ${m}`).join('\n')
   const txt = await chat(
     [
       {
         role: 'system',
         content:
-          'Classify each commit message as one of: backend, frontend, db, other. Respond with JSON {"categories": string[]} with same order.'
+          'For each commit message, classify two ways: "domain" from [frontend, backend, db, other] and "type" from [feature, fix, infra, refactor, test, docs, security, data]. Respond with JSON {"domains": string[], "types": string[]} in the same order as given messages.'
       },
       { role: 'user', content: prompt }
     ],
@@ -76,9 +79,14 @@ export async function categorizeCommits(messages: string[]): Promise<string[]> {
   )
   try {
     const parsed = JSON.parse(txt)
-    return Array.isArray(parsed.categories) ? parsed.categories : []
+    const domains = Array.isArray(parsed.domains) ? parsed.domains : []
+    const types = Array.isArray(parsed.types) ? parsed.types : []
+    return messages.map((_, i) => ({
+      domain: domains[i] || 'other',
+      type: types[i] || 'other'
+    }))
   } catch {
-    return []
+    return messages.map(() => ({ domain: 'other', type: 'other' }))
   }
 }
 

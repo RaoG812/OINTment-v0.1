@@ -55,12 +55,18 @@ export async function GET(req: NextRequest) {
     })
   )
 
-  // Ask the LLM to classify commit messages into buckets
+  // Ask the LLM to classify commit messages into domain and type buckets
   try {
-    const categories = await categorizeCommits(rawList.map(c => c.message))
-    categories.forEach((cat: string, i: number) => (rawList[i].category = cat || 'other'))
+    const cats = await categorizeCommits(rawList.map(c => c.message))
+    cats.forEach((c, i) => {
+      rawList[i].domain = c.domain || 'other'
+      rawList[i].type = c.type || 'other'
+    })
   } catch {
-    rawList.forEach(r => (r.category = 'other'))
+    rawList.forEach(r => {
+      r.domain = 'other'
+      r.type = 'other'
+    })
   }
 
   rawList.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())

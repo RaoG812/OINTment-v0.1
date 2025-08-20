@@ -17,14 +17,15 @@ function Card({ children }: { children: React.ReactNode }) {
   )
 }
 
-function HealthOrb({ value }: { value: number }) {
+function HealthOrb({ value, suggestion }: { value: number; suggestion?: string }) {
   const deg = (value / 100) * 360
   const color = value >= 80 ? '#10b981' : value >= 60 ? '#f59e0b' : '#ef4444'
   return (
     <div className="relative w-32 h-32 mx-auto">
       <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(${color} ${deg}deg,#27272a ${deg}deg)` }} />
-      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-zinc-950 to-zinc-900 flex items-center justify-center text-sm">
-        {value}%
+      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-zinc-950 to-zinc-900 flex flex-col items-center justify-center text-center px-2 text-xs">
+        <span className="text-sm">{value}%</span>
+        {suggestion && <span className="mt-1 text-[10px] text-zinc-400">{suggestion}</span>}
       </div>
     </div>
   )
@@ -38,6 +39,9 @@ export default function RoasterPage() {
   const [temp, setTemp] = useState(1)
   const [fix, setFix] = useState('')
   const [fixLoading, setFixLoading] = useState(false)
+  const [packages, setPackages] = useState<string[]>([])
+  const [pkgInfo, setPkgInfo] = useState<Record<string, string>>({})
+  const [activePkg, setActivePkg] = useState('')
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -45,6 +49,7 @@ export default function RoasterPage() {
       try {
         const parsed = JSON.parse(stored)
         if (parsed.analysis) setAnalysis(parsed.analysis)
+        if (parsed.packages) setPackages(parsed.packages)
       } catch {}
     }
     const r = localStorage.getItem('repo')
@@ -92,6 +97,7 @@ export default function RoasterPage() {
       const data = await res.json()
       if (res.ok) {
         setAnalysis(data.analysis)
+        setPackages(data.packages || [])
         localStorage.setItem('ingestResult', JSON.stringify(data))
       }
     } catch {}
@@ -111,6 +117,16 @@ export default function RoasterPage() {
       if (res.ok) setFix(data.suggestion)
     } catch {}
     setFixLoading(false)
+  }
+
+  async function loadPkgInfo(name: string) {
+    setActivePkg(name)
+    if (pkgInfo[name]) return
+    try {
+      const res = await fetch(`/api/pkg?name=${encodeURIComponent(name)}`)
+      const data = await res.json()
+      if (res.ok) setPkgInfo(p => ({ ...p, [name]: data.info }))
+    } catch {}
   }
 
   return (
@@ -164,8 +180,25 @@ export default function RoasterPage() {
                 {fixLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               </button>
             </div>
-            <HealthOrb value={health} />
-            {fix && <p className="text-xs text-zinc-400 mt-2">{fix}</p>}
+            <HealthOrb value={health} suggestion={fix} />
+          </Card>
+
+          <Card>
+            <div className="text-sm font-semibold mb-2">Integration Matrix</div>
+            <div className="flex flex-wrap gap-2">
+              {packages.map(d => (
+                <button
+                  key={d}
+                  onClick={() => loadPkgInfo(d)}
+                  className="text-xs px-2 py-1 bg-zinc-800 rounded hover:bg-zinc-700"
+                >
+                  {d}
+                </button>
+              ))}
+            </div>
+            {activePkg && pkgInfo[activePkg] && (
+              <p className="text-xs text-zinc-400 mt-2">{pkgInfo[activePkg]}</p>
+            )}
           </Card>
 
           <div className="grid md:grid-cols-2 gap-4">

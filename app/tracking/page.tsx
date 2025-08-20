@@ -1,5 +1,6 @@
 'use client'
 
+import * as React from 'react'
 import { useEffect, useMemo, useState, useRef } from 'react'
 import { Canvas, useThree, useFrame } from '@react-three/fiber'
 import {
@@ -41,6 +42,7 @@ export default function TrackingPage() {
   const [data, setData] = useState<Record<string, Commit[]>>({})
   const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
   const [showLayers, setShowLayers] = useState(false)
+  const [hoveredBranch, setHoveredBranch] = useState<string | null>(null)
 
   // Load stored repo/branch on mount
   useEffect(() => {
@@ -56,6 +58,9 @@ export default function TrackingPage() {
   }, [repo])
   useEffect(() => {
     if (branch) localStorage.setItem('branch', branch)
+  }, [branch])
+  useEffect(() => {
+    if (branch !== 'all') setHoveredBranch(null)
   }, [branch])
 
   // Fetch branches only when repo looks valid
@@ -135,7 +140,8 @@ export default function TrackingPage() {
       typeY: type.y,
       typeZ: type.z,
       size:
-        Math.max(0.4, Math.min(2, (c.stats?.total || 1) / 50)) * (c.branch === 'main' ? 0.6 : 1),
+        Math.min(0.35, Math.max(0.2, (c.stats?.total || 1) / 200)) *
+        (c.branch === 'main' ? 0.5 : 1),
       status: c.status || 'unknown',
       current: c.sha === latestSha
     }
@@ -184,24 +190,51 @@ export default function TrackingPage() {
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
 
-  function CameraRig({ target, view, offset }: { target: number; view: '3d' | 'top' | 'front'; offset: number }) {
+  function CameraRig({
+    target,
+    view,
+    offset,
+    range
+  }: {
+    target: number
+    view: '3d' | 'top' | 'front'
+    offset: number
+    range?: { start: number; end: number }
+  }) {
     const { camera } = useThree()
     useEffect(() => {
       const from = camera.position.clone()
-      let to = new THREE.Vector3(-10, offset, 20)
-      let tgt = new THREE.Vector3(target / 2, offset, 0)
-      let rotX = 0
-      let rotY = 0
-      if (view === 'top') {
-        to = new THREE.Vector3(target / 2, 40, offset)
-        tgt = new THREE.Vector3(target / 2, offset, 0)
-        camera.up.set(0, 0, 1)
-      } else if (view === 'front') {
-        to = new THREE.Vector3(-40, offset, 0)
-        tgt = new THREE.Vector3(target, offset, 0)
-        camera.up.set(0, 0, 1)
+      let to: THREE.Vector3
+      let tgt: THREE.Vector3
+      if (range) {
+        const center = (range.start + range.end) / 2
+        if (view === 'top') {
+          to = new THREE.Vector3(center, 30, offset)
+          tgt = new THREE.Vector3(center, offset, 0)
+          camera.up.set(0, 0, 1)
+        } else if (view === 'front') {
+          to = new THREE.Vector3(range.start - 10, offset, 0)
+          tgt = new THREE.Vector3(range.end, offset, 0)
+          camera.up.set(0, 0, 1)
+        } else {
+          to = new THREE.Vector3(range.start - 10, offset, 5)
+          tgt = new THREE.Vector3(range.end, offset, 0)
+          camera.up.set(0, 1, 0)
+        }
       } else {
-        camera.up.set(0, 1, 0)
+        if (view === 'top') {
+          to = new THREE.Vector3(target / 2, 40, offset)
+          tgt = new THREE.Vector3(target / 2, offset, 0)
+          camera.up.set(0, 0, 1)
+        } else if (view === 'front') {
+          to = new THREE.Vector3(-40, offset, 0)
+          tgt = new THREE.Vector3(target, offset, 0)
+          camera.up.set(0, 0, 1)
+        } else {
+          to = new THREE.Vector3(-10, offset, 20)
+          tgt = new THREE.Vector3(target / 2, offset, 0)
+          camera.up.set(0, 1, 0)
+        }
       }
       const startX = groupRef.current?.rotation.x || 0
       const startY = groupRef.current?.rotation.y || 0
@@ -212,13 +245,13 @@ export default function TrackingPage() {
         controlsRef.current?.target.lerp(tgt, t)
         controlsRef.current?.update()
         if (groupRef.current) {
-          groupRef.current.rotation.x = THREE.MathUtils.lerp(startX, rotX, t)
-          groupRef.current.rotation.y = THREE.MathUtils.lerp(startY, rotY, t)
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(startX, 0, t)
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(startY, 0, t)
         }
         if (t < 1) requestAnimationFrame(anim)
       }
       anim()
-    }, [view, target, offset, camera])
+    }, [view, target, offset, range, camera])
     return null
   }
 
@@ -260,17 +293,17 @@ export default function TrackingPage() {
         {p.current && (
           <>
             <mesh>
-              <ringGeometry args={[p.size + 0.1, p.size + 0.2, 32]} />
+              <ringGeometry args={[p.size + 0.02, p.size + 0.04, 32]} />
               <meshBasicMaterial color="#fff" />
             </mesh>
-            <Html distanceFactor={10} position={[0, p.size + 0.3, 0]}>
-              <div className="text-[6px] bg-emerald-600/80 text-white px-1 py-0.5 rounded">WE ARE HERE</div>
+            <Html distanceFactor={50} position={[0, p.size + 0.2, 0]} zIndexRange={[100, 0]}>
+              <div className="text-[5px] bg-emerald-600/80 text-white px-1 py-0.5 rounded">WE ARE HERE</div>
             </Html>
           </>
         )}
         {hovered && (
-          <Html distanceFactor={10} position={[0, p.size + 0.5, 0]}>
-            <div className="text-[10px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
+          <Html distanceFactor={30} position={[0, p.size + 0.3, 0]} zIndexRange={[100, 0]}>
+            <div className="text-[8px] bg-black/70 text-white px-1 py-0.5 rounded whitespace-nowrap">
               {p.commit.sha.slice(0, 7)} {p.commit.message}
             </div>
           </Html>
@@ -279,23 +312,59 @@ export default function TrackingPage() {
     )
   }
 
-  function BranchGrid({ length }: { length: number }) {
+  function BranchPipe({
+    b,
+    curve,
+    range,
+    offset
+  }: {
+    b: string
+    curve: THREE.CatmullRomCurve3
+    range: { start: number; end: number }
+    offset: number
+  }) {
+    const matRef = useRef<THREE.MeshPhysicalMaterial>(null)
+    const active = hoveredBranch === b
+    useFrame(() => {
+      if (matRef.current) {
+        const target = active ? 0.05 : 0.25
+        matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, target, 0.1)
+      }
+    })
     return (
-      <mesh position={[length / 2, selectedOffset, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[length, 1, Math.max(1, Math.round(length)), 3]} />
-        <meshBasicMaterial color="#334155" wireframe />
-      </mesh>
+      <group>
+        <mesh raycast={() => null}>
+          <tubeGeometry args={[curve, 64, 0.5, 16, false]} />
+          <meshPhysicalMaterial
+            ref={matRef}
+            color="#a855f7"
+            transparent
+            opacity={0.25}
+            roughness={0}
+            metalness={0}
+            transmission={0.9}
+            thickness={0.4}
+            depthWrite={false}
+          />
+        </mesh>
+        <Line
+          points={curve.getPoints(32)}
+          color="#a855f7"
+          lineWidth={2}
+          transparent
+          opacity={0.8}
+          toneMapped={false}
+          onPointerOver={() => setHoveredBranch(b)}
+          onPointerOut={() => setHoveredBranch(null)}
+          onClick={() => setBranch(b)}
+        />
+        <Html position={[range.start, offset + 0.3, 0]} zIndexRange={[100, 0]}>
+          <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
+        </Html>
+      </group>
     )
   }
 
-  function AllGrid({ length }: { length: number }) {
-    return (
-      <mesh position={[length / 2, selectedOffset, 0]} rotation={[0, Math.PI / 2, 0]}>
-        <planeGeometry args={[length, 2.4, Math.max(1, Math.round(length)), 4]} />
-        <meshBasicMaterial color="#334155" wireframe />
-      </mesh>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
@@ -345,7 +414,10 @@ export default function TrackingPage() {
             Front
           </button>
           <button
-            onClick={() => setShowLayers(s => !s)}
+            onClick={() => {
+              setView('front')
+              setShowLayers(s => !s)
+            }}
             className={`px-3 py-2 rounded text-sm ${showLayers ? 'bg-emerald-600' : 'bg-zinc-800'}`}
           >
             Layers
@@ -358,12 +430,21 @@ export default function TrackingPage() {
             ) : (
               <OrthographicCamera
                 makeDefault
-                position={view === 'top' ? [displayPositions.length * 1.5, 40, selectedOffset] : [-40, selectedOffset, 0]}
+                position={
+                  view === 'top'
+                    ? [displayPositions.length * 1.5, 40, selectedOffset]
+                    : [-40, selectedOffset, 0]
+                }
                 zoom={40}
               />
             )}
-            <OrbitControls ref={controlsRef} enableRotate={view === '3d'} />
-            <CameraRig target={displayPositions.length * 3} view={view} offset={selectedOffset} />
+            <OrbitControls ref={controlsRef} enableRotate={false} enabled={!showLayers} />
+            <CameraRig
+              target={displayPositions.length * 3}
+              view={view}
+              offset={selectedOffset}
+              range={branch === 'all' ? undefined : branchRanges.get(branch)}
+            />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
             <pointLight position={[0, 5, 10]} intensity={1} />
@@ -371,13 +452,6 @@ export default function TrackingPage() {
               <Bloom luminanceThreshold={0.4} intensity={0.8} />
             </EffectComposer>
             <group ref={groupRef}>
-              {view === 'front' && showLayers && (
-                branch === 'all' ? (
-                  <AllGrid length={displayPositions.length * 3} />
-                ) : (
-                  <BranchGrid length={(branchRanges.get(branch)?.end || 0) - (branchRanges.get(branch)?.start || 0)} />
-                )
-              )}
               {pipes.map(([b, offset]) => {
                 const range = branchRanges.get(b) || { start: 0, end: displayPositions.length * 3 }
                 const len = range.end - range.start
@@ -394,35 +468,18 @@ export default function TrackingPage() {
                         new THREE.Vector3(range.end, offset, 0)
                       ]
                 const curve = new THREE.CatmullRomCurve3(points)
-                return (
-                  <group key={b}>
-                    {branch === 'all' && (
-                      <mesh onClick={() => setBranch(b)}>
-                        <tubeGeometry args={[curve, 64, 0.6, 16, false]} />
-                        <meshPhysicalMaterial
-                          color="#a855f7"
-                          transparent
-                          opacity={0.25}
-                          roughness={0}
-                          metalness={0}
-                          transmission={1}
-                        />
-                      </mesh>
-                    )}
-                    <Line
-                      points={curve.getPoints(32)}
-                      color="#a855f7"
-                      lineWidth={2}
-                      transparent
-                      opacity={0.8}
-                      toneMapped={false}
-                    />
-                    {branch === 'all' && (
-                      <Html position={[range.start, offset + 0.3, 0]}>
-                        <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
-                      </Html>
-                    )}
-                  </group>
+                return branch === 'all' ? (
+                  <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} />
+                ) : (
+                  <Line
+                    key={b}
+                    points={curve.getPoints(32)}
+                    color="#a855f7"
+                    lineWidth={2}
+                    transparent
+                    opacity={0.8}
+                    toneMapped={false}
+                  />
                 )
               })}
               {displayPositions.map(p => (
@@ -447,6 +504,9 @@ export default function TrackingPage() {
               )}
             </group>
           </Canvas>
+          {view === 'front' && showLayers && (
+            <div className="absolute inset-0 pointer-events-none grid-overlay" />
+          )}
           <div className="absolute top-2 right-2 text-[10px] space-y-1">
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10b981]"></span>Success</div>
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#f59e0b]"></span>Pending</div>

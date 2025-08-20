@@ -7,6 +7,7 @@ export async function POST(req: NextRequest) {
   const form = await req.formData()
   const repo = form.get('repo')
   const branch = form.get('branch') || 'main'
+  const temp = parseInt((form.get('temp') as string) || '0')
   let buffer: Buffer
 
   if (typeof repo === 'string' && repo) {
@@ -28,7 +29,7 @@ export async function POST(req: NextRequest) {
   const files = allEntries.filter(e => !e.isDirectory).map(e => e.entryName)
 
   try {
-    const analysis = await summarizeRepo(files)
+    const analysis = await summarizeRepo(files, temp)
     return NextResponse.json({ files, analysis })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'analysis failed'

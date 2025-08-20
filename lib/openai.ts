@@ -45,20 +45,45 @@ async function chat(messages: any[], response_format: any) {
   throw new Error(`LLM analysis failed: ${detail}`)
 }
 
-export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
+export async function summarizeRepo(
+  fileList: string[],
+  level = 0
+): Promise<RepoAnalysis> {
   // Large repositories can exceed token limits; only send the first 200 entries
   const content = fileList.slice(0, 200).join('\n')
+  const tones = [
+    'Provide a gentle, high-level review highlighting strengths and mild suggestions for improvement across backend, frontend, database and other areas.',
+    'Deliver a direct and balanced code audit noting weaknesses, missing pieces and potential risks for backend, frontend, database and other components.',
+    'Produce an unforgiving, highly critical audit that focuses on vulnerabilities, missing tests and documentation, and any red flags in backend, frontend, database and other parts. No praise, only issues.'
+  ]
+  const sys = tones[level] || tones[0]
   const messages: any = [
     {
       role: 'system',
       content:
-        'Summarize the repository file list. Respond with JSON of shape {"overview":string,"takeaways":string[],"metrics":{"complexity":number,"documentation":number,"tests":number}}. Values are 0-100. No extra text.'
+        `${sys} Respond with JSON of shape {"overview":string,"takeaways":string[],"metrics":{"complexity":number,"documentation":number,"tests":number}}. Values are 0-100. No extra text.`
     },
     { role: 'user', content }
   ]
 
   const txt = await chat(messages, { type: 'json_object' })
   return JSON.parse(txt)
+}
+
+export async function suggestFixes(analysis: RepoAnalysis): Promise<string> {
+  const messages = [
+    {
+      role: 'system',
+      content:
+        'Given repository health metrics and critique, propose one concise fix or improvement action for maintainers. Plain text only.'
+    },
+    { role: 'user', content: JSON.stringify(analysis) }
+  ]
+  const res = await client.chat.completions.create({
+    model: 'gpt-4.1-nano',
+    messages
+  } as any)
+  return res.choices[0]?.message?.content?.trim() || ''
 }
 
 // Categorize commit messages into domain (frontend/backend/db/other) and

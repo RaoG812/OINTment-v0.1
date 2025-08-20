@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 import { useEffect, useState } from 'react'
-import { Flame, RefreshCw, AlertTriangle } from 'lucide-react'
+import { Flame, RefreshCw, AlertTriangle, Plus } from 'lucide-react'
 
 type Analysis = {
   overview: string
@@ -17,26 +17,16 @@ function Card({ children }: { children: React.ReactNode }) {
   )
 }
 
-function Gauge({ value }: { value: number }) {
-  const radius = 28
-  const circumference = 2 * Math.PI * radius
-  const offset = circumference - (value / 100) * circumference
+function HealthOrb({ value }: { value: number }) {
+  const deg = (value / 100) * 360
   const color = value >= 80 ? '#10b981' : value >= 60 ? '#f59e0b' : '#ef4444'
   return (
-    <svg viewBox="0 0 120 60" className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
-      <path d="M10 50 A 50 50 0 0 1 110 50" stroke="#27272a" strokeWidth={8} fill="none" />
-      <path
-        d="M10 50 A 50 50 0 0 1 110 50"
-        stroke={color}
-        strokeWidth={8}
-        strokeDasharray={circumference}
-        strokeDashoffset={offset}
-        fill="none"
-      />
-      <text x="60" y="45" textAnchor="middle" fontSize="12" fill="#a1a1aa">
+    <div className="relative w-32 h-32 mx-auto">
+      <div className="absolute inset-0 rounded-full" style={{ background: `conic-gradient(${color} ${deg}deg,#27272a ${deg}deg)` }} />
+      <div className="absolute inset-2 rounded-full bg-gradient-to-br from-zinc-950 to-zinc-900 flex items-center justify-center text-sm">
         {value}%
-      </text>
-    </svg>
+      </div>
+    </div>
   )
 }
 
@@ -46,6 +36,8 @@ export default function RoasterPage() {
   const [branch, setBranch] = useState('')
   const [loading, setLoading] = useState(false)
   const [temp, setTemp] = useState(1)
+  const [fix, setFix] = useState('')
+  const [fixLoading, setFixLoading] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -92,7 +84,9 @@ export default function RoasterPage() {
     const form = new FormData()
     form.append('repo', repo)
     form.append('branch', branch)
+    form.append('temp', String(temp))
     setLoading(true)
+    setFix('')
     try {
       const res = await fetch('/api/ingest', { method: 'POST', body: form })
       const data = await res.json()
@@ -102,6 +96,21 @@ export default function RoasterPage() {
       }
     } catch {}
     setLoading(false)
+  }
+
+  async function requestFix() {
+    if (!analysis || fixLoading) return
+    setFixLoading(true)
+    try {
+      const res = await fetch('/api/fixes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ analysis })
+      })
+      const data = await res.json()
+      if (res.ok) setFix(data.suggestion)
+    } catch {}
+    setFixLoading(false)
   }
 
   return (
@@ -146,8 +155,17 @@ export default function RoasterPage() {
           <Card>
             <div className="flex items-center justify-between mb-4">
               <span className="text-sm font-semibold">Project Health</span>
+              <button
+                onClick={requestFix}
+                disabled={fixLoading}
+                className="p-1 rounded hover:bg-zinc-800"
+                title="Suggest fix"
+              >
+                {fixLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              </button>
             </div>
-            <Gauge value={health} />
+            <HealthOrb value={health} />
+            {fix && <p className="text-xs text-zinc-400 mt-2">{fix}</p>}
           </Card>
 
           <div className="grid md:grid-cols-2 gap-4">
@@ -155,7 +173,7 @@ export default function RoasterPage() {
               <Card key={cat}>
                 <div className="text-sm font-semibold mb-1">{cat} Dept.</div>
                 <p className="text-xs text-zinc-400">
-                  {prefix} {critMap[cat]}
+                  {loading ? 'Roasting...' : `${prefix} ${critMap[cat]}`}
                 </p>
               </Card>
             ))}
@@ -166,9 +184,13 @@ export default function RoasterPage() {
               <AlertTriangle className="w-4 h-4 text-amber-400" />
               Urgent Action
             </div>
-            <p className="text-xs text-zinc-400 mt-2">{urgentSuggestion()}</p>
+            <p className="text-xs text-zinc-400 mt-2">
+              {loading ? 'Analyzing...' : urgentSuggestion()}
+            </p>
           </Card>
         </div>
+      ) : loading ? (
+        <p className="text-sm text-zinc-400">Roasting...</p>
       ) : (
         <p className="text-sm text-zinc-400">No analysis available. Ingest a repository to begin.</p>
       )}

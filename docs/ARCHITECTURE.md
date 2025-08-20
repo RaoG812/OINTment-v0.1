@@ -31,6 +31,7 @@ flowchart LR
 ### Key modules
 - **Ingestor**: clones repo (read-only) or uses GitHub API; schedules a Scan.
 - **Manual Ingestor**: accepts `.zip` uploads from the UI, extracts repository files, and triggers the scan pipeline.
+
 - **Artifact Extractor**: parses manifests (package.json, pnpm-lock.yaml, requirements.txt, go.mod, Dockerfiles, Terraform, GitHub Actions) + README/docs.
 - **Static Analyzers**: AST + pattern scans (Semgrep, bespoke parsers), SBOM generation (CycloneDX), OSV vulnerability mapping.
 - **Embeddings & Index**: chunked code/docs into vector DB (per-commit namespace) to allow narrow LLM contexts.

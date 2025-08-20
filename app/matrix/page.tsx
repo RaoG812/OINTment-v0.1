@@ -10,6 +10,7 @@ import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 ChartJS.register(ArcElement, Tooltip, Legend)
 const Pie = dynamic(() => import('react-chartjs-2').then(m => m.Pie), { ssr: false })
 
+
 // Minimal shadcn pieces (replace with imported components in real app)
 function Card({children}:{children:React.ReactNode}){return <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 shadow-xl p-4 backdrop-blur-sm">{children}</div>}
 function Pill({children}:{children:React.ReactNode}){return <span className="px-3 py-1 rounded-full text-xs bg-zinc-800/80 border border-zinc-700/80">{children}</span>}
@@ -27,17 +28,20 @@ function ExpandableCard({title,summary,children}:{title:string;summary:React.Rea
   )
 }
 
+
 export type Row = {
   logoUrl?: string
   name: string
   category: string
   impact: number
+
   security: number
   ops: number
   health: number
   coupling: number
   upgrade: number
 }
+
 
 function scoreColor(v:number){
   if(v>=80) return 'text-emerald-400'
@@ -124,6 +128,7 @@ export default function MatrixPage(){
     [categoryCounts]
   )
 
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
       <div className="mx-auto max-w-7xl px-6 py-10 space-y-6">
@@ -165,6 +170,7 @@ export default function MatrixPage(){
                     ) : (
                       <Cpu className="w-4 h-4 text-zinc-500" />
                     )}
+
                   </div>
                   <div className="text-sm text-zinc-200">{r.name}</div>
                 </div>
@@ -175,6 +181,7 @@ export default function MatrixPage(){
                   </div>
                 ))}
               </button>
+
             ))}
           </div>
         </Card>
@@ -248,6 +255,7 @@ export default function MatrixPage(){
             </div>
           </Card>
         )}
+
       </div>
     </div>
   )

@@ -22,6 +22,7 @@ export default function Home() {
           View Matrix
         </Link>
       </div>
+
     </main>
   );
 }

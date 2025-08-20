@@ -3,10 +3,12 @@ import './globals.css';
 import { ReactNode } from 'react';
 import Link from 'next/link';
 
+
 export const metadata = {
   title: 'PM Control Suite',
   description: 'Integration matrix prototype',
   icons: { icon: '/favicon.svg' }
+
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
@@ -31,6 +33,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         </header>
         {children}
       </body>
+
     </html>
   );
 }

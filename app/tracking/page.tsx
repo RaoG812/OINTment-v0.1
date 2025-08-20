@@ -332,12 +332,14 @@ export default function TrackingPage() {
     target,
     view,
     offset,
+    depth,
     range,
     branch
   }: {
     target: number
     view: '3d' | 'top' | 'front'
     offset: number
+    depth: number
     range?: { start: number; end: number }
     branch: string
   }) {
@@ -353,12 +355,12 @@ export default function TrackingPage() {
           tgt = new THREE.Vector3(center, 0, 0)
           camera.up.set(0, 0, -1)
         } else if (view === 'front') {
-          to = new THREE.Vector3(range.start - 10, offset, 0)
-          tgt = new THREE.Vector3(range.end, offset, 0)
-          camera.up.set(0, branch === 'all' ? -1 : 1, 0)
+          to = new THREE.Vector3(range.start - 10, offset, depth)
+          tgt = new THREE.Vector3(range.end, offset, depth)
+          camera.up.set(0, 1, 0)
         } else {
-          to = new THREE.Vector3(range.start - 10, offset, 5)
-          tgt = new THREE.Vector3(range.end, offset, 0)
+          to = new THREE.Vector3(range.start - 10, offset, depth + 5)
+          tgt = new THREE.Vector3(range.end, offset, depth)
           camera.up.set(0, 1, 0)
         }
       } else {
@@ -367,22 +369,17 @@ export default function TrackingPage() {
           tgt = new THREE.Vector3(target / 2, 0, 0)
           camera.up.set(0, 0, -1)
         } else if (view === 'front') {
-          to = new THREE.Vector3(-40, offset, 0)
-          tgt = new THREE.Vector3(target, offset, 0)
-          camera.up.set(0, branch === 'all' ? -1 : 1, 0)
+          to = new THREE.Vector3(-40, offset, depth)
+          tgt = new THREE.Vector3(target, offset, depth)
+          camera.up.set(0, 1, 0)
         } else {
-          to = new THREE.Vector3(-10, offset, 20)
-          tgt = new THREE.Vector3(target / 2, offset, 0)
+          to = new THREE.Vector3(-10, offset, depth + 20)
+          tgt = new THREE.Vector3(target / 2, offset, depth)
           camera.up.set(0, 1, 0)
         }
       }
       const startRot = groupRef.current?.rotation.clone() || new THREE.Euler()
-      const endRot =
-        view === 'front'
-          ? branch === 'all'
-            ? new THREE.Euler(0, Math.PI / 2, Math.PI)
-            : new THREE.Euler(0, Math.PI / 2, -Math.PI / 2)
-          : new THREE.Euler(0, 0, 0)
+      const endRot = new THREE.Euler(0, 0, 0)
       let t = 0
       const anim = () => {
         t += 0.05
@@ -589,14 +586,15 @@ export default function TrackingPage() {
           <OrbitControls
             ref={controlsRef}
             enableRotate={view === '3d'}
-            enablePan={view !== 'top'}
+            enablePan
             enableZoom={view === '3d'}
-            screenSpacePanning={view !== 'top'}
+            screenSpacePanning
           />
             <CameraRig
               target={displayPositions.length * GRID_X}
               view={view}
               offset={selectedPos.y}
+              depth={selectedPos.z}
               range={showLayers ? undefined : branch === 'all' ? undefined : branchRanges.get(branch)}
               branch={branch}
             />

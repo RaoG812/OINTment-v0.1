@@ -332,12 +332,14 @@ export default function TrackingPage() {
     target,
     view,
     offset,
-    range
+    range,
+    branch
   }: {
     target: number
     view: '3d' | 'top' | 'front'
     offset: number
     range?: { start: number; end: number }
+    branch: string
   }) {
     const { camera } = useThree()
     useEffect(() => {
@@ -353,7 +355,7 @@ export default function TrackingPage() {
         } else if (view === 'front') {
           to = new THREE.Vector3(range.start - 10, offset, 0)
           tgt = new THREE.Vector3(range.end, offset, 0)
-          camera.up.set(0, 1, 0)
+          camera.up.set(0, branch === 'all' ? -1 : 1, 0)
         } else {
           to = new THREE.Vector3(range.start - 10, offset, 5)
           tgt = new THREE.Vector3(range.end, offset, 0)
@@ -367,7 +369,7 @@ export default function TrackingPage() {
         } else if (view === 'front') {
           to = new THREE.Vector3(-40, offset, 0)
           tgt = new THREE.Vector3(target, offset, 0)
-          camera.up.set(0, 1, 0)
+          camera.up.set(0, branch === 'all' ? -1 : 1, 0)
         } else {
           to = new THREE.Vector3(-10, offset, 20)
           tgt = new THREE.Vector3(target / 2, offset, 0)
@@ -375,7 +377,12 @@ export default function TrackingPage() {
         }
       }
       const startRot = groupRef.current?.rotation.clone() || new THREE.Euler()
-      const endRot = view === 'front' ? new THREE.Euler(0, Math.PI / 2, 0) : new THREE.Euler(0, 0, 0)
+      const endRot =
+        view === 'front'
+          ? branch === 'all'
+            ? new THREE.Euler(0, Math.PI / 2, Math.PI)
+            : new THREE.Euler(0, Math.PI / 2, -Math.PI / 2)
+          : new THREE.Euler(0, 0, 0)
       let t = 0
       const anim = () => {
         t += 0.05
@@ -390,7 +397,7 @@ export default function TrackingPage() {
         if (t < 1) requestAnimationFrame(anim)
       }
       anim()
-    }, [view, target, offset, range, camera])
+    }, [view, target, offset, range, branch, camera])
     return null
   }
 
@@ -582,15 +589,16 @@ export default function TrackingPage() {
           <OrbitControls
             ref={controlsRef}
             enableRotate={view === '3d'}
-            enablePan={view !== 'front'}
-            enableZoom={view !== 'front'}
-            screenSpacePanning={view !== 'front'}
+            enablePan={view !== 'top'}
+            enableZoom={view === '3d'}
+            screenSpacePanning={view !== 'top'}
           />
             <CameraRig
               target={displayPositions.length * GRID_X}
               view={view}
               offset={selectedPos.y}
               range={showLayers ? undefined : branch === 'all' ? undefined : branchRanges.get(branch)}
+              branch={branch}
             />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />

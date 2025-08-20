@@ -44,6 +44,24 @@ export default function TrackingPage() {
   const [showLayers, setShowLayers] = useState(false)
   const [hoveredBranch, setHoveredBranch] = useState<string | null>(null)
 
+  const typeLayerLabels = [
+    { text: 'Refactor', style: { top: '2%', left: '2%' } },
+    { text: 'Infra', style: { top: '2%', left: '34%' } },
+    { text: 'Fix', style: { top: '2%', right: '2%' } },
+    { text: 'Test', style: { top: '34%', left: '2%' } },
+    { text: 'Feature', style: { top: '34%', right: '2%' } },
+    { text: 'Docs', style: { bottom: '2%', left: '2%' } },
+    { text: 'Security', style: { bottom: '2%', left: '34%' } },
+    { text: 'Data', style: { bottom: '2%', right: '2%' } }
+  ]
+
+  const domainLayerLabels = [
+    { text: 'Frontend', style: { top: '2%', left: '2%' } },
+    { text: 'Backend', style: { top: '27%', left: '2%' } },
+    { text: 'DB', style: { top: '52%', left: '2%' } },
+    { text: 'Other', style: { bottom: '2%', left: '2%' } }
+  ]
+
   // Load stored repo/branch on mount
   useEffect(() => {
     const storedRepo = localStorage.getItem('repo')
@@ -115,7 +133,7 @@ export default function TrackingPage() {
   }, [data])
 
   const domainOffset = (d: string) =>
-    d === 'backend' ? 0.6 : d === 'frontend' ? 0.2 : d === 'db' ? -0.2 : -0.6
+    d === 'frontend' ? 0.6 : d === 'backend' ? 0.2 : d === 'db' ? -0.2 : -0.6
   const typeOffsets: Record<string, { y: number; z: number }> = {
     feature: { y: 0, z: 0.5 },
     fix: { y: 0.5, z: 0.5 },
@@ -238,6 +256,8 @@ export default function TrackingPage() {
       }
       const startX = groupRef.current?.rotation.x || 0
       const startY = groupRef.current?.rotation.y || 0
+      const startZ = groupRef.current?.rotation.z || 0
+      const endZ = view === 'top' ? Math.PI : 0
       let t = 0
       const anim = () => {
         t += 0.05
@@ -247,6 +267,7 @@ export default function TrackingPage() {
         if (groupRef.current) {
           groupRef.current.rotation.x = THREE.MathUtils.lerp(startX, 0, t)
           groupRef.current.rotation.y = THREE.MathUtils.lerp(startY, 0, t)
+          groupRef.current.rotation.z = THREE.MathUtils.lerp(startZ, endZ, t)
         }
         if (t < 1) requestAnimationFrame(anim)
       }
@@ -438,12 +459,12 @@ export default function TrackingPage() {
                 zoom={40}
               />
             )}
-            <OrbitControls ref={controlsRef} enableRotate={false} enabled={!showLayers} />
+            <OrbitControls ref={controlsRef} enabled={view === '3d'} />
             <CameraRig
               target={displayPositions.length * 3}
               view={view}
               offset={selectedOffset}
-              range={branch === 'all' ? undefined : branchRanges.get(branch)}
+              range={showLayers ? undefined : branch === 'all' ? undefined : branchRanges.get(branch)}
             />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
@@ -505,7 +526,21 @@ export default function TrackingPage() {
             </group>
           </Canvas>
           {view === 'front' && showLayers && (
-            <div className="absolute inset-0 pointer-events-none grid-overlay" />
+            <div
+              className={`absolute inset-0 pointer-events-none ${
+                branch === 'all' ? 'grid-overlay-4' : 'grid-overlay-3'
+              }`}
+            >
+              {(branch === 'all' ? domainLayerLabels : typeLayerLabels).map(l => (
+                <span
+                  key={l.text}
+                  className="absolute text-[10px] text-white/40"
+                  style={l.style as React.CSSProperties}
+                >
+                  {l.text}
+                </span>
+              ))}
+            </div>
           )}
           <div className="absolute top-2 right-2 text-[10px] space-y-1">
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#10b981]"></span>Success</div>

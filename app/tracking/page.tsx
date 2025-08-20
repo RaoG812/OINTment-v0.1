@@ -135,14 +135,14 @@ export default function TrackingPage() {
   const domainOffset = (d: string) =>
     d === 'frontend' ? 0.6 : d === 'backend' ? 0.2 : d === 'db' ? -0.2 : -0.6
   const typeOffsets: Record<string, { y: number; z: number }> = {
-    feature: { y: 0, z: 0.5 },
-    fix: { y: 0.5, z: 0.5 },
-    infra: { y: 0.5, z: 0 },
-    refactor: { y: 0.5, z: -0.5 },
-    test: { y: 0, z: -0.5 },
-    docs: { y: -0.5, z: -0.5 },
-    security: { y: -0.5, z: 0 },
-    data: { y: -0.5, z: 0.5 },
+    feature: { y: 0, z: 1 },
+    fix: { y: 1, z: 1 },
+    infra: { y: 1, z: 0 },
+    refactor: { y: 1, z: -1 },
+    test: { y: 0, z: -1 },
+    docs: { y: -1, z: -1 },
+    security: { y: -1, z: 0 },
+    data: { y: -1, z: 1 },
     other: { y: 0, z: 0 }
   }
   const latestSha = sorted.at(-1)?.sha
@@ -176,28 +176,46 @@ export default function TrackingPage() {
     return map
   }, [data, sorted])
 
+  const posBySha = useMemo(() => {
+    const m = new Map<string, { x: number; y: number }>()
+    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.yBase }))
+    return m
+  }, [positions])
+
   const displayPositions: DisplayPos[] = useMemo(() => {
     return positions
       .filter(p => branch === 'all' || p.commit.branch === branch)
       .map(p => {
         const jitter = ((parseInt(p.commit.sha.slice(0, 2), 16) % 20) - 10) / 100
+        const scale = branch === 'all' ? 1 : view === 'front' ? 1 : 0.3
         return {
           commit: p.commit,
           x: p.x,
-          y: branch === 'all' ? p.yBase : p.yBase + p.typeY,
-          z: branch === 'all' ? p.domainZ + jitter : p.typeZ + jitter,
+          y: branch === 'all' ? p.yBase : p.yBase + p.typeY * scale,
+          z: branch === 'all' ? p.domainZ + jitter : p.typeZ * scale + jitter,
           size: p.size,
           status: p.status,
           current: p.current
         } as DisplayPos
       })
-  }, [positions, branch])
+  }, [positions, branch, view])
 
   const displayPosBySha = useMemo(() => {
     const m = new Map<string, { x: number; y: number; z: number }>()
     displayPositions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y, z: p.z }))
     return m
   }, [displayPositions])
+
+  const branchOrigins = useMemo(() => {
+    const map = new Map<string, { x: number; y: number }>()
+    Object.entries(data).forEach(([b, arr]) => {
+      if (b === 'main' || arr.length === 0) return
+      const parentSha = arr[0].parents?.[0]?.sha
+      const parentPos = parentSha ? posBySha.get(parentSha) : undefined
+      if (parentPos) map.set(b, parentPos)
+    })
+    return map
+  }, [data, posBySha])
 
   const selectedOffset = branch === 'all' ? 0 : branchOffsets.get(branch) || 0
   const pipes: [string, number][] =
@@ -227,9 +245,9 @@ export default function TrackingPage() {
       if (range) {
         const center = (range.start + range.end) / 2
         if (view === 'top') {
-          to = new THREE.Vector3(center, 30, offset)
+          to = new THREE.Vector3(center, offset, 40)
           tgt = new THREE.Vector3(center, offset, 0)
-          camera.up.set(0, 0, 1)
+          camera.up.set(0, 1, 0)
         } else if (view === 'front') {
           to = new THREE.Vector3(range.start - 10, offset, 0)
           tgt = new THREE.Vector3(range.end, offset, 0)
@@ -241,9 +259,9 @@ export default function TrackingPage() {
         }
       } else {
         if (view === 'top') {
-          to = new THREE.Vector3(target / 2, 40, offset)
+          to = new THREE.Vector3(target / 2, offset, 40)
           tgt = new THREE.Vector3(target / 2, offset, 0)
-          camera.up.set(0, 0, 1)
+          camera.up.set(0, 1, 0)
         } else if (view === 'front') {
           to = new THREE.Vector3(-40, offset, 0)
           tgt = new THREE.Vector3(target, offset, 0)
@@ -452,13 +470,13 @@ export default function TrackingPage() {
               <OrthographicCamera
                 makeDefault
                 position={
-                  view === 'top'
-                    ? [displayPositions.length * 1.5, 40, selectedOffset]
-                    : [-40, selectedOffset, 0]
-                }
-                zoom={40}
-              />
-            )}
+              view === 'top'
+                ? [displayPositions.length * 1.5, selectedOffset, 40]
+                : [-40, selectedOffset, 0]
+            }
+            zoom={40}
+          />
+        )}
             <OrbitControls ref={controlsRef} enabled={view === '3d'} />
             <CameraRig
               target={displayPositions.length * 3}
@@ -476,11 +494,20 @@ export default function TrackingPage() {
               {pipes.map(([b, offset]) => {
                 const range = branchRanges.get(b) || { start: 0, end: displayPositions.length * 3 }
                 const len = range.end - range.start
+                const origin = branchOrigins.get(b)
                 const points =
                   b === 'main'
                     ? [
                         new THREE.Vector3(range.start, 0, 0),
                         new THREE.Vector3(range.end, 0, 0)
+                      ]
+                    : origin
+                    ? [
+                        new THREE.Vector3(origin.x, origin.y, 0),
+                        new THREE.Vector3(range.start, offset * 0.3, 0),
+                        new THREE.Vector3(range.start + len * 0.3, offset * 0.6, 0),
+                        new THREE.Vector3(range.start + len * 0.6, offset, 0),
+                        new THREE.Vector3(range.end, offset, 0)
                       ]
                     : [
                         new THREE.Vector3(range.start, 0, 0),

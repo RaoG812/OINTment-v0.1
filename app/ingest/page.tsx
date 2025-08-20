@@ -57,6 +57,32 @@ export default function IngestPage() {
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
 
+  async function prefetchTracking(repo: string) {
+    try {
+      const brRes = await fetch(`/api/github/branches?repo=${repo}`)
+      const brData = await (brRes.ok ? brRes.json() : [])
+      if (!Array.isArray(brData)) return
+      const names = brData.map((d: any) => d.name)
+      const offsets: Record<string, { x: number; y: number; z: number }> = {}
+      brData.forEach((d: any) => {
+        offsets[d.name] = d.offset || { x: 0, y: 0, z: 0 }
+      })
+      const entries = await Promise.all(
+        names.map(async b => {
+          const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
+          const j = await r.json()
+          return [b, Array.isArray(j) ? j : []]
+        })
+      )
+      localStorage.setItem(
+        'trackingData',
+        JSON.stringify({ branches: names, offsets, data: Object.fromEntries(entries) })
+      )
+    } catch {
+      /* ignore prefetch errors */
+    }
+  }
+
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
     if (stored) setResult(JSON.parse(stored))
@@ -88,6 +114,7 @@ export default function IngestPage() {
       localStorage.setItem('ingestResult', JSON.stringify(data))
       if (repo) localStorage.setItem('repo', repo)
       if (branch) localStorage.setItem('branch', branch)
+      if (repo) prefetchTracking(repo)
       setError('')
     } catch (err) {
       console.error(err)
@@ -122,6 +149,7 @@ export default function IngestPage() {
       if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
       localStorage.setItem('ingestResult', JSON.stringify(data))
+      if (repo) prefetchTracking(repo)
       setError('')
     } catch (err) {
       console.error(err)

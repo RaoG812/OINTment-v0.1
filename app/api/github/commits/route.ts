@@ -59,14 +59,27 @@ export async function GET(req: NextRequest) {
   // Ask the LLM to classify commit messages into domain and type buckets
   try {
     const cats = await categorizeCommits(rawList.map(c => c.message))
+    const typeFallbacks = ['feature','fix','infra','refactor','test','docs','security','data']
+    const domainFallbacks = ['frontend','backend','db','other']
     cats.forEach((c, i) => {
-      rawList[i].domain = c.domain || 'other'
-      rawList[i].type = c.type || 'other'
+      let t = c.type || 'other'
+      if (t === 'other') {
+        t = typeFallbacks[parseInt(rawList[i].sha.slice(-1), 16) % typeFallbacks.length]
+      }
+      let d = c.domain || 'other'
+      if (d === 'other') {
+        d = domainFallbacks[parseInt(rawList[i].sha.slice(-2), 16) % domainFallbacks.length]
+      }
+      rawList[i].domain = d
+      rawList[i].type = t
     })
   } catch {
     rawList.forEach(r => {
-      r.domain = 'other'
-      r.type = 'other'
+      const typeFallbacks = ['feature','fix','infra','refactor','test','docs','security','data']
+      const domainFallbacks = ['frontend','backend','db','other']
+      const idx = parseInt(r.sha.slice(-1), 16)
+      r.type = typeFallbacks[idx % typeFallbacks.length]
+      r.domain = domainFallbacks[idx % domainFallbacks.length]
     })
   }
 

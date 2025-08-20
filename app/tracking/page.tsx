@@ -46,6 +46,7 @@ export default function TrackingPage() {
   const [hoveredBranch, setHoveredBranch] = useState<string | null>(null)
   const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null)
   const [selectedFiles, setSelectedFiles] = useState<{ filename: string; status: string; additions: number; deletions: number; patch?: string }[]>([])
+  const [loading, setLoading] = useState(false)
   const closeModal = () => {
     setSelectedCommit(null)
     setSelectedFiles([])
@@ -73,8 +74,17 @@ export default function TrackingPage() {
   useEffect(() => {
     const storedRepo = localStorage.getItem('repo')
     const storedBranch = localStorage.getItem('branch')
+    const storedTracking = localStorage.getItem('trackingData')
     if (storedRepo) setRepo(storedRepo)
     if (storedBranch) setBranch(storedBranch)
+    if (storedTracking) {
+      try {
+        const parsed = JSON.parse(storedTracking)
+        if (parsed.branches) setBranches(parsed.branches)
+        if (parsed.offsets) setBranchOffsets(parsed.offsets)
+        if (parsed.data) setData(parsed.data)
+      } catch {}
+    }
   }, [])
 
   // Persist repo and branch selections
@@ -121,6 +131,7 @@ export default function TrackingPage() {
 
   const load = async () => {
     if (!repo) return
+    setLoading(true)
     const entries = await Promise.all(
       branches.map(async b => {
         const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
@@ -128,7 +139,13 @@ export default function TrackingPage() {
         return [b, Array.isArray(d) ? d : []] as [string, Commit[]]
       })
     )
-    setData(Object.fromEntries(entries))
+    const obj = Object.fromEntries(entries)
+    setData(obj)
+    localStorage.setItem(
+      'trackingData',
+      JSON.stringify({ branches, offsets: branchOffsets, data: obj })
+    )
+    setLoading(false)
   }
 
   const allCommits = useMemo(() => {
@@ -258,7 +275,7 @@ export default function TrackingPage() {
       .filter(p => branch === 'all' || p.commit.branch === branch)
       .map(p => {
         const offset = p.commit.offset || { x: 0, y: 0, z: 0 }
-        const scale = branch === 'all' ? 1 : view === 'front' ? 1 : 0.3
+        const scale = branch === 'all' ? 1 : 0.3
         const seed = parseInt(p.commit.sha.slice(0, 4), 16)
         const jitterX = (((Math.floor(seed / 10000)) % 100) / 100 - 0.5) * 0.2
         const jitterY = ((seed % 100) / 100 - 0.5) * 0.2
@@ -572,6 +589,11 @@ export default function TrackingPage() {
           </button>
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
+          {loading && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60">
+              <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+            </div>
+          )}
           <Canvas>
             {view === '3d' ? (
               <PerspectiveCamera makeDefault position={[-10, selectedPos.y, 20]} fov={50} />

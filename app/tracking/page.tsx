@@ -39,6 +39,7 @@ export default function TrackingPage() {
   const [repo, setRepo] = useState('')
   const [branch, setBranch] = useState('all')
   const [branches, setBranches] = useState<string[]>([])
+  const [branchOffsets, setBranchOffsets] = useState<Record<string, { x: number; y: number; z: number }>>({})
   const [data, setData] = useState<Record<string, Commit[]>>({})
   const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
   const [showLayers, setShowLayers] = useState(false)
@@ -93,10 +94,26 @@ export default function TrackingPage() {
       if (/^[\w.-]+\/[\w.-]+$/.test(repo)) {
         fetch(`/api/github/branches?repo=${repo}`)
           .then(r => (r.ok ? r.json() : []))
-          .then(data => setBranches(Array.isArray(data) ? data : []))
-          .catch(() => setBranches([]))
+          .then(data => {
+            if (Array.isArray(data)) {
+              setBranches(data.map((d: any) => d.name))
+              const map: Record<string, { x: number; y: number; z: number }> = {}
+              data.forEach((d: any) => {
+                map[d.name] = d.offset || { x: 0, y: 0, z: 0 }
+              })
+              setBranchOffsets(map)
+            } else {
+              setBranches([])
+              setBranchOffsets({})
+            }
+          })
+          .catch(() => {
+            setBranches([])
+            setBranchOffsets({})
+          })
       } else {
         setBranches([])
+        setBranchOffsets({})
       }
     }, 300)
     return () => clearTimeout(handle)
@@ -156,10 +173,11 @@ export default function TrackingPage() {
       const sign = count % 2 === 0 ? 1 : -1
       const depth = (Math.floor(count / 2) + 1) * 2 * sign
       counters[dom] = count + 1
-      map.set(b, { y: layerY(dom), z: depth })
+      const jit = branchOffsets[b] || { x: 0, y: 0, z: 0 }
+      map.set(b, { y: layerY(dom) + jit.y * 0.3, z: depth + jit.z * 0.3 })
     })
     return map
-  }, [data, branchDomains])
+  }, [data, branchDomains, branchOffsets])
   const typeOffsets: Record<string, { y: number; z: number }> = {
     feature: { y: 0, z: 1 },
     fix: { y: 1, z: 1 },
@@ -236,15 +254,15 @@ export default function TrackingPage() {
           commit: p.commit,
           x:
             Math.round(p.x / GRID_X) * GRID_X +
-            (branch === 'all' ? offset.x * GRID_X : offset.x * GRID_X * 0.3) +
+            (branch === 'all' ? offset.x * GRID_X * 0.3 : offset.x * GRID_X * 0.3) +
             jitterX,
           y:
             (branch === 'all'
-              ? p.yBase + offset.y
+              ? p.yBase + offset.y * 0.3
               : p.yBase + p.typeY * scale + offset.y * scale) + jitterY,
           z:
             (branch === 'all'
-              ? p.zBase + offset.z
+              ? p.zBase + offset.z * 0.3
               : p.zBase + p.typeZ * scale + offset.z * scale) + jitterZ,
           size: p.size,
           status: p.status,
@@ -440,7 +458,7 @@ export default function TrackingPage() {
     return (
       <group>
         <mesh raycast={() => null}>
-          <tubeGeometry args={[curve, 64, 0.5, 16, false]} />
+          <tubeGeometry args={[curve, 128, 0.5, 16, false]} />
           <meshPhysicalMaterial
             ref={matRef}
             color={color}
@@ -454,7 +472,7 @@ export default function TrackingPage() {
           />
         </mesh>
         <Line
-          points={curve.getPoints(32)}
+          points={curve.getPoints(64)}
           color={color}
           lineWidth={2}
           transparent
@@ -573,26 +591,14 @@ export default function TrackingPage() {
                         new THREE.Vector3(range.end, offset, z)
                       ]
                     : origin
-                    ? (() => {
-                        const dir = range.start - origin.x
-                        const first = new THREE.Vector3(
-                          origin.x + Math.min(1, dir * 0.2),
-                          origin.y + offset * 0.1,
-                          z
-                        )
-                        return [
-                          new THREE.Vector3(origin.x, origin.y, origin.z),
-                          first,
-                          new THREE.Vector3(range.start, offset * 0.3, z),
-                          new THREE.Vector3(range.start + len * 0.3, offset * 0.6, z),
-                          new THREE.Vector3(range.start + len * 0.6, offset, z),
-                          new THREE.Vector3(range.end, offset, z)
-                        ]
-                      })()
+                    ? [
+                        new THREE.Vector3(origin.x, origin.y, origin.z),
+                        new THREE.Vector3((origin.x + range.start) / 2, (origin.y + offset) / 2, z),
+                        new THREE.Vector3(range.start, offset, z),
+                        new THREE.Vector3(range.end, offset, z)
+                      ]
                     : [
-                        new THREE.Vector3(range.start, 0, z),
-                        new THREE.Vector3(range.start + len * 0.3, offset * 0.3, z),
-                        new THREE.Vector3(range.start + len * 0.6, offset, z),
+                        new THREE.Vector3(range.start, offset, z),
                         new THREE.Vector3(range.end, offset, z)
                       ]
                 const curve = new THREE.CatmullRomCurve3(basePoints)

@@ -103,7 +103,11 @@ export default function IngestPage() {
     if (!repo) return
     const res = await fetch(`/api/github/branches?repo=${repo}`)
     const data = await (res.ok ? res.json() : Promise.resolve([]))
-    setBranches(Array.isArray(data) ? data : [])
+    if (Array.isArray(data)) {
+      setBranches(data.map((d: any) => d.name))
+    } else {
+      setBranches([])
+    }
   }
 
   async function analyzeRepo() {

@@ -234,6 +234,19 @@ export default function TrackingPage() {
     return map
   }, [data, sorted])
 
+  const laneBounds = useMemo(() => {
+    const map = new Map<string, THREE.Box3>()
+    branchRanges.forEach((range, b) => {
+      const pos = branchPositions.get(b)
+      if (pos) {
+        const min = new THREE.Vector3(range.start, pos.y - 0.5, pos.z - 0.5)
+        const max = new THREE.Vector3(range.end, pos.y + 0.5, pos.z + 0.5)
+        map.set(b, new THREE.Box3(min, max))
+      }
+    })
+    return map
+  }, [branchRanges, branchPositions])
+
   const posBySha = useMemo(() => {
     const m = new Map<string, { x: number; y: number; z: number }>()
     positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.yBase, z: p.zBase }))
@@ -250,26 +263,33 @@ export default function TrackingPage() {
         const jitterX = (((Math.floor(seed / 10000)) % 100) / 100 - 0.5) * 0.2
         const jitterY = ((seed % 100) / 100 - 0.5) * 0.2
         const jitterZ = (((Math.floor(seed / 100)) % 100) / 100 - 0.5) * 0.2
-        return {
-          commit: p.commit,
-          x:
-            Math.round(p.x / GRID_X) * GRID_X +
+        const vec = new THREE.Vector3(
+          Math.round(p.x / GRID_X) * GRID_X +
             (branch === 'all' ? offset.x * GRID_X * 0.3 : offset.x * GRID_X * 0.3) +
             jitterX,
-          y:
-            (branch === 'all'
-              ? p.yBase + offset.y * 0.3
-              : p.yBase + p.typeY * scale + offset.y * scale) + jitterY,
-          z:
-            (branch === 'all'
-              ? p.zBase + offset.z * 0.3
-              : p.zBase + p.typeZ * scale + offset.z * scale) + jitterZ,
+          (branch === 'all'
+            ? p.yBase + offset.y * 0.3
+            : p.yBase + p.typeY * scale + offset.y * scale) + jitterY,
+          (branch === 'all'
+            ? p.zBase + offset.z * 0.3
+            : p.zBase + p.typeZ * scale + offset.z * scale) + jitterZ
+        )
+        const box =
+          branch === 'all'
+            ? laneBounds.get(p.commit.branch || 'main')
+            : laneBounds.get(branch)
+        if (box) box.clampPoint(vec, vec)
+        return {
+          commit: p.commit,
+          x: vec.x,
+          y: vec.y,
+          z: vec.z,
           size: p.size,
           status: p.status,
           current: p.current
         } as DisplayPos
       })
-  }, [positions, branch, view])
+  }, [positions, branch, view, laneBounds])
 
   const branchOrigins = useMemo(() => {
     const map = new Map<string, { x: number; y: number; z: number }>()
@@ -327,13 +347,13 @@ export default function TrackingPage() {
       if (range) {
         const center = (range.start + range.end) / 2
         if (view === 'top') {
-          to = new THREE.Vector3(center, 0, 40)
+          to = new THREE.Vector3(center, 40, 0)
           tgt = new THREE.Vector3(center, 0, 0)
-          camera.up.set(0, 1, 0)
+          camera.up.set(0, 0, -1)
         } else if (view === 'front') {
           to = new THREE.Vector3(range.start - 10, offset, 0)
           tgt = new THREE.Vector3(range.end, offset, 0)
-          camera.up.set(0, 0, 1)
+          camera.up.set(0, 1, 0)
         } else {
           to = new THREE.Vector3(range.start - 10, offset, 5)
           tgt = new THREE.Vector3(range.end, offset, 0)
@@ -341,13 +361,13 @@ export default function TrackingPage() {
         }
       } else {
         if (view === 'top') {
-          to = new THREE.Vector3(target / 2, 0, 40)
+          to = new THREE.Vector3(target / 2, 40, 0)
           tgt = new THREE.Vector3(target / 2, 0, 0)
-          camera.up.set(0, 1, 0)
+          camera.up.set(0, 0, -1)
         } else if (view === 'front') {
           to = new THREE.Vector3(-40, offset, 0)
           tgt = new THREE.Vector3(target, offset, 0)
-          camera.up.set(0, 0, 1)
+          camera.up.set(0, 1, 0)
         } else {
           to = new THREE.Vector3(-10, offset, 20)
           tgt = new THREE.Vector3(target / 2, offset, 0)
@@ -355,7 +375,7 @@ export default function TrackingPage() {
         }
       }
       const startRot = groupRef.current?.rotation.clone() || new THREE.Euler()
-      const endRot = new THREE.Euler(0, 0, 0)
+      const endRot = view === 'front' ? new THREE.Euler(0, Math.PI / 2, 0) : new THREE.Euler(0, 0, 0)
       let t = 0
       const anim = () => {
         t += 0.05
@@ -554,7 +574,8 @@ export default function TrackingPage() {
             ) : (
               <OrthographicCamera
                 makeDefault
-                position={view === 'top' ? [0, 0, 40] : [-40, 0, 0]}
+                position={view === 'top' ? [0, 40, 0] : [-40, 0, 0]}
+                rotation={view === 'top' ? [-Math.PI / 2, 0, 0] : undefined}
                 zoom={view === 'front' ? 30 : 40}
               />
             )}

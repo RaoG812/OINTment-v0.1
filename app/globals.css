@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.grid-overlay-3{
+  background-image:
+    linear-gradient(rgba(51,65,85,0.6) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(51,65,85,0.6) 1px, transparent 1px);
+  background-size: 33.333% 33.333%;
+}
+
+.grid-overlay-4{
+  background-image:
+    linear-gradient(rgba(51,65,85,0.6) 1px, transparent 1px);
+  background-size: 100% 25%;
+}
+

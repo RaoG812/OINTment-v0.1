@@ -22,6 +22,7 @@ interface Commit {
   type?: string
   branch?: string
   status?: string
+  offset?: { y: number; z: number }
 }
 
 interface DisplayPos {
@@ -211,25 +212,23 @@ export default function TrackingPage() {
     return positions
       .filter(p => branch === 'all' || p.commit.branch === branch)
       .map(p => {
-        const jitter = ((parseInt(p.commit.sha.slice(0, 2), 16) % 20) - 10) / 100
+        const offset = p.commit.offset || { y: 0, z: 0 }
         const scale = branch === 'all' ? 1 : view === 'front' ? 1 : 0.3
         return {
           commit: p.commit,
           x: Math.round(p.x / GRID_X) * GRID_X,
-          y: branch === 'all' ? p.yBase : p.yBase + p.typeY * scale,
-          z: branch === 'all' ? p.zBase + jitter : p.zBase + p.typeZ * scale + jitter,
+          y: branch === 'all'
+            ? p.yBase + offset.y
+            : p.yBase + p.typeY * scale + offset.y * scale,
+          z: branch === 'all'
+            ? p.zBase + offset.z
+            : p.zBase + p.typeZ * scale + offset.z * scale,
           size: p.size,
           status: p.status,
           current: p.current
         } as DisplayPos
       })
   }, [positions, branch, view])
-
-  const displayPosBySha = useMemo(() => {
-    const m = new Map<string, { x: number; y: number; z: number }>()
-    displayPositions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.y, z: p.z }))
-    return m
-  }, [displayPositions])
 
   const branchOrigins = useMemo(() => {
     const map = new Map<string, { x: number; y: number; z: number }>()
@@ -510,13 +509,19 @@ export default function TrackingPage() {
                 makeDefault
                 position={
                   view === 'top'
-                    ? [displayPositions.length * 1.5, selectedPos.y, 40]
-                    : [-40, selectedPos.y, 0]
+                    ? [displayPositions.length * 1.5, 0, 40]
+                    : [-40, 0, 0]
                 }
-                zoom={40}
+                zoom={view === 'front' ? 30 : 40}
               />
             )}
-            <OrbitControls ref={controlsRef} enableRotate={view === '3d'} enablePan={view === '3d'} enableZoom={view === '3d'} />
+          <OrbitControls
+            ref={controlsRef}
+            enableRotate={view === '3d'}
+            enablePan={view !== 'front'}
+            enableZoom={view !== 'front'}
+            screenSpacePanning={view !== 'front'}
+          />
             <CameraRig
               target={displayPositions.length * GRID_X}
               view={view}
@@ -557,40 +562,11 @@ export default function TrackingPage() {
                         new THREE.Vector3(range.end, offset, z)
                       ]
                 const curve = new THREE.CatmullRomCurve3(basePoints)
-                return branch === 'all' ? (
-                  <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} depth={z} />
-                ) : (
-                  <Line
-                    key={b}
-                    points={curve.getPoints(32)}
-                    color={b === 'main' ? '#22d3ee' : '#a855f7'}
-                    lineWidth={2}
-                    transparent
-                    opacity={0.8}
-                    toneMapped={false}
-                  />
-                )
+                return <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} depth={z} />
               })}
               {displayPositions.map(p => (
                 <CommitSphere key={p.commit.sha} p={p} onSelect={selectCommit} />
               ))}
-              {displayPositions.map(p =>
-                p.commit.parents?.map(par => {
-                  const parent = displayPosBySha.get(par.sha)
-                  if (!parent) return null
-                  return (
-                    <Line
-                      key={`${p.commit.sha}-${par.sha}`}
-                      points={[[p.x, p.y, p.z], [parent.x, parent.y, parent.z]]}
-                      color="#e5e7eb"
-                      lineWidth={2}
-                      transparent
-                      opacity={0.5}
-                      toneMapped={false}
-                    />
-                  )
-                })
-              )}
             </group>
           </Canvas>
           {view === 'front' && showLayers && (
@@ -620,7 +596,6 @@ export default function TrackingPage() {
             <div className="absolute bottom-2 left-2 text-[10px] space-y-1">
               <div className="flex items-center gap-1"><span className="w-4 h-1 bg-[#22d3ee]"></span>Main pipe</div>
               <div className="flex items-center gap-1"><span className="w-4 h-1 bg-[#a855f7]"></span>Branch pipe</div>
-              <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white"></span>Commit link</div>
             </div>
           </>
           {selectedCommit && (

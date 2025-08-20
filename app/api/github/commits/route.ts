@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
-import { categorizeCommits } from '../../../../lib/openai'
+import { categorizeCommits, jitterOffsets } from '../../../../lib/openai'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -67,6 +67,18 @@ export async function GET(req: NextRequest) {
     rawList.forEach(r => {
       r.domain = 'other'
       r.type = 'other'
+    })
+  }
+
+  // Ask the LLM for jitter offsets to help distribute commits in 3D space
+  try {
+    const offs = await jitterOffsets(rawList.map(c => c.message))
+    offs.forEach((o, i) => {
+      rawList[i].offset = o
+    })
+  } catch {
+    rawList.forEach(r => {
+      r.offset = { y: 0, z: 0 }
     })
   }
 

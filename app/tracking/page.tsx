@@ -168,14 +168,28 @@ export default function TrackingPage() {
     test: { y: 0, z: -1 },
     docs: { y: -1, z: -1 },
     security: { y: -1, z: 0 },
-    data: { y: -1, z: 1 },
-    other: { y: 0, z: 0 }
+    data: { y: -1, z: 1 }
   }
+
+  // fallback directions when commit type can't be identified
+  const otherDirs = [
+    { y: 0, z: 1 },
+    { y: 1, z: 1 },
+    { y: 1, z: 0 },
+    { y: 1, z: -1 },
+    { y: 0, z: -1 },
+    { y: -1, z: -1 },
+    { y: -1, z: 0 },
+    { y: -1, z: 1 }
+  ]
   const latestSha = sorted.at(-1)?.sha
   const GRID_X = 3
   const positions = sorted.map((c, i) => {
     const base = branchPositions.get(c.branch || '') || { y: 0, z: 0 }
-    const type = typeOffsets[c.type || 'other']
+    const type =
+      c.type && typeOffsets[c.type]
+        ? typeOffsets[c.type]
+        : otherDirs[parseInt(c.sha.slice(-1), 16) % otherDirs.length]
     return {
       commit: c,
       x: i * GRID_X,
@@ -214,15 +228,20 @@ export default function TrackingPage() {
       .map(p => {
         const offset = p.commit.offset || { y: 0, z: 0 }
         const scale = branch === 'all' ? 1 : view === 'front' ? 1 : 0.3
+        const seed = parseInt(p.commit.sha.slice(0, 4), 16)
+        const jitterY = ((seed % 100) / 100 - 0.5) * 0.2
+        const jitterZ = (((Math.floor(seed / 100)) % 100) / 100 - 0.5) * 0.2
         return {
           commit: p.commit,
           x: Math.round(p.x / GRID_X) * GRID_X,
-          y: branch === 'all'
-            ? p.yBase + offset.y
-            : p.yBase + p.typeY * scale + offset.y * scale,
-          z: branch === 'all'
-            ? p.zBase + offset.z
-            : p.zBase + p.typeZ * scale + offset.z * scale,
+          y:
+            (branch === 'all'
+              ? p.yBase + offset.y
+              : p.yBase + p.typeY * scale + offset.y * scale) + jitterY,
+          z:
+            (branch === 'all'
+              ? p.zBase + offset.z
+              : p.zBase + p.typeZ * scale + offset.z * scale) + jitterZ,
           size: p.size,
           status: p.status,
           current: p.current
@@ -548,13 +567,22 @@ export default function TrackingPage() {
                         new THREE.Vector3(range.end, offset, z)
                       ]
                     : origin
-                    ? [
-                        new THREE.Vector3(origin.x, origin.y, origin.z),
-                        new THREE.Vector3(range.start, offset * 0.3, z),
-                        new THREE.Vector3(range.start + len * 0.3, offset * 0.6, z),
-                        new THREE.Vector3(range.start + len * 0.6, offset, z),
-                        new THREE.Vector3(range.end, offset, z)
-                      ]
+                    ? (() => {
+                        const dir = range.start - origin.x
+                        const first = new THREE.Vector3(
+                          origin.x + Math.min(1, dir * 0.2),
+                          origin.y + offset * 0.1,
+                          z
+                        )
+                        return [
+                          new THREE.Vector3(origin.x, origin.y, origin.z),
+                          first,
+                          new THREE.Vector3(range.start, offset * 0.3, z),
+                          new THREE.Vector3(range.start + len * 0.3, offset * 0.6, z),
+                          new THREE.Vector3(range.start + len * 0.6, offset, z),
+                          new THREE.Vector3(range.end, offset, z)
+                        ]
+                      })()
                     : [
                         new THREE.Vector3(range.start, 0, z),
                         new THREE.Vector3(range.start + len * 0.3, offset * 0.3, z),

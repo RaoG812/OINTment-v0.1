@@ -43,6 +43,12 @@ export default function TrackingPage() {
   const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
   const [showLayers, setShowLayers] = useState(false)
   const [hoveredBranch, setHoveredBranch] = useState<string | null>(null)
+  const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null)
+  const [selectedFiles, setSelectedFiles] = useState<{ filename: string; status: string; additions: number; deletions: number; patch?: string }[]>([])
+  const closeModal = () => {
+    setSelectedCommit(null)
+    setSelectedFiles([])
+  }
 
   const typeLayerLabels = [
     { text: 'Refactor', style: { top: '2%', left: '2%' } },
@@ -132,6 +138,21 @@ export default function TrackingPage() {
     return map
   }, [data])
 
+  const branchDomains = useMemo(() => {
+    const map = new Map<string, string>()
+    Object.entries(data).forEach(([b, arr]) => {
+      if (!arr.length) return
+      const counts = new Map<string, number>()
+      arr.forEach(c => {
+        const d = c.domain || 'other'
+        counts.set(d, (counts.get(d) || 0) + 1)
+      })
+      const dom = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0]
+      map.set(b, dom)
+    })
+    return map
+  }, [data])
+
   const domainOffset = (d: string) =>
     d === 'frontend' ? 0.6 : d === 'backend' ? 0.2 : d === 'db' ? -0.2 : -0.6
   const typeOffsets: Record<string, { y: number; z: number }> = {
@@ -217,6 +238,17 @@ export default function TrackingPage() {
     return map
   }, [data, posBySha])
 
+  const selectCommit = async (c: Commit) => {
+    setSelectedCommit(c)
+    try {
+      const r = await fetch(`/api/github/commit?repo=${repo}&sha=${c.sha}`)
+      const j = await r.json()
+      setSelectedFiles(Array.isArray(j.files) ? j.files : [])
+    } catch {
+      setSelectedFiles([])
+    }
+  }
+
   const selectedOffset = branch === 'all' ? 0 : branchOffsets.get(branch) || 0
   const pipes: [string, number][] =
     branch === 'all'
@@ -275,7 +307,7 @@ export default function TrackingPage() {
       const startX = groupRef.current?.rotation.x || 0
       const startY = groupRef.current?.rotation.y || 0
       const startZ = groupRef.current?.rotation.z || 0
-      const endZ = view === 'top' ? Math.PI : 0
+      const endZ = 0
       let t = 0
       const anim = () => {
         t += 0.05
@@ -294,7 +326,7 @@ export default function TrackingPage() {
     return null
   }
 
-  function CommitSphere({ p }: { p: DisplayPos }) {
+  function CommitSphere({ p, onSelect }: { p: DisplayPos; onSelect: (c: Commit) => void }) {
     const ref = useRef<THREE.Mesh>(null)
     const [hovered, setHovered] = useState(false)
     const scale = useRef(1)
@@ -321,6 +353,7 @@ export default function TrackingPage() {
           ref={ref}
           onPointerOver={() => setHovered(true)}
           onPointerOut={() => setHovered(false)}
+          onClick={() => onSelect(p.commit)}
         >
           <sphereGeometry args={[p.size, 16, 16]} />
           <meshBasicMaterial color={color} wireframe transparent opacity={0.8} />
@@ -370,13 +403,15 @@ export default function TrackingPage() {
         matRef.current.opacity = THREE.MathUtils.lerp(matRef.current.opacity, target, 0.1)
       }
     })
+    const main = b === 'main'
+    const color = main ? '#22d3ee' : '#a855f7'
     return (
       <group>
         <mesh raycast={() => null}>
           <tubeGeometry args={[curve, 64, 0.5, 16, false]} />
           <meshPhysicalMaterial
             ref={matRef}
-            color="#a855f7"
+            color={color}
             transparent
             opacity={0.25}
             roughness={0}
@@ -388,7 +423,7 @@ export default function TrackingPage() {
         </mesh>
         <Line
           points={curve.getPoints(32)}
-          color="#a855f7"
+          color={color}
           lineWidth={2}
           transparent
           opacity={0.8}
@@ -477,7 +512,7 @@ export default function TrackingPage() {
             zoom={40}
           />
         )}
-            <OrbitControls ref={controlsRef} enabled={view === '3d'} />
+            <OrbitControls ref={controlsRef} enableRotate={view === '3d'} enablePan={view === '3d'} enableZoom={view === '3d'} />
             <CameraRig
               target={displayPositions.length * 3}
               view={view}
@@ -495,34 +530,35 @@ export default function TrackingPage() {
                 const range = branchRanges.get(b) || { start: 0, end: displayPositions.length * 3 }
                 const len = range.end - range.start
                 const origin = branchOrigins.get(b)
-                const points =
+                const z = branchDomains.has(b) ? domainOffset(branchDomains.get(b) || 'other') : 0
+                const basePoints =
                   b === 'main'
                     ? [
-                        new THREE.Vector3(range.start, 0, 0),
-                        new THREE.Vector3(range.end, 0, 0)
+                        new THREE.Vector3(range.start, 0, z),
+                        new THREE.Vector3(range.end, 0, z)
                       ]
                     : origin
                     ? [
-                        new THREE.Vector3(origin.x, origin.y, 0),
-                        new THREE.Vector3(range.start, offset * 0.3, 0),
-                        new THREE.Vector3(range.start + len * 0.3, offset * 0.6, 0),
-                        new THREE.Vector3(range.start + len * 0.6, offset, 0),
-                        new THREE.Vector3(range.end, offset, 0)
+                        new THREE.Vector3(origin.x, origin.y, z),
+                        new THREE.Vector3(range.start, offset * 0.3, z),
+                        new THREE.Vector3(range.start + len * 0.3, offset * 0.6, z),
+                        new THREE.Vector3(range.start + len * 0.6, offset, z),
+                        new THREE.Vector3(range.end, offset, z)
                       ]
                     : [
-                        new THREE.Vector3(range.start, 0, 0),
-                        new THREE.Vector3(range.start + len * 0.3, offset * 0.3, 0),
-                        new THREE.Vector3(range.start + len * 0.6, offset, 0),
-                        new THREE.Vector3(range.end, offset, 0)
+                        new THREE.Vector3(range.start, 0, z),
+                        new THREE.Vector3(range.start + len * 0.3, offset * 0.3, z),
+                        new THREE.Vector3(range.start + len * 0.6, offset, z),
+                        new THREE.Vector3(range.end, offset, z)
                       ]
-                const curve = new THREE.CatmullRomCurve3(points)
+                const curve = new THREE.CatmullRomCurve3(basePoints)
                 return branch === 'all' ? (
                   <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} />
                 ) : (
                   <Line
                     key={b}
                     points={curve.getPoints(32)}
-                    color="#a855f7"
+                    color={b === 'main' ? '#22d3ee' : '#a855f7'}
                     lineWidth={2}
                     transparent
                     opacity={0.8}
@@ -531,7 +567,7 @@ export default function TrackingPage() {
                 )
               })}
               {displayPositions.map(p => (
-                <CommitSphere key={p.commit.sha} p={p} />
+                <CommitSphere key={p.commit.sha} p={p} onSelect={selectCommit} />
               ))}
               {displayPositions.map(p =>
                 p.commit.parents?.map(par => {
@@ -575,6 +611,23 @@ export default function TrackingPage() {
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#ef4444]"></span>Failure</div>
             <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#6b7280]"></span>Unknown</div>
           </div>
+          <div className="absolute bottom-2 left-2 text-[10px] space-y-1">
+            <div className="flex items-center gap-1"><span className="w-4 h-1 bg-[#22d3ee]"></span>Main pipe</div>
+            <div className="flex items-center gap-1"><span className="w-4 h-1 bg-[#a855f7]"></span>Branch pipe</div>
+            <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-white"></span>Commit link</div>
+          </div>
+          {selectedCommit && (
+            <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-50" onClick={closeModal}>
+              <div className="bg-zinc-900 p-4 rounded-xl max-h-[80%] w-80 overflow-y-auto" onClick={e => e.stopPropagation()}>
+                <div className="text-sm font-semibold mb-2">{selectedCommit.message}</div>
+                <ul className="space-y-1 text-xs">
+                  {selectedFiles.map(f => (
+                    <li key={f.filename} className="flex justify-between"><span>{f.filename}</span><span className="text-zinc-500">{f.status}</span></li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

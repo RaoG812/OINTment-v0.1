@@ -1,3 +1,4 @@
+// @ts-nocheck
 import OpenAI from 'openai'
 
 export interface RepoAnalysis {

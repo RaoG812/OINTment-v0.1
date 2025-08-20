@@ -144,13 +144,18 @@ export default function TrackingPage() {
   const layerY = (d: string) =>
     d === 'frontend' ? 1.5 : d === 'backend' ? 0.5 : d === 'db' ? -0.5 : -1.5
 
-  const branchOffsets = useMemo(() => {
-    const map = new Map<string, number>()
-    map.set('main', 0)
+  const branchPositions = useMemo(() => {
+    const map = new Map<string, { y: number; z: number }>()
+    map.set('main', { y: 0, z: 0 })
+    const counters: Record<string, number> = {}
     Object.entries(data).forEach(([b]) => {
       if (b === 'main') return
       const dom = branchDomains.get(b) || 'other'
-      map.set(b, layerY(dom))
+      const count = counters[dom] || 0
+      const sign = count % 2 === 0 ? 1 : -1
+      const depth = (Math.floor(count / 2) + 1) * 2 * sign
+      counters[dom] = count + 1
+      map.set(b, { y: layerY(dom), z: depth })
     })
     return map
   }, [data, branchDomains])
@@ -168,12 +173,13 @@ export default function TrackingPage() {
   const latestSha = sorted.at(-1)?.sha
   const GRID_X = 3
   const positions = sorted.map((c, i) => {
-    const baseY = branchOffsets.get(c.branch || '') || 0
+    const base = branchPositions.get(c.branch || '') || { y: 0, z: 0 }
     const type = typeOffsets[c.type || 'other']
     return {
       commit: c,
       x: i * GRID_X,
-      yBase: baseY,
+      yBase: base.y,
+      zBase: base.z,
       typeY: type.y,
       typeZ: type.z,
       size:
@@ -196,8 +202,8 @@ export default function TrackingPage() {
   }, [data, sorted])
 
   const posBySha = useMemo(() => {
-    const m = new Map<string, { x: number; y: number }>()
-    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.yBase }))
+    const m = new Map<string, { x: number; y: number; z: number }>()
+    positions.forEach(p => m.set(p.commit.sha, { x: p.x, y: p.yBase, z: p.zBase }))
     return m
   }, [positions])
 
@@ -211,7 +217,7 @@ export default function TrackingPage() {
           commit: p.commit,
           x: Math.round(p.x / GRID_X) * GRID_X,
           y: branch === 'all' ? p.yBase : p.yBase + p.typeY * scale,
-          z: branch === 'all' ? jitter : p.typeZ * scale + jitter,
+          z: branch === 'all' ? p.zBase + jitter : p.zBase + p.typeZ * scale + jitter,
           size: p.size,
           status: p.status,
           current: p.current
@@ -226,7 +232,7 @@ export default function TrackingPage() {
   }, [displayPositions])
 
   const branchOrigins = useMemo(() => {
-    const map = new Map<string, { x: number; y: number }>()
+    const map = new Map<string, { x: number; y: number; z: number }>()
     Object.entries(data).forEach(([b, arr]) => {
       if (b === 'main' || arr.length === 0) return
       const parentSha = arr[0].parents?.[0]?.sha
@@ -247,11 +253,11 @@ export default function TrackingPage() {
     }
   }
 
-  const selectedOffset = branch === 'all' ? 0 : branchOffsets.get(branch) || 0
-  const pipes: [string, number][] =
+  const selectedPos = branchPositions.get(branch) || { y: 0, z: 0 }
+  const pipes: [string, { y: number; z: number }][] =
     branch === 'all'
-      ? Array.from(branchOffsets.entries())
-      : ([[branch, selectedOffset]] as [string, number][])
+      ? Array.from(branchPositions.entries())
+      : ([[branch, selectedPos]] as [string, { y: number; z: number }][])
 
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
@@ -302,10 +308,8 @@ export default function TrackingPage() {
           camera.up.set(0, 1, 0)
         }
       }
-      const startX = groupRef.current?.rotation.x || 0
-      const startY = groupRef.current?.rotation.y || 0
-      const startZ = groupRef.current?.rotation.z || 0
-      const endZ = view === 'front' ? -Math.PI / 2 : 0
+      const startRot = groupRef.current?.rotation.clone() || new THREE.Euler()
+      const endRot = new THREE.Euler(0, 0, 0)
       let t = 0
       const anim = () => {
         t += 0.05
@@ -313,9 +317,9 @@ export default function TrackingPage() {
         controlsRef.current?.target.lerp(tgt, t)
         controlsRef.current?.update()
         if (groupRef.current) {
-          groupRef.current.rotation.x = THREE.MathUtils.lerp(startX, 0, t)
-          groupRef.current.rotation.y = THREE.MathUtils.lerp(startY, 0, t)
-          groupRef.current.rotation.z = THREE.MathUtils.lerp(startZ, endZ, t)
+          groupRef.current.rotation.x = THREE.MathUtils.lerp(startRot.x, endRot.x, t)
+          groupRef.current.rotation.y = THREE.MathUtils.lerp(startRot.y, endRot.y, t)
+          groupRef.current.rotation.z = THREE.MathUtils.lerp(startRot.z, endRot.z, t)
         }
         if (t < 1) requestAnimationFrame(anim)
       }
@@ -386,12 +390,14 @@ export default function TrackingPage() {
     b,
     curve,
     range,
-    offset
+    offset,
+    depth
   }: {
     b: string
     curve: THREE.CatmullRomCurve3
     range: { start: number; end: number }
     offset: number
+    depth: number
   }) {
     const matRef = useRef<THREE.MeshPhysicalMaterial>(null)
     const active = hoveredBranch === b
@@ -430,7 +436,7 @@ export default function TrackingPage() {
           onPointerOut={() => setHoveredBranch(null)}
           onClick={() => setBranch(b)}
         />
-        <Html position={[range.start, offset + 0.3, 0]} zIndexRange={[100, 0]}>
+        <Html position={[range.start, offset + 0.3, depth]} zIndexRange={[100, 0]}>
           <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
         </Html>
       </group>
@@ -498,23 +504,23 @@ export default function TrackingPage() {
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           <Canvas>
             {view === '3d' ? (
-              <PerspectiveCamera makeDefault position={[-10, selectedOffset, 20]} fov={50} />
+              <PerspectiveCamera makeDefault position={[-10, selectedPos.y, 20]} fov={50} />
             ) : (
               <OrthographicCamera
                 makeDefault
                 position={
-              view === 'top'
-                ? [displayPositions.length * 1.5, selectedOffset, 40]
-                : [-40, selectedOffset, 0]
-            }
-            zoom={40}
-          />
-        )}
+                  view === 'top'
+                    ? [displayPositions.length * 1.5, selectedPos.y, 40]
+                    : [-40, selectedPos.y, 0]
+                }
+                zoom={40}
+              />
+            )}
             <OrbitControls ref={controlsRef} enableRotate={view === '3d'} enablePan={view === '3d'} enableZoom={view === '3d'} />
             <CameraRig
               target={displayPositions.length * GRID_X}
               view={view}
-              offset={selectedOffset}
+              offset={selectedPos.y}
               range={showLayers ? undefined : branch === 'all' ? undefined : branchRanges.get(branch)}
             />
             <color attach="background" args={[0, 0, 0]} />
@@ -524,20 +530,21 @@ export default function TrackingPage() {
               <Bloom luminanceThreshold={0.4} intensity={0.8} />
             </EffectComposer>
             <group ref={groupRef}>
-              {pipes.map(([b, offset]) => {
+              {pipes.map(([b, pos]) => {
                 const range = branchRanges.get(b) || { start: 0, end: displayPositions.length * GRID_X }
                 const len = range.end - range.start
                 const origin = branchOrigins.get(b)
-                const z = 0
+                const offset = pos.y
+                const z = pos.z
                 const basePoints =
                   b === 'main'
                     ? [
-                        new THREE.Vector3(range.start, 0, z),
-                        new THREE.Vector3(range.end, 0, z)
+                        new THREE.Vector3(range.start, offset, z),
+                        new THREE.Vector3(range.end, offset, z)
                       ]
                     : origin
                     ? [
-                        new THREE.Vector3(origin.x, origin.y, z),
+                        new THREE.Vector3(origin.x, origin.y, origin.z),
                         new THREE.Vector3(range.start, offset * 0.3, z),
                         new THREE.Vector3(range.start + len * 0.3, offset * 0.6, z),
                         new THREE.Vector3(range.start + len * 0.6, offset, z),
@@ -551,7 +558,7 @@ export default function TrackingPage() {
                       ]
                 const curve = new THREE.CatmullRomCurve3(basePoints)
                 return branch === 'all' ? (
-                  <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} />
+                  <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} depth={z} />
                 ) : (
                   <Line
                     key={b}

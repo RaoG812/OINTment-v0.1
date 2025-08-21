@@ -46,7 +46,69 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
   )
 }
 
-function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean) => void }) {
+function RevealHexes() {
+  const ref = useRef<HTMLDivElement>(null)
+  const [cells, setCells] = useState<{ id: number; x: number; y: number; start: number }[]>([])
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const spawn = () => {
+      const now = Date.now()
+      const rect = el.getBoundingClientRect()
+      const w = rect.width
+      const h = rect.height
+      const count = Math.random() < 0.5 ? 1 : 2
+      const next = Array.from({ length: count }).map(() => ({
+        id: now + Math.random(),
+        x: Math.random() * w,
+        y: Math.random() * h,
+        start: now
+      }))
+      setCells(prev => [...prev.filter(c => now - c.start < 6000), ...next])
+    }
+    spawn()
+    const t = setInterval(spawn, 3000)
+    return () => clearInterval(t)
+  }, [])
+  return (
+    <div ref={ref} className="absolute inset-0 pointer-events-none">
+      {cells.map(c => (
+        <span key={c.id} className="hex-anim" style={{ left: c.x, top: c.y }} />
+      ))}
+      <style jsx>{`
+        .hex-anim {
+          position: absolute;
+          width: 18px;
+          height: 15.6px;
+          clip-path: polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
+          background: rgba(220,38,38,0.9);
+          animation: fadeHex 6s forwards;
+          mix-blend-mode: screen;
+        }
+        .hex-anim::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: rgba(59,130,246,0.9);
+          transform: scaleY(0);
+          transform-origin: bottom;
+          animation: fillHex 6s forwards;
+        }
+        @keyframes fillHex {
+          0% { transform: scaleY(0); }
+          20% { transform: scaleY(0); }
+          100% { transform: scaleY(1); }
+        }
+        @keyframes fadeHex {
+          0%,80% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function Face({ level }: { level: number }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
@@ -65,13 +127,12 @@ function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean)
         el.style.setProperty('--mx', `-999px`)
         el.style.setProperty('--my', `-999px`)
       }
-      onCursor?.(inside)
     }
     window.addEventListener('pointermove', move)
     return () => {
       window.removeEventListener('pointermove', move)
     }
-  }, [onCursor])
+  }, [])
 
   function eyePolygon(t: number) {
     const circle = [
@@ -160,6 +221,7 @@ function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean)
       </div>
       <div className="absolute inset-0 bot rounded-full pointer-events-none">
         <img src="/gpt5-face.svg" alt="GPT-5 circuit face" className="w-full h-full object-cover" />
+        <RevealHexes />
       </div>
       <style jsx>{`
         .bot {
@@ -196,38 +258,6 @@ function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean)
           left: 50%;
           transform: translateX(-50%);
           transition: all 0.3s;
-        }
-      `}</style>
-    </div>
-  )
-}
-
-function HexCursorLayer({ hidden = false }: { hidden?: boolean }) {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    function move(e: PointerEvent) {
-      el.style.setProperty('--hx', `${e.clientX}px`)
-      el.style.setProperty('--hy', `${e.clientY}px`)
-    }
-    window.addEventListener('pointermove', move)
-    return () => window.removeEventListener('pointermove', move)
-  }, [])
-  return (
-    <div
-      ref={ref}
-      className="pointer-events-none fixed inset-0 z-0"
-      style={{ '--hx': '-999px', '--hy': '-999px', opacity: hidden ? 0 : 1 } as CSSProperties}
-    >
-      <div className="absolute inset-0 hex-layer" />
-      <style jsx>{`
-        .hex-layer {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8.66'%3E%3Cpath d='M2.5 0h5l2.5 4.33-2.5 4.33h-5L0 4.33z' fill='none' stroke='rgba(255,255,255,0.2)'/%3E%3C/svg%3E");
-          background-size: 18px 15.6px;
-          opacity: 0.25;
-          mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
-          -webkit-mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
         }
       `}</style>
     </div>
@@ -310,7 +340,6 @@ export default function RoasterPage() {
   const [fixing, setFixing] = useState(false)
   const [error, setError] = useState('')
   const [healed, setHealed] = useState(false)
-  const [faceHover, setFaceHover] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -390,14 +419,13 @@ export default function RoasterPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
-      <HexCursorLayer hidden={faceHover} />
       {level > 0.95 && <FireLayer />}
       <div
         className="absolute -bottom-40 -right-40 opacity-20 z-10"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
-        <Face level={level} onCursor={setFaceHover} />
+        <Face level={level} />
       </div>
       <div className="relative z-30 space-y-8">
         <div className="flex items-start justify-between">

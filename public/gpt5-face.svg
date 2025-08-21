@@ -1,25 +1,54 @@
-<svg viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none">
+<svg viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
   <rect width="270" height="270" fill="#0a0a0a"/>
-  <g id="skull" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+  <g id="skullOutline" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M135 15c-40 0-75 35-75 75v60c0 20-10 30-10 45s15 30 45 30h80c30 0 45-15 45-30s-10-25-10-45v-60c0-40-35-75-75-75z"/>
     <path d="M85 150h100"/>
     <path d="M105 180v25h60v-25"/>
     <circle cx="100" cy="105" r="18"/>
     <circle cx="170" cy="105" r="18"/>
   </g>
-  <path id="topWire" d="M60 70h150" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <path id="jawWire" d="M95 205h80" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
-  <circle r="3" fill="#38bdf8">
-    <animateMotion dur="4s" repeatCount="indefinite">
-      <mpath xlink:href="#topWire"/>
-    </animateMotion>
-  </circle>
-  <circle r="3" fill="#38bdf8">
-    <animateMotion dur="5s" repeatCount="indefinite">
-      <mpath xlink:href="#jawWire"/>
-    </animateMotion>
-  </circle>
-  <g id="lights">
+  <g id="circuits" stroke="#38bdf8" stroke-width="1">
+    <path d="M60 60h30l10-15 20 25h40"/>
+    <path d="M210 60l-20 15 15 25-30 10h-50"/>
+    <path d="M70 120l-15 20 25 10-5 25 20 15"/>
+    <path d="M200 120l15 20-25 10 5 25-20 15"/>
+    <path d="M120 90v30l-20 20v40"/>
+    <path d="M150 90v25l25 25v40"/>
+    <path d="M135 60v20"/>
+    <path d="M90 60v20"/>
+    <path d="M180 60v20"/>
+    <path d="M60 190h40l10 20"/>
+    <path d="M210 190h-40l-10 20"/>
+    <path d="M85 160h10l15 15"/>
+    <path d="M185 160h-10l-15 15"/>
+    <path d="M135 150v40"/>
+    <path d="M115 150v20"/>
+    <path d="M155 150v20"/>
+    <path d="M135 200l-15 15"/>
+    <path d="M135 200l15 15"/>
+    <path d="M120 215v15"/>
+    <path d="M150 215v15"/>
+  </g>
+  <g id="chips" stroke="#4ade80" stroke-width="1" fill="none">
+    <rect x="75" y="70" width="20" height="12"/>
+    <rect x="175" y="70" width="20" height="12"/>
+    <rect x="70" y="170" width="18" height="12"/>
+    <rect x="182" y="170" width="18" height="12"/>
+    <rect x="125" y="140" width="20" height="12"/>
+    <rect x="125" y="210" width="20" height="12"/>
+    <rect x="50" y="110" width="16" height="10"/>
+    <rect x="204" y="110" width="16" height="10"/>
+  </g>
+  <g id="bulbs" filter="url(#glow)">
     <circle cx="135" cy="40" r="3" fill="#f87171">
       <animate attributeName="opacity" values="1;0.2;1" dur="3s" repeatCount="indefinite"/>
     </circle>
@@ -31,6 +60,30 @@
     </circle>
     <circle cx="235" cy="135" r="3" fill="#fb923c">
       <animate attributeName="opacity" values="1;0.2;1" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="80" cy="40" r="2.5" fill="#fb7185">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="190" cy="40" r="2.5" fill="#fb7185">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="90" r="2" fill="#f472b6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="210" cy="90" r="2" fill="#f472b6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="180" r="2" fill="#a78bfa">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="210" cy="180" r="2" fill="#a78bfa">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.9s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="90" cy="230" r="2.5" fill="#38bdf8">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="180" cy="230" r="2.5" fill="#38bdf8">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.9s" repeatCount="indefinite"/>
     </circle>
   </g>
   <g stroke="#4ade80" stroke-width="1.5" stroke-linecap="round">

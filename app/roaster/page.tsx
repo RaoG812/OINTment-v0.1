@@ -16,8 +16,8 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
     >
       <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
         <div
-          className="absolute top-1/2 left-1/2 h-1 w-1/2 -translate-y-1/2 origin-left rounded-full bg-emerald-500"
-          style={{ transform: `rotate(${value * 270 - 135}deg)` }}
+          className="w-1 rounded-full bg-emerald-500 origin-bottom"
+          style={{ height: '45%', transform: `rotate(${value * 270 - 135}deg)` }}
         />
       </div>
       <input
@@ -188,32 +188,10 @@ export default function RoasterPage() {
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-8">
       <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
-      <div className="flex gap-10">
-        <div className="space-y-6 flex-1 max-w-2xl">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-4">
-            <div className="relative h-20 w-20">
-              <div className="absolute inset-0 rounded-full bg-zinc-800" />
-              <div
-                className="absolute inset-0 rounded-full"
-                style={{ background: `conic-gradient(#10b981 ${health}%, transparent 0)` }}
-              />
-              <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
-                <span className="text-sm font-semibold">{health}</span>
-              </div>
-            </div>
-            <div>
-              <div className="text-sm font-medium">Health</div>
-              <div className="text-xs text-zinc-400">Overall project vitality</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <div className="flex items-center gap-4">
-            <TemperatureKnob value={level} onChange={setLevel} />
-            <div className="text-sm font-medium">Criticism Level: {Math.round(level * 100)}%</div>
-          </div>
+      <div className="flex flex-wrap items-center gap-8">
+        <TemperatureKnob value={level} onChange={setLevel} />
+        <div className="flex flex-col gap-2">
+          <div className="text-sm font-medium">Criticism Level: {Math.round(level * 100)}%</div>
           <div className="flex gap-2">
             <button
               onClick={runRoaster}
@@ -229,55 +207,66 @@ export default function RoasterPage() {
             </button>
           </div>
         </div>
-
-        {error && <div className="text-xs text-rose-400">{error}</div>}
-
-        <div className="grid sm:grid-cols-3 gap-4 mt-4">
-          {departments.map(d => {
-            const w = widgets[d]
-            return (
-              <div key={d} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-semibold capitalize">{d}</span>
-                  <span className="text-xs text-zinc-400">{Math.round(w.temperature * 100)}%</span>
-                </div>
-                <div
-                  className={`text-sm ${w.temperature > 0.66 ? 'text-rose-400' : w.temperature > 0.33 ? 'text-amber-300' : 'text-emerald-400'}`}
-                >
-                  {w.comment}
-                </div>
-                <div className="h-1 bg-zinc-800 rounded-full mt-2">
-                  <div
-                    className={`h-full rounded-full ${w.temperature > 0.66 ? 'bg-rose-500' : w.temperature > 0.33 ? 'bg-amber-400' : 'bg-emerald-500'}`}
-                    style={{ width: `${w.temperature * 100}%` }}
-                  />
-                </div>
-              </div>
-            )
-          })}
+        <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-4">
+          <div className="relative h-20 w-20">
+            <div className="absolute inset-0 rounded-full bg-zinc-800" />
+            <div
+              className="absolute inset-0 rounded-full"
+              style={{ background: `conic-gradient(#10b981 ${health}%, transparent 0)` }}
+            />
+            <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
+              <span className="text-sm font-semibold">{health}</span>
+            </div>
+          </div>
+          <div>
+            <div className="text-sm font-medium">Health</div>
+            <div className="text-xs text-zinc-400">Overall project vitality</div>
+          </div>
         </div>
-
-        {fixes && (
-          <div className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="text-sm font-semibold mb-2">Suggested Fixes</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              {fixes.map((f, i) => (
-                <li key={i}>{f}</li>
-              ))}
-            </ul>
-          </div>
-        )}
-
-        {(roasting || fixing) && (
-          <div className="flex items-center justify-center mt-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-          </div>
-        )}
+      </div>
+      {error && <div className="text-xs text-rose-400">{error}</div>}
+      <div className="grid sm:grid-cols-3 gap-4">
+        {departments.map(d => {
+          const w = widgets[d]
+          return (
+            <div key={d} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-sm font-semibold capitalize">{d}</span>
+                <span className="text-xs text-zinc-400">{Math.round(w.temperature * 100)}%</span>
+              </div>
+              <div
+                className={`text-sm ${w.temperature > 0.66 ? 'text-rose-400' : w.temperature > 0.33 ? 'text-amber-300' : 'text-emerald-400'}`}
+              >
+                {w.comment}
+              </div>
+              <div className="h-1 bg-zinc-800 rounded-full mt-2">
+                <div
+                  className={`h-full rounded-full ${w.temperature > 0.66 ? 'bg-rose-500' : w.temperature > 0.33 ? 'bg-amber-400' : 'bg-emerald-500'}`}
+                  style={{ width: `${w.temperature * 100}%` }}
+                />
+              </div>
+            </div>
+          )
+        })}
+      </div>
+      {fixes && (
+        <div className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+          <div className="text-sm font-semibold mb-2">Suggested Fixes</div>
+          <ul className="list-disc pl-5 space-y-1 text-sm">
+            {fixes.map((f, i) => (
+              <li key={i}>{f}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+      {(roasting || fixing) && (
+        <div className="flex items-center justify-center mt-4">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+        </div>
+      )}
+      <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-20 -z-10 scale-[2.5]">
+        <Face level={level} />
       </div>
     </div>
-    <div className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 opacity-40 -z-10">
-      <Face level={level} />
-    </div>
-  </div>
   )
 }

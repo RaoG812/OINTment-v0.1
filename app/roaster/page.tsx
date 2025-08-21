@@ -199,6 +199,42 @@ function Face({ level }: { level: number }) {
   )
 }
 
+function HexOverlay() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    function move(e: PointerEvent) {
+      el.style.setProperty('--x', `${e.clientX}px`)
+      el.style.setProperty('--y', `${e.clientY}px`)
+    }
+    function leave() {
+      el.style.setProperty('--x', `-999px`)
+      el.style.setProperty('--y', `-999px`)
+    }
+    leave()
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerleave', leave)
+    return () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerleave', leave)
+    }
+  }, [])
+  return (
+    <div
+      ref={ref}
+      className="fixed inset-0 pointer-events-none z-10 opacity-40"
+      style={{
+        backgroundImage:
+          "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'52\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.2\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
+        backgroundSize: '30px 26px',
+        mask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 40px, black 60px 120px, transparent 140px)',
+        WebkitMask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 40px, black 60px 120px, transparent 140px)'
+      }}
+    />
+  )
+}
+
 
 export default function RoasterPage() {
   const [result, setResult] = useState<Result | null>(null)
@@ -213,6 +249,7 @@ export default function RoasterPage() {
   const [fixes, setFixes] = useState<string[] | null>(null)
   const [fixing, setFixing] = useState(false)
   const [error, setError] = useState('')
+  const [healed, setHealed] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -221,6 +258,7 @@ export default function RoasterPage() {
 
   async function runRoaster() {
     if (!result) return
+    setHealed(false)
     setRoasting(true)
     try {
       const res = await fetch('/api/roaster', {
@@ -259,6 +297,7 @@ export default function RoasterPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'fix suggestions failed')
       setFixes(data.suggestions || [])
+      setHealed(true)
       setError('')
     } catch (err) {
       setFixes(null)
@@ -278,23 +317,32 @@ export default function RoasterPage() {
     : 0
 
   const hue = 120 - level * 120
-  const bgStyle: CSSProperties = {
-    background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,8%), #000)`,
-    backgroundSize: '200% 200%',
-    animation: 'bgMove 20s ease infinite',
-    transition: 'background 0.5s'
-  }
+  const bgStyle: CSSProperties = healed
+    ? {
+        background: 'radial-gradient(circle at 50% 50%, hsl(210,60%,15%), #000)',
+        backgroundSize: '200% 200%',
+        animation: 'bgMove 20s ease infinite',
+        transition: 'background 0.5s'
+      }
+    : {
+        background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,8%), #000)`,
+        backgroundSize: '200% 200%',
+        animation: 'bgMove 20s ease infinite',
+        transition: 'background 0.5s'
+      }
 
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
+      <HexOverlay />
+      {level > 0.95 && <div className="fire-overlay" />}
       <div
-        className="absolute -bottom-40 -right-40 opacity-20"
+        className="absolute -bottom-40 -right-40 opacity-20 z-20"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
         <Face level={level} />
       </div>
-      <div className="relative z-10 space-y-8">
+      <div className="relative z-30 space-y-8">
         <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
@@ -364,7 +412,7 @@ export default function RoasterPage() {
         )}
       </div>
       {fixes && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-30 w-96 p-4 rounded-xl bg-zinc-900/80 border border-zinc-700 backdrop-blur">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-96 p-4 rounded-xl bg-zinc-900/80 border border-zinc-700 backdrop-blur">
           <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
           <ul className="list-disc pl-5 space-y-1 text-sm max-h-60 overflow-auto">
             {fixes.map((f, i) => (
@@ -378,6 +426,25 @@ export default function RoasterPage() {
           0% { background-position: 0 0; }
           50% { background-position: 100% 100%; }
           100% { background-position: 0 0; }
+        }
+        .fire-overlay {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 160px;
+          pointer-events: none;
+          z-index: 5;
+          background:
+            radial-gradient(at 10% 120%, rgba(255,80,0,0.6), transparent 60%),
+            radial-gradient(at 30% 120%, rgba(255,140,0,0.5), transparent 60%),
+            radial-gradient(at 70% 120%, rgba(255,200,0,0.4), transparent 60%),
+            radial-gradient(at 90% 120%, rgba(255,100,0,0.6), transparent 60%);
+          animation: flicker 1.2s infinite alternate;
+        }
+        @keyframes flicker {
+          from { transform: translateY(0); }
+          to { transform: translateY(-10px); }
         }
       `}</style>
     </div>

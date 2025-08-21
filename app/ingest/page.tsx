@@ -171,7 +171,14 @@ export default function IngestPage() {
   return (
     <div className="relative min-h-screen text-zinc-200">
       <HexBackground />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-blue-950 to-black" />
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, #1e3a8a, #000)',
+          backgroundSize: '200% 200%',
+          animation: 'bgMove 20s ease infinite'
+        }}
+      />
       <div className="relative z-10 p-10 space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
         <div className="space-y-8 max-w-md">
@@ -271,6 +278,13 @@ export default function IngestPage() {
           </div>
         )}
       </div>
+      <style jsx>{`
+        @keyframes bgMove {
+          0% { background-position: 0 0; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0 0; }
+        }
+      `}</style>
     </div>
   )
 }

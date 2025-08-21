@@ -36,7 +36,7 @@ interface DisplayPos {
   current: boolean
 }
 
-export default function TrackingPage() {
+export default function MapPage() {
   const [repo, setRepo] = useState('')
   const [branch, setBranch] = useState('all')
   const [branches, setBranches] = useState<string[]>([])
@@ -536,9 +536,16 @@ export default function TrackingPage() {
   return (
     <div className="relative min-h-screen text-zinc-200">
       <HexBackground />
-      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-purple-950 to-black" />
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, #2e1065, #000)',
+          backgroundSize: '200% 200%',
+          animation: 'bgMove 20s ease infinite'
+        }}
+      />
       <div className="relative z-10 mx-auto max-w-5xl px-6 py-10 space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Tracking</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">3D Map</h1>
         <div className="flex flex-wrap gap-2">
           <input
             value={repo}
@@ -720,6 +727,13 @@ export default function TrackingPage() {
           )}
         </div>
       </div>
+      <style jsx>{`
+        @keyframes bgMove {
+          0% { background-position: 0 0; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0 0; }
+        }
+      `}</style>
     </div>
   )
 }

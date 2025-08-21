@@ -373,10 +373,6 @@ export default function RoasterPage() {
     }
   }
 
-  useEffect(() => {
-    if (result && !roast && !roasting) runRoaster()
-  }, [result])
-
   const temps = Object.values(widgets).map(w => w.temperature)
   const health = temps.length
     ? 100 - Math.round((temps.reduce((s, t) => s + t, 0) / temps.length) * 100)
@@ -420,7 +416,7 @@ export default function RoasterPage() {
                 onClick={runRoaster}
                 className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
               >
-                Run Roaster
+                Roast!
               </button>
               <button
                 onClick={applyOint}

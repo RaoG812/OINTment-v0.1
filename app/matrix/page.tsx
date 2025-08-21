@@ -179,7 +179,14 @@ export default function MatrixPage(){
     <div className="relative min-h-screen text-zinc-200">
       <HexBackground />
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-white to-zinc-300" />
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, #f9fafb, #9ca3af)',
+            backgroundSize: '200% 200%',
+            animation: 'bgMove 20s ease infinite'
+          }}
+        />
         <div className="absolute inset-0 bg-black/60" />
       </div>
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 space-y-6">
@@ -309,6 +316,13 @@ export default function MatrixPage(){
           </Card>
         )}
       </div>
+      <style jsx>{`
+        @keyframes bgMove {
+          0% { background-position: 0 0; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0 0; }
+        }
+      `}</style>
     </div>
   )
 }

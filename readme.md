@@ -13,7 +13,7 @@ The home page now links to key interfaces:
 
 - **Upload ZIP / GitHub Repo** &mdash; manual ingestion or GitHub analysis at `/ingest`
 - **View Matrix** &mdash; integration matrix prototype at `/matrix`
-- **Track Commits** &mdash; 3D commit map at `/tracking`
+- **3D Map** &mdash; commit map at `/3d-map`
 
 `npm test` runs a TypeScript type check.
 

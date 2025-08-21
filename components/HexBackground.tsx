@@ -1,5 +1,5 @@
 "use client"
-import { useRef, useEffect, useState, CSSProperties } from 'react'
+import { useRef, useEffect, useState } from 'react'
 
 export default function HexBackground({ className = "" }: { className?: string }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -10,47 +10,27 @@ export default function HexBackground({ className = "" }: { className?: string }
     const el = ref.current as HTMLDivElement
 
     function move(e: PointerEvent) {
-      el.style.setProperty("--hx", `${e.clientX}px`)
-      el.style.setProperty("--hy", `${e.clientY}px`)
+      const now = Date.now()
+      const x = Math.floor(e.clientX / 18) * 18
+      const y = Math.floor(e.clientY / 15.6) * 15.6
+      setCells(prev => {
+        const keep = prev.filter(c => now - c.start < 5000)
+        return [...keep, { id: now, x, y, start: now }]
+      })
     }
     window.addEventListener("pointermove", move)
 
-    const interval = setInterval(() => {
-      setCells(prev => {
-        const now = Date.now()
-        const keep = prev.filter(c => now - c.start < 6000)
-        const w = window.innerWidth
-        const h = window.innerHeight
-        const x = Math.floor(Math.random() * (w / 18)) * 18
-        const y = Math.floor(Math.random() * (h / 15.6)) * 15.6
-        return [...keep, { id: now, x, y, start: now }]
-      })
-    }, 3000)
-
     return () => {
       window.removeEventListener("pointermove", move)
-      clearInterval(interval)
     }
   }, [])
 
   return (
-    <div
-      ref={ref}
-      className={`pointer-events-none fixed inset-0 z-0 ${className}`}
-      style={{ "--hx": "-999px", "--hy": "-999px" } as CSSProperties}
-    >
-      <div className="absolute inset-0 hex-layer" />
+    <div ref={ref} className={`pointer-events-none fixed inset-0 z-0 ${className}`}>
       {cells.map(c => (
         <span key={c.id} className="hex-anim" style={{ left: c.x, top: c.y }} />
       ))}
       <style jsx>{`
-        .hex-layer {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8.66'%3E%3Cpath d='M2.5 0h5l2.5 4.33-2.5 4.33h-5L0 4.33z' fill='none' stroke='rgba(255,255,255,0.2)'/%3E%3C/svg%3E");
-          background-size: 18px 15.6px;
-          opacity: 0.25;
-          mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
-          -webkit-mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
-        }
         .hex-anim {
           position: absolute;
           width: 18px;

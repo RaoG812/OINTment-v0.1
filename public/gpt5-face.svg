@@ -1,19 +1,43 @@
-<svg viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg" fill="none">
-  <rect width="270" height="270" fill="#0f0f0f"/>
-  <g stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-    <path d="M20 30h40v40h20V50h40v20h20V30h40"/>
-    <path d="M250 30h-40v40h-20V50h-40v20h-20V30h-40"/>
-    <path d="M20 240h40v-40h20v20h40v-20h20v40h40"/>
-    <path d="M250 240h-40v-40h-20v20h-40v-20h-20v40h-40"/>
-    <circle cx="100" cy="100" r="18"/>
-    <circle cx="170" cy="100" r="18"/>
-    <rect x="115" y="170" width="40" height="20" rx="2"/>
+<svg viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" fill="none">
+  <rect width="270" height="270" fill="#0a0a0a"/>
+  <g id="skull" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M135 15c-40 0-75 35-75 75v60c0 20-10 30-10 45s15 30 45 30h80c30 0 45-15 45-30s-10-25-10-45v-60c0-40-35-75-75-75z"/>
+    <path d="M85 150h100"/>
+    <path d="M105 180v25h60v-25"/>
+    <circle cx="100" cy="105" r="18"/>
+    <circle cx="170" cy="105" r="18"/>
+  </g>
+  <path id="topWire" d="M60 70h150" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+  <path id="jawWire" d="M95 205h80" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/>
+  <circle r="3" fill="#38bdf8">
+    <animateMotion dur="4s" repeatCount="indefinite">
+      <mpath xlink:href="#topWire"/>
+    </animateMotion>
+  </circle>
+  <circle r="3" fill="#38bdf8">
+    <animateMotion dur="5s" repeatCount="indefinite">
+      <mpath xlink:href="#jawWire"/>
+    </animateMotion>
+  </circle>
+  <g id="lights">
+    <circle cx="135" cy="40" r="3" fill="#f87171">
+      <animate attributeName="opacity" values="1;0.2;1" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="135" cy="230" r="3" fill="#4ade80">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="35" cy="135" r="3" fill="#facc15">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="235" cy="135" r="3" fill="#fb923c">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <g stroke="#4ade80" stroke-width="1.5" stroke-linecap="round">
+    <path d="M135 0v20M100 0v20M170 0v20"/>
+    <path d="M135 270v-20M100 270v-20M170 270v-20"/>
+    <path d="M0 135h20M0 100h20M0 170h20"/>
+    <path d="M270 135h-20M270 100h-20M270 170h-20"/>
   </g>
   <text x="135" y="60" text-anchor="middle" font-size="28" font-weight="700" fill="#f87171">GPT-5</text>
-  <g stroke="#4ade80" stroke-width="1.5" stroke-linecap="round">
-    <path d="M135 20v20M100 20v20M170 20v20"/>
-    <path d="M135 250v-20M100 250v-20M170 250v-20"/>
-    <path d="M20 135h20M20 100h20M20 170h20"/>
-    <path d="M250 135h-20M250 100h-20M250 170h-20"/>
-  </g>
 </svg>

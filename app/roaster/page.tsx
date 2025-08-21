@@ -21,16 +21,17 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
           background: `conic-gradient(hsl(${hue},80%,50%) ${percent}%, #27272a ${percent}% 100%)`
         }}
       />
-      <div className="absolute inset-[6px] rounded-full bg-black flex items-center justify-center">
+      <div className="absolute inset-[6px] rounded-full bg-black">
         <div
-          className="w-2 h-14 rounded-full origin-bottom"
+          className="absolute top-1/2 left-1/2 w-2 h-14 rounded-full"
           style={{
-            transform: `rotate(${angle}deg)`,
+            transform: `translate(-50%, -100%) rotate(${angle}deg)`,
+            transformOrigin: '50% 100%',
             background: `hsl(${hue},80%,50%)`,
             transition: 'transform 0.3s ease-out, background 0.3s ease-out'
           }}
         />
-        <div className="absolute w-3 h-3 bg-zinc-200 rounded-full" />
+        <div className="absolute top-1/2 left-1/2 w-3 h-3 -translate-x-1/2 -translate-y-1/2 bg-zinc-200 rounded-full" />
       </div>
       <input
         type="range"
@@ -131,6 +132,37 @@ function Face({ level }: { level: number }) {
   )
 }
 
+function HexOverlay() {
+  useEffect(() => {
+    function move(e: PointerEvent) {
+      const root = document.documentElement
+      root.style.setProperty('--cursor-x', `${e.clientX}px`)
+      root.style.setProperty('--cursor-y', `${e.clientY}px`)
+    }
+    window.addEventListener('pointermove', move)
+    return () => window.removeEventListener('pointermove', move)
+  }, [])
+  return (
+    <>
+      <div className="pointer-events-none fixed inset-0 z-20 hex-overlay" />
+      <style jsx global>{`
+        .hex-overlay {
+          background-image:
+            linear-gradient(30deg, rgba(255,255,255,0.2) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.2) 87.5%),
+            linear-gradient(150deg, rgba(255,255,255,0.2) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.2) 87.5%),
+            linear-gradient(90deg, rgba(255,255,255,0.2) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.2) 87.5%);
+          background-size: 20px 35px;
+          background-position: 0 0, 0 0, 10px 17.5px;
+          opacity: 0.12;
+          mix-blend-mode: exclusion;
+          mask: radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(0,0,0,0.8) 0, rgba(0,0,0,0.4) 80px, transparent 160px);
+          -webkit-mask: radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(0,0,0,0.8) 0, rgba(0,0,0,0.4) 80px, transparent 160px);
+        }
+      `}</style>
+    </>
+  )
+}
+
 export default function RoasterPage() {
   const [result, setResult] = useState<Result | null>(null)
   const [level, setLevel] = useState(0.5)
@@ -210,7 +242,7 @@ export default function RoasterPage() {
 
   const hue = 120 - level * 120
   const bgStyle: CSSProperties = {
-    background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,15%), #000)` ,
+    background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,8%), #000)`,
     backgroundSize: '200% 200%',
     animation: 'bgMove 20s ease infinite',
     transition: 'background 0.5s'
@@ -218,7 +250,12 @@ export default function RoasterPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
-      <div className="pointer-events-none absolute bottom-10 right-10 opacity-20" aria-hidden="true">
+      <HexOverlay />
+      <div
+        className="pointer-events-none absolute -bottom-40 -right-40 opacity-20"
+        aria-hidden="true"
+        style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
+      >
         <Face level={level} />
       </div>
       <div className="relative z-10 space-y-8">
@@ -284,22 +321,22 @@ export default function RoasterPage() {
             )
           })}
         </div>
-        {fixes && (
-          <div className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
-            <ul className="list-disc pl-5 space-y-1 text-sm">
-              {fixes.map((f, i) => (
-                <li key={i}>{f}</li>
-              ))}
-            </ul>
-          </div>
-        )}
         {(roasting || fixing) && (
           <div className="flex items-center justify-center mt-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
           </div>
         )}
       </div>
+      {fixes && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-30 w-96 p-4 rounded-xl bg-zinc-900/80 border border-zinc-700 backdrop-blur">
+          <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
+          <ul className="list-disc pl-5 space-y-1 text-sm max-h-60 overflow-auto">
+            {fixes.map((f, i) => (
+              <li key={i}>{f}</li>
+            ))}
+          </ul>
+        </div>
+      )}
       <style jsx>{`
         @keyframes bgMove {
           0% { background-position: 0 0; }

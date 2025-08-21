@@ -1,6 +1,7 @@
 // @ts-nocheck
 'use client'
 import { useEffect, useState, CSSProperties, useRef } from 'react'
+import Link from 'next/link'
 
 type Result = { files: string[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -372,6 +373,7 @@ export default function RoasterPage() {
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
+        <Link href="/toolset" className="text-sm text-zinc-400 underline">Apply OINT</Link>
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">

@@ -34,6 +34,9 @@ export default function Home() {
           >
             View Matrix
           </Link>
+          <Link href="/toolset" className="text-sm text-zinc-400 underline">
+            Apply OINT
+          </Link>
         </div>
         <div className="pt-8 text-sm text-zinc-400 max-w-prose">
           <p>

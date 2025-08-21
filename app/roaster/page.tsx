@@ -158,25 +158,20 @@ function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean)
         />
         <div className="mouth" style={mouthStyle} />
       </div>
-      <div className="absolute inset-0 skull rounded-full pointer-events-none" />
+      <div className="absolute inset-0 bot rounded-full pointer-events-none">
+        <img src="/gpt5-face.svg" alt="GPT-5 circuit face" className="w-full h-full object-cover" />
+      </div>
       <style jsx>{`
-        .skull {
-          background: radial-gradient(circle at 50% 35%, #b91c1c, #000);
+        .bot {
+          background: radial-gradient(circle at 50% 35%, #1e1e1e, #000);
           position: absolute;
           overflow: hidden;
           mask: radial-gradient(circle 90px at var(--mx) var(--my), black 0 40px, transparent 60px);
           -webkit-mask: radial-gradient(circle 90px at var(--mx) var(--my), black 0 40px, transparent 60px);
           transition: mask 0.3s;
         }
-        .skull::before {
-          content: '☠️';
-          position: absolute;
-          top: 50%;
-          left: 50%;
-          transform: translate(-50%, -63%);
-          font-size: 250px;
-          color: #f87171;
-          filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
+        .bot img {
+          filter: drop-shadow(0 0 10px rgba(59,130,246,0.3));
         }
         .top-face {
           transition: background 0.3s;
@@ -409,7 +404,7 @@ export default function RoasterPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
           <div className="text-right leading-tight">
             <div className="text-5xl font-bold">Roaster v0.1.6</div>
-            <div className="text-sm text-zinc-400">AI-powered code critique</div>
+            <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-8">

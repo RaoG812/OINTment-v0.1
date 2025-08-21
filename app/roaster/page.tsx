@@ -24,15 +24,16 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
         className="absolute inset-0 rounded-full transition-[background] duration-300"
         style={{ background: `conic-gradient(var(--col) var(--pct), #27272a 0)` }}
       />
-      <div className="absolute inset-2 rounded-full bg-black flex items-center justify-center">
+      <div className="absolute inset-2 rounded-full bg-black relative">
         <div
-          className="w-1 h-8 rounded-full origin-bottom"
+          className="absolute top-1/2 left-1/2 w-1 h-8 -translate-x-1/2 -translate-y-full rounded-full origin-bottom"
           style={{
             transform: `rotate(${value * 270 - 135}deg)`,
             background: 'var(--col)',
             transition: 'transform 0.3s ease-out, background 0.3s ease-out'
           }}
         />
+        <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-200" />
       </div>
       <input
         type="range"
@@ -58,20 +59,20 @@ function Face({ level }: { level: number }) {
           width: 180px;
           height: 180px;
           border-radius: 50%;
-          background: #27272a;
           position: relative;
-          filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.25));
+          background: radial-gradient(circle at 50% 35%, #27272a 0%, #000 100%);
+          filter: drop-shadow(0 0 15px rgba(16,185,129,0.25));
           transition: background 0.3s, filter 0.3s;
         }
         .face.smile {
-          background: #14532d;
+          background: radial-gradient(circle at 50% 35%, #166534, #052e16);
         }
         .face.poker {
-          background: #57534e;
+          background: radial-gradient(circle at 50% 35%, #57534e, #292524);
         }
         .face.furious {
-          background: #7f1d1d;
-          filter: drop-shadow(0 0 20px rgba(127, 29, 29, 0.4));
+          background: radial-gradient(circle at 50% 35%, #7f1d1d, #450a0a);
+          filter: drop-shadow(0 0 20px rgba(127,29,29,0.4));
         }
         .eye {
           width: 24px;
@@ -175,7 +176,7 @@ export default function RoasterPage() {
     }
   }
 
-  async function runFixes() {
+  async function applyOint() {
     if (!result) return
     setFixing(true)
     try {
@@ -207,7 +208,7 @@ export default function RoasterPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10">
-      <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-20 scale-[2.5]" aria-hidden="true">
+      <div className="pointer-events-none absolute bottom-10 right-10 opacity-20 scale-[2]" aria-hidden="true">
         <Face level={level} />
       </div>
       <div className="relative z-10 space-y-8">
@@ -224,10 +225,10 @@ export default function RoasterPage() {
                 Run Roaster
               </button>
               <button
-                onClick={runFixes}
+                onClick={applyOint}
                 className="px-4 py-2 bg-rose-600 text-sm font-medium rounded-lg hover:bg-rose-500 transition"
               >
-                Fix
+                Apply OINT
               </button>
             </div>
           </div>
@@ -275,7 +276,7 @@ export default function RoasterPage() {
         </div>
         {fixes && (
           <div className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-            <div className="text-sm font-semibold mb-2">Suggested Fixes</div>
+            <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
             <ul className="list-disc pl-5 space-y-1 text-sm">
               {fixes.map((f, i) => (
                 <li key={i}>{f}</li>

@@ -2,6 +2,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import type { RepoAnalysis } from '../../lib/openai'
+import HexBackground from '../../components/HexBackground'
 
 type Result = { files: string[]; analysis: RepoAnalysis }
 
@@ -168,9 +169,12 @@ export default function IngestPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
-      <div className="space-y-8 max-w-md">
+    <div className="relative min-h-screen text-zinc-200">
+      <HexBackground />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-blue-950 to-black" />
+      <div className="relative z-10 p-10 space-y-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
+        <div className="space-y-8 max-w-md">
         <section className="space-y-4">
           <h2 className="text-lg font-medium">GitHub Repository</h2>
           <div className="flex gap-2">
@@ -266,6 +270,7 @@ export default function IngestPage() {
             ))}
           </div>
         )}
-  </div>
+      </div>
+    </div>
   )
 }

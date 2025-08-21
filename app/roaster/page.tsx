@@ -173,7 +173,7 @@ function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean)
           position: absolute;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -60%);
+          transform: translate(-50%, -63%);
           font-size: 250px;
           color: #f87171;
           filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));

@@ -1,6 +1,6 @@
-# PM Control Suite
+# OINTment
 
-Early documentation and starter UI for a project manager control platform. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture, data model, and execution plan.
+Early documentation and starter UI for the Onboarding Insights Neural Toolset. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture, data model, and execution plan.
 
 ## Getting Started
 

@@ -11,6 +11,7 @@ import {
 } from '@react-three/drei'
 import { EffectComposer, Bloom } from '@react-three/postprocessing'
 import * as THREE from 'three'
+import HexBackground from '../../components/HexBackground'
 
 interface Commit {
   sha: string
@@ -533,8 +534,10 @@ export default function TrackingPage() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
-      <div className="mx-auto max-w-5xl px-6 py-10 space-y-6">
+    <div className="relative min-h-screen text-zinc-200">
+      <HexBackground />
+      <div className="fixed inset-0 -z-10 bg-gradient-to-b from-purple-950 to-black" />
+      <div className="relative z-10 mx-auto max-w-5xl px-6 py-10 space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">Tracking</h1>
         <div className="flex flex-wrap gap-2">
           <input

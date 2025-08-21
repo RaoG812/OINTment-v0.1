@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { ArrowUpDown, Search, ShieldAlert, Cpu } from 'lucide-react'
+import HexBackground from '../../components/HexBackground'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
@@ -175,8 +176,13 @@ export default function MatrixPage(){
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
-      <div className="mx-auto max-w-7xl px-6 py-10 space-y-6">
+    <div className="relative min-h-screen text-zinc-200">
+      <HexBackground />
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0 bg-gradient-to-b from-white to-zinc-300" />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Integration Matrix</h1>

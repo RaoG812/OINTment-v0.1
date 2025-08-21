@@ -224,7 +224,7 @@ function HexOverlay() {
   return (
     <div
       ref={ref}
-      className="fixed inset-0 pointer-events-none z-50"
+      className="fixed inset-0 pointer-events-none z-40"
       style={{
         backgroundImage:
           "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'34\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.2\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
@@ -235,6 +235,68 @@ function HexOverlay() {
         WebkitMask: 'radial-gradient(circle at var(--x) var(--y), black 0 80px, transparent 120px)'
       }}
     />
+  )
+}
+
+
+function FireLayer() {
+  const flames = Array.from({ length: 8 })
+  return (
+    <div className="fire-layer" aria-hidden="true">
+      {flames.map((_, i) => (
+        <span
+          key={i}
+          style={{
+            left: `${(i / (flames.length - 1)) * 100}%`,
+            animationDelay: `${i * 0.4}s`,
+            animationDuration: `${4 + (i % 3)}s`
+          }}
+        />
+      ))}
+      <style jsx>{`
+        .fire-layer {
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          height: 200px;
+          pointer-events: none;
+          overflow: hidden;
+          z-index: 5;
+        }
+        .fire-layer span {
+          position: absolute;
+          bottom: -40px;
+          width: 80px;
+          height: 80px;
+          background: radial-gradient(circle at 50% 100%, rgba(255,120,0,0.45), transparent 70%);
+          filter: blur(6px);
+          transform-origin: 50% 100%;
+          animation: ember ease-in-out infinite;
+        }
+        .fire-layer span::after {
+          content: '';
+          position: absolute;
+          top: 100%;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: inherit;
+          transform: scaleY(-1);
+          opacity: 0.35;
+        }
+        @keyframes ember {
+          0%,100% {
+            transform: translateY(0) scale(1);
+            opacity: 0.5;
+          }
+          50% {
+            transform: translateY(-30px) scale(1.1) translateX(-10px);
+            opacity: 0.2;
+          }
+        }
+      `}</style>
+    </div>
   )
 }
 
@@ -336,10 +398,9 @@ export default function RoasterPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
-      <HexOverlay />
-      {level > 0.95 && <div className="fire-overlay" />}
+      {level > 0.95 && <FireLayer />}
       <div
-        className="absolute -bottom-40 -right-40 opacity-20 z-20"
+        className="absolute -bottom-40 -right-40 opacity-20 z-10"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
@@ -415,7 +476,7 @@ export default function RoasterPage() {
         )}
       </div>
       {fixes && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-40 w-96 p-4 rounded-xl bg-zinc-900/80 border border-zinc-700 backdrop-blur">
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-96 p-4 rounded-xl bg-zinc-900/80 border border-zinc-700 backdrop-blur">
           <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
           <ul className="list-disc pl-5 space-y-1 text-sm max-h-60 overflow-auto">
             {fixes.map((f, i) => (
@@ -424,38 +485,12 @@ export default function RoasterPage() {
           </ul>
         </div>
       )}
+      <HexOverlay />
       <style jsx>{`
         @keyframes bgMove {
           0% { background-position: 0 0; }
           50% { background-position: 100% 100%; }
           100% { background-position: 0 0; }
-        }
-        .fire-overlay {
-          position: fixed;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 180px;
-          pointer-events: none;
-          z-index: 5;
-          overflow: hidden;
-        }
-        .fire-overlay::before {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background:
-            linear-gradient(to top, rgba(255,90,0,0.5), transparent),
-            radial-gradient(at 10% 120%, rgba(255,80,0,0.6), transparent 60%),
-            radial-gradient(at 30% 120%, rgba(255,140,0,0.5), transparent 60%),
-            radial-gradient(at 70% 120%, rgba(255,200,0,0.4), transparent 60%),
-            radial-gradient(at 90% 120%, rgba(255,100,0,0.6), transparent 60%);
-          animation: flicker 1.2s infinite alternate;
-          transform-origin: bottom;
-        }
-        @keyframes flicker {
-          from { transform: scaleY(1); }
-          to { transform: scaleY(1.1); }
         }
       `}</style>
     </div>

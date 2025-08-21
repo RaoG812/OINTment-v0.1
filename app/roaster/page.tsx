@@ -274,7 +274,7 @@ export default function RoasterPage() {
   )
   const [widgets, setWidgets] = useState<Record<Department, Comment>>(empty)
   const [roasting, setRoasting] = useState(false)
-  const [fixes, setFixes] = useState<string[] | null>(null)
+  const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(null)
   const [fixing, setFixing] = useState(false)
   const [error, setError] = useState('')
   const [healed, setHealed] = useState(false)
@@ -317,18 +317,20 @@ export default function RoasterPage() {
     if (!result) return
     setFixing(true)
     try {
-      const res = await fetch('/api/roaster/fix', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: result.files })
-      })
+      const res = await fetch('/api/oint/recommendations')
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'fix suggestions failed')
-      setFixes(data.suggestions || [])
+      if (!res.ok) throw new Error(data.error || 'apply OINT failed')
+      const updated = { ...empty }
+      const comments = Array.isArray(data.comments) ? data.comments : []
+      comments.forEach((c: Comment) => {
+        const key = c.department.toLowerCase() as Department
+        if (updated[key]) updated[key] = c
+      })
+      setOintWidgets(updated)
       setHealed(true)
       setError('')
     } catch (err) {
-      setFixes(null)
+      setOintWidgets(null)
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setFixing(false)
@@ -373,7 +375,7 @@ export default function RoasterPage() {
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
-        <Link href="/toolset" className="text-sm text-zinc-400 underline">Apply OINT</Link>
+        <Link href="/toolset" className="text-sm text-zinc-400 underline">Create OINT</Link>
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">
@@ -442,14 +444,33 @@ export default function RoasterPage() {
           </div>
         )}
       </div>
-      {fixes && (
-        <div className="mt-8 p-4 rounded-xl bg-zinc-900/60 border border-zinc-700">
-          <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
-          <ul className="list-disc pl-5 space-y-1 text-sm max-h-60 overflow-auto">
-            {fixes.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
+      {ointWidgets && (
+        <div className="mt-8">
+          <div className="text-sm font-semibold mb-2">OINT Recommendations</div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {departments.map(d => {
+              const w = ointWidgets[d]
+              return (
+                <div key={d} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-700">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold capitalize">{d}</span>
+                    <span className="text-xs text-zinc-400">{Math.round(w.temperature * 100)}%</span>
+                  </div>
+                  <div
+                    className={`text-sm ${w.temperature > 0.66 ? 'text-rose-400' : w.temperature > 0.33 ? 'text-amber-300' : 'text-emerald-400'}`}
+                  >
+                    {w.comment}
+                  </div>
+                  <div className="h-1 bg-zinc-800 rounded-full mt-2">
+                    <div
+                      className={`h-full rounded-full ${w.temperature > 0.66 ? 'bg-rose-500' : w.temperature > 0.33 ? 'bg-amber-400' : 'bg-emerald-500'}`}
+                      style={{ width: `${w.temperature * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
       <style jsx>{`

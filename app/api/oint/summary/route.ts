@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server'
 import type { DashboardData } from '../../../../lib/types.oint'
+import { isCreated } from '../state'
 
 export async function GET() {
+  if (!isCreated()) {
+    return NextResponse.json({ error: 'OINT not created' }, { status: 409 })
+  }
   const data: DashboardData & Record<string, unknown> = {
     generatedAt: '2024-04-01T00:00:00Z',
     pulse: { envs: ['prod', 'stage'], deploysToday: 2, criticalAlerts: 0 },

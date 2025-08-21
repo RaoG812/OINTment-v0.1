@@ -7,7 +7,7 @@ export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(false)
 
-  async function apply() {
+  async function create() {
     setLoading(true)
     try {
       await fetch('/api/oint/apply', { method: 'POST' })
@@ -48,10 +48,10 @@ export default function ToolsetPage() {
             </div>
           ) : (
             <button
-              onClick={apply}
+              onClick={create}
               className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
             >
-              Apply OINT
+              Create OINT
             </button>
           )}
         </Card>

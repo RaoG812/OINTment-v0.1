@@ -420,13 +420,13 @@ export default function RoasterPage() {
             <div className="flex gap-2">
               <button
                 onClick={runRoaster}
-                className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                className="px-4 py-2 bg-red-600 text-sm font-medium rounded-lg hover:bg-red-500 transition"
               >
                 Roast!
               </button>
               <button
                 onClick={applyOint}
-                className="px-4 py-2 bg-rose-600 text-sm font-medium rounded-lg hover:bg-rose-500 transition"
+                className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg hover:bg-blue-500 transition"
               >
                 Apply OINT
               </button>

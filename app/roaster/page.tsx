@@ -405,7 +405,13 @@ export default function RoasterPage() {
         <Face level={level} onCursor={setFaceHover} />
       </div>
       <div className="relative z-30 space-y-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
+        <div className="flex items-start justify-between">
+          <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
+          <div className="text-right leading-tight">
+            <div className="text-5xl font-bold">Roaster v0.1.6</div>
+            <div className="text-sm text-zinc-400">AI-powered code critique</div>
+          </div>
+        </div>
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">
@@ -475,7 +481,7 @@ export default function RoasterPage() {
         )}
       </div>
       {fixes && (
-        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 w-96 p-4 rounded-xl bg-zinc-900/80 border border-zinc-700 backdrop-blur">
+        <div className="mt-8 p-4 rounded-xl bg-zinc-900/60 border border-zinc-700">
           <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
           <ul className="list-disc pl-5 space-y-1 text-sm max-h-60 overflow-auto">
             {fixes.map((f, i) => (

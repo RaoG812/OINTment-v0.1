@@ -174,7 +174,7 @@ export default function IngestPage() {
       <div
         className="fixed inset-0 -z-10"
         style={{
-          background: 'radial-gradient(circle at 50% 50%, #1e3a8a, #000)',
+          background: 'radial-gradient(circle at 50% 50%, rgba(30,58,138,0.4), rgba(0,0,0,0.9))',
           backgroundSize: '200% 200%',
           animation: 'bgMove 20s ease infinite'
         }}

@@ -182,7 +182,7 @@ export default function MatrixPage(){
         <div
           className="absolute inset-0"
           style={{
-            background: 'radial-gradient(circle at 50% 50%, #f9fafb, #9ca3af)',
+            background: 'radial-gradient(circle at 50% 50%, rgba(229,231,235,0.3), rgba(51,65,85,0.9))',
             backgroundSize: '200% 200%',
             animation: 'bgMove 20s ease infinite'
           }}

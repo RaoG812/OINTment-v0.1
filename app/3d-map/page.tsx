@@ -539,7 +539,7 @@ export default function MapPage() {
       <div
         className="fixed inset-0 -z-10"
         style={{
-          background: 'radial-gradient(circle at 50% 50%, #2e1065, #000)',
+          background: 'radial-gradient(circle at 50% 50%, rgba(46,16,101,0.4), rgba(0,0,0,0.9))',
           backgroundSize: '200% 200%',
           animation: 'bgMove 20s ease infinite'
         }}

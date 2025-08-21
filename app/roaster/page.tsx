@@ -46,68 +46,6 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
   )
 }
 
-function RevealHexes() {
-  const ref = useRef<HTMLDivElement>(null)
-  const [cells, setCells] = useState<{ id: number; x: number; y: number; start: number }[]>([])
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const spawn = () => {
-      const now = Date.now()
-      const rect = el.getBoundingClientRect()
-      const w = rect.width
-      const h = rect.height
-      const count = Math.random() < 0.5 ? 1 : 2
-      const next = Array.from({ length: count }).map(() => ({
-        id: now + Math.random(),
-        x: Math.random() * w,
-        y: Math.random() * h,
-        start: now
-      }))
-      setCells(prev => [...prev.filter(c => now - c.start < 6000), ...next])
-    }
-    spawn()
-    const t = setInterval(spawn, 3000)
-    return () => clearInterval(t)
-  }, [])
-  return (
-    <div ref={ref} className="absolute inset-0 pointer-events-none">
-      {cells.map(c => (
-        <span key={c.id} className="hex-anim" style={{ left: c.x, top: c.y }} />
-      ))}
-      <style jsx>{`
-        .hex-anim {
-          position: absolute;
-          width: 18px;
-          height: 15.6px;
-          clip-path: polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
-          background: rgba(220,38,38,0.9);
-          animation: fadeHex 6s forwards;
-          mix-blend-mode: screen;
-        }
-        .hex-anim::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background: rgba(59,130,246,0.9);
-          transform: scaleY(0);
-          transform-origin: bottom;
-          animation: fillHex 6s forwards;
-        }
-        @keyframes fillHex {
-          0% { transform: scaleY(0); }
-          20% { transform: scaleY(0); }
-          100% { transform: scaleY(1); }
-        }
-        @keyframes fadeHex {
-          0%,80% { opacity: 1; }
-          100% { opacity: 0; }
-        }
-      `}</style>
-    </div>
-  )
-}
-
 function Face({ level }: { level: number }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -221,7 +159,6 @@ function Face({ level }: { level: number }) {
       </div>
       <div className="absolute inset-0 bot rounded-full pointer-events-none">
         <img src="/gpt5-face.svg" alt="GPT-5 circuit face" className="w-full h-full object-cover" />
-        <RevealHexes />
       </div>
       <style jsx>{`
         .bot {

@@ -67,18 +67,18 @@ export default function HexBackground({ className = "" }: { className?: string }
           width: 20px;
           height: 17.32px;
           clip-path: polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
-          background: rgba(220,38,38,0.9);
-          filter: drop-shadow(0 0 6px rgba(220,38,38,0.8));
+          background: rgba(220,38,38,0.25);
+          filter: drop-shadow(0 0 3px rgba(220,38,38,0.25));
           animation: fadeHex 6s forwards;
         }
         .hex-anim::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(59,130,246,0.9);
+          background: rgba(59,130,246,0.25);
           transform: scaleY(0);
           transform-origin: bottom;
-          filter: drop-shadow(0 0 6px rgba(59,130,246,0.8));
+          filter: drop-shadow(0 0 3px rgba(59,130,246,0.25));
           animation: fillHex 6s forwards;
         }
         @keyframes fillHex {

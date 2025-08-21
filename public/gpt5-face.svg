@@ -7,15 +7,37 @@
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
+    <pattern id="micro" width="5" height="5" patternUnits="userSpaceOnUse">
+      <path d="M5 0H0V5" stroke="#1f2937" stroke-width="0.5"/>
+    </pattern>
   </defs>
   <rect width="270" height="270" fill="#0a0a0a"/>
+  <rect width="270" height="270" fill="url(#micro)" opacity="0.12"/>
   <g id="skullOutline" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M135 15c-40 0-75 35-75 75v60c0 20-10 30-10 45s15 30 45 30h80c30 0 45-15 45-30s-10-25-10-45v-60c0-40-35-75-75-75z"/>
     <path d="M85 150h100"/>
     <path d="M105 180v25h60v-25"/>
-    <circle cx="100" cy="105" r="18"/>
-    <circle cx="170" cy="105" r="18"/>
   </g>
+  <!-- spinning eyes -->
+  <g transform="translate(100 105)">
+    <circle r="18" stroke="#38bdf8" stroke-width="2"/>
+    <g>
+      <circle r="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="-8" y1="0" x2="8" y2="0" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="0" y1="-8" x2="0" y2="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/>
+    </g>
+  </g>
+  <g transform="translate(170 105)">
+    <circle r="18" stroke="#38bdf8" stroke-width="2"/>
+    <g>
+      <circle r="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="-8" y1="0" x2="8" y2="0" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="0" y1="-8" x2="0" y2="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/>
+    </g>
+  </g>
+  <!-- dense circuitry -->
   <g id="circuits" stroke="#38bdf8" stroke-width="1">
     <path d="M60 60h30l10-15 20 25h40"/>
     <path d="M210 60l-20 15 15 25-30 10h-50"/>
@@ -37,7 +59,15 @@
     <path d="M135 200l15 15"/>
     <path d="M120 215v15"/>
     <path d="M150 215v15"/>
+    <!-- extra dense lines -->
+    <path d="M45 80h25"/><path d="M45 85h15"/><path d="M220 80h-25"/><path d="M220 85h-15"/>
+    <path d="M60 140h20"/><path d="M190 140h-20"/>
+    <path d="M110 65v15"/><path d="M160 65v15"/><path d="M110 230v-15"/><path d="M160 230v-15"/>
+    <path d="M90 200h15"/><path d="M180 200h-15"/>
+    <path d="M75 150v15"/><path d="M195 150v15"/>
+    <path d="M135 40v15"/><path d="M135 215v15"/>
   </g>
+  <!-- microchips grid -->
   <g id="chips" stroke="#4ade80" stroke-width="1" fill="none">
     <rect x="75" y="70" width="20" height="12"/>
     <rect x="175" y="70" width="20" height="12"/>
@@ -47,7 +77,12 @@
     <rect x="125" y="210" width="20" height="12"/>
     <rect x="50" y="110" width="16" height="10"/>
     <rect x="204" y="110" width="16" height="10"/>
+    <rect x="90" y="90" width="14" height="9"/>
+    <rect x="166" y="90" width="14" height="9"/>
+    <rect x="90" y="190" width="14" height="9"/>
+    <rect x="166" y="190" width="14" height="9"/>
   </g>
+  <!-- flickering bulbs -->
   <g id="bulbs" filter="url(#glow)">
     <circle cx="135" cy="40" r="3" fill="#f87171">
       <animate attributeName="opacity" values="1;0.2;1" dur="3s" repeatCount="indefinite"/>
@@ -86,11 +121,14 @@
       <animate attributeName="opacity" values="1;0.1;1" dur="1.9s" repeatCount="indefinite"/>
     </circle>
   </g>
+  <!-- frame ticks -->
   <g stroke="#4ade80" stroke-width="1.5" stroke-linecap="round">
     <path d="M135 0v20M100 0v20M170 0v20"/>
     <path d="M135 270v-20M100 270v-20M170 270v-20"/>
     <path d="M0 135h20M0 100h20M0 170h20"/>
     <path d="M270 135h-20M270 100h-20M270 170h-20"/>
   </g>
-  <text x="135" y="60" text-anchor="middle" font-size="28" font-weight="700" fill="#f87171">GPT-5</text>
+  <!-- digital sign -->
+  <rect x="95" y="25" width="80" height="28" fill="#111" stroke="#f87171" stroke-width="2" rx="2" ry="2"/>
+  <text x="135" y="45" text-anchor="middle" font-size="18" font-weight="700" fill="#f87171" font-family="monospace">GPT-5</text>
 </svg>

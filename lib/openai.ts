@@ -17,6 +17,11 @@ export interface RoastComment {
   temperature: number
 }
 
+// Suggestions for improvements ordered by priority
+export interface FixSuggestion {
+  suggestions: string[]
+}
+
 // Create a client that can talk to AIMLAPI when AIML_API_KEY is provided.
 // Otherwise, it falls back to the standard OpenAI endpoint using OPENAI_API_KEY.
 const apiKey = process.env.AIML_API_KEY || process.env.OPENAI_API_KEY
@@ -81,6 +86,26 @@ export async function roastRepo(fileList: string[], level = 0.5): Promise<RoastC
   try {
     const parsed = JSON.parse(txt)
     return Array.isArray(parsed.reviews) ? parsed.reviews : []
+  } catch {
+    return []
+  }
+}
+
+export async function suggestFixes(fileList: string[]): Promise<string[]> {
+  const content = fileList.slice(0, 200).join('\n')
+  const messages: any = [
+    {
+      role: 'system',
+      content:
+        'From the repository file list, propose the most impactful improvements the team should address first. Respond with JSON {"suggestions":string[]} of up to 3 concise items.'
+    },
+    { role: 'user', content }
+  ]
+
+  const txt = await chat(messages, { type: 'json_object' })
+  try {
+    const parsed = JSON.parse(txt)
+    return Array.isArray(parsed.suggestions) ? parsed.suggestions : []
   } catch {
     return []
   }

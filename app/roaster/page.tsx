@@ -1,6 +1,6 @@
 // @ts-nocheck
 'use client'
-import { useEffect, useState, CSSProperties } from 'react'
+import { useEffect, useState, CSSProperties, useRef } from 'react'
 
 type Result = { files: string[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -46,31 +46,77 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
 }
 
 function Face({ level }: { level: number }) {
-  const mood = level > 0.66 ? 'furious' : level > 0.33 ? 'poker' : 'smile'
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    function move(e: PointerEvent) {
+      const rect = el.getBoundingClientRect()
+      el.style.setProperty('--mx', `${e.clientX - rect.left}px`)
+      el.style.setProperty('--my', `${e.clientY - rect.top}px`)
+    }
+    function leave() {
+      el.style.setProperty('--mx', `-999px`)
+      el.style.setProperty('--my', `-999px`)
+    }
+    el.addEventListener('pointermove', move)
+    el.addEventListener('pointerleave', leave)
+    return () => {
+      el.removeEventListener('pointermove', move)
+      el.removeEventListener('pointerleave', leave)
+    }
+  }, [])
+
+  const smileOpacity = level < 0.33 ? 1 - level / 0.33 : 0
+  const pokerOpacity =
+    level < 0.33 ? level / 0.33 : level < 0.66 ? 1 - (level - 0.33) / 0.33 : 0
+  const furiousOpacity = level > 0.66 ? (level - 0.66) / 0.34 : 0
+  const hue = 120 - level * 120
   return (
-    <div className={`face ${mood}`}>
-      <div className="eye left" />
-      <div className="eye right" />
-      <div className="mouth" />
+    <div ref={ref} className="relative w-[270px] h-[270px]">
+      <div className="absolute inset-0 skull rounded-full" />
+      <div
+          className="absolute inset-0 rounded-full overflow-hidden top-face"
+          style={{ background: `radial-gradient(circle at 50% 35%, hsl(${hue},40%,30%), #000)` }}
+      >
+        <div className="absolute inset-0 transition-opacity" style={{ opacity: smileOpacity }}>
+          <div className="eye left" />
+          <div className="eye right" />
+          <div className="mouth smile" />
+        </div>
+        <div className="absolute inset-0 transition-opacity" style={{ opacity: pokerOpacity }}>
+          <div className="eye left" />
+          <div className="eye right" />
+          <div className="mouth poker" />
+        </div>
+        <div className="absolute inset-0 transition-opacity" style={{ opacity: furiousOpacity }}>
+          <div className="eye left furious" />
+          <div className="eye right furious" />
+          <div className="mouth furious" />
+        </div>
+      </div>
       <style jsx>{`
-        .face {
-          width: 270px;
-          height: 270px;
-          border-radius: 50%;
-          position: relative;
-          background: radial-gradient(circle at 50% 35%, #27272a 0%, #000 100%);
-          filter: drop-shadow(0 0 15px rgba(16,185,129,0.25));
-          transition: background 0.3s, filter 0.3s;
+        .skull {
+          background: radial-gradient(circle at 50% 35%, #450a0a, #000);
+          position: absolute;
+          overflow: hidden;
         }
-        .face.smile {
-          background: radial-gradient(circle at 50% 35%, #166534, #052e16);
+        .skull::before {
+          content: '☠️';
+          position: absolute;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          font-size: 160px;
+          color: #f87171;
+          filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
         }
-        .face.poker {
-          background: radial-gradient(circle at 50% 35%, #57534e, #292524);
-        }
-        .face.furious {
-          background: radial-gradient(circle at 50% 35%, #7f1d1d, #450a0a);
-          filter: drop-shadow(0 0 20px rgba(127,29,29,0.4));
+        .top-face {
+          --mx: -999px;
+          --my: -999px;
+          mask: radial-gradient(circle 60px at var(--mx) var(--my), transparent 0, black 60px);
+          -webkit-mask: radial-gradient(circle 60px at var(--mx) var(--my), transparent 0, black 60px);
+          transition: background 0.3s;
         }
         .eye {
           width: 36px;
@@ -79,52 +125,47 @@ function Face({ level }: { level: number }) {
           background: #fff;
           position: absolute;
           top: 82px;
-          transition: transform 0.3s, clip-path 0.3s;
           animation: blink 5s infinite;
           transform-origin: center;
         }
+        .eye.left { left: 82px; }
+        .eye.right { right: 82px; }
+        .eye.furious {
+          clip-path: polygon(50% 0, 0 100%, 100% 100%);
+          transform: translateY(-6px) rotate(calc(10deg * var(--dir)));
+        }
+        .eye.furious.left { --dir: 1; }
+        .eye.furious.right { --dir: -1; }
         @keyframes blink {
           0%, 97%, 100% { transform: scaleY(1); }
           98%, 99% { transform: scaleY(0.1); }
         }
-        .eye.left {
-          left: 82px;
-        }
-        .eye.right {
-          right: 82px;
-        }
-        .face.furious .eye {
-          clip-path: polygon(50% 0, 0 100%, 100% 100%);
-        }
-        .face.furious .eye.left {
-          transform: translateY(-6px) rotate(10deg);
-        }
-        .face.furious .eye.right {
-          transform: translateY(-6px) rotate(-10deg);
-        }
         .mouth {
+          position: absolute;
+          left: 50%;
+          transform: translateX(-50%);
+          transition: all 0.3s;
+        }
+        .mouth.smile {
           width: 120px;
           height: 60px;
           border: 8px solid #fff;
           border-top: none;
           border-radius: 0 0 120px 120px;
-          position: absolute;
-          left: 50%;
-          transform: translateX(-50%);
           bottom: 82px;
-          transition: all 0.3s;
         }
-        .face.poker .mouth {
+        .mouth.poker {
+          width: 120px;
           height: 0;
-          border-radius: 0;
+          border: 8px solid #fff;
+          border-bottom: none;
           bottom: 120px;
         }
-        .face.furious .mouth {
+        .mouth.furious {
           width: 120px;
           height: 60px;
           background: #fff;
-          border: none;
-          bottom: 110px;
+          bottom: 40px;
           clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
         }
       `}</style>
@@ -147,12 +188,8 @@ function HexOverlay() {
       <div className="pointer-events-none fixed inset-0 z-20 hex-overlay" />
       <style jsx global>{`
         .hex-overlay {
-          background-image:
-            linear-gradient(30deg, rgba(255,255,255,0.2) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.2) 87.5%),
-            linear-gradient(150deg, rgba(255,255,255,0.2) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.2) 87.5%),
-            linear-gradient(90deg, rgba(255,255,255,0.2) 12%, transparent 12.5%, transparent 87%, rgba(255,255,255,0.2) 87.5%);
-          background-size: 20px 35px;
-          background-position: 0 0, 0 0, 10px 17.5px;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 17.32' width='20' height='17.32'%3E%3Cpolygon fill='rgba(255,255,255,0.2)' points='10,0 20,5.77 20,11.55 10,17.32 0,11.55 0,5.77'/%3E%3C/svg%3E");
+          background-size: 20px 17.32px;
           opacity: 0.12;
           mix-blend-mode: exclusion;
           mask: radial-gradient(circle at var(--cursor-x) var(--cursor-y), rgba(0,0,0,0.8) 0, rgba(0,0,0,0.4) 80px, transparent 160px);
@@ -252,7 +289,7 @@ export default function RoasterPage() {
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
       <HexOverlay />
       <div
-        className="pointer-events-none absolute -bottom-40 -right-40 opacity-20"
+        className="absolute -bottom-40 -right-40 opacity-20"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >

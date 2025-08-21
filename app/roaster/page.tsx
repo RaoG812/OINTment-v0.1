@@ -53,9 +53,11 @@ function Face({ level }: { level: number }) {
     if (!el) return
     function move(e: PointerEvent) {
       const rect = el.getBoundingClientRect()
-      const x = e.clientX - rect.left
-      const y = e.clientY - rect.top
-      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+      const scaleX = rect.width / el.offsetWidth || 1
+      const scaleY = rect.height / el.offsetHeight || 1
+      const x = (e.clientX - rect.left) / scaleX
+      const y = (e.clientY - rect.top) / scaleY
+      if (x >= 0 && x <= el.offsetWidth && y >= 0 && y <= el.offsetHeight) {
         el.style.setProperty('--mx', `${x}px`)
         el.style.setProperty('--my', `${y}px`)
       } else {
@@ -169,8 +171,8 @@ function Face({ level }: { level: number }) {
           position: absolute;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -50%);
-          font-size: 160px;
+          transform: translate(-50%, -50%) translateY(-10px);
+          font-size: 260px;
           color: #f87171;
           filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
         }
@@ -375,7 +377,8 @@ export default function RoasterPage() {
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">
-            <div className="text-sm font-medium">Criticism Level: {Math.round(level * 100)}%</div>
+            <div className="text-sm font-medium">Roast Temperature: {Math.round(level * 100)}%</div>
+            <div className="text-xs text-zinc-400">Higher heat yields harsher criticism.</div>
             <div className="flex gap-2">
               <button
                 onClick={runRoaster}

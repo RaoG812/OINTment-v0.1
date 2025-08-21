@@ -11,12 +11,12 @@ type Department = typeof departments[number]
 function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   return (
     <div
-      className="relative w-24 h-24 rounded-full"
+      className="relative w-24 h-24 rounded-full shadow-lg shadow-emerald-500/20"
       style={{ background: `conic-gradient(#10b981 ${value * 100}%, #27272a 0)` }}
     >
       <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
         <div
-          className="h-1 w-1/2 bg-emerald-500 origin-right"
+          className="absolute top-1/2 left-1/2 h-1 w-1/2 -translate-y-1/2 origin-left rounded-full bg-emerald-500"
           style={{ transform: `rotate(${value * 270 - 135}deg)` }}
         />
       </div>
@@ -33,7 +33,7 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
 }
 
 function Face({ level }: { level: number }) {
-  const mood = level > 0.66 ? 'angry' : level > 0.33 ? 'meh' : 'happy'
+  const mood = level > 0.66 ? 'furious' : level > 0.33 ? 'poker' : 'smile'
   return (
     <div className={`face ${mood}`}>
       <div className="eye left" />
@@ -41,58 +41,67 @@ function Face({ level }: { level: number }) {
       <div className="mouth" />
       <style jsx>{`
         .face {
-          width: 160px;
-          height: 160px;
+          width: 180px;
+          height: 180px;
           border-radius: 50%;
           background: #27272a;
           position: relative;
-          transition: background 0.3s;
+          filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.25));
+          transition: background 0.3s, filter 0.3s;
         }
-        .face.happy {
+        .face.smile {
           background: #14532d;
         }
-        .face.meh {
+        .face.poker {
           background: #57534e;
         }
-        .face.angry {
+        .face.furious {
           background: #7f1d1d;
+          filter: drop-shadow(0 0 20px rgba(127, 29, 29, 0.4));
         }
         .eye {
-          width: 20px;
-          height: 20px;
+          width: 24px;
+          height: 24px;
           border-radius: 50%;
           background: #fff;
           position: absolute;
-          top: 45px;
+          top: 55px;
+          transition: transform 0.3s;
         }
         .eye.left {
-          left: 45px;
+          left: 55px;
         }
         .eye.right {
-          right: 45px;
+          right: 55px;
+        }
+        .face.furious .eye.left {
+          transform: rotate(20deg) translateY(-4px);
+        }
+        .face.furious .eye.right {
+          transform: rotate(-20deg) translateY(-4px);
         }
         .mouth {
-          width: 60px;
-          height: 30px;
-          border: 4px solid #fff;
+          width: 80px;
+          height: 40px;
+          border: 5px solid #fff;
           border-top: none;
-          border-radius: 0 0 60px 60px;
+          border-radius: 0 0 80px 80px;
           position: absolute;
           left: 50%;
           transform: translateX(-50%);
-          bottom: 45px;
+          bottom: 55px;
           transition: all 0.3s;
         }
-        .face.meh .mouth {
-          height: 4px;
+        .face.poker .mouth {
+          height: 0;
           border-radius: 0;
-          bottom: 60px;
+          bottom: 80px;
         }
-        .face.angry .mouth {
+        .face.furious .mouth {
           border-bottom: none;
-          border-top: 4px solid #fff;
-          border-radius: 60px 60px 0 0;
-          bottom: 75px;
+          border-top: 5px solid #fff;
+          border-radius: 80px 80px 0 0;
+          bottom: 90px;
         }
       `}</style>
     </div>
@@ -177,7 +186,7 @@ export default function RoasterPage() {
     : 0
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-8">
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-8">
       <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
       <div className="flex gap-10">
         <div className="space-y-6 flex-1 max-w-2xl">
@@ -265,9 +274,9 @@ export default function RoasterPage() {
           </div>
         )}
       </div>
-      <div className="hidden lg:flex flex-1 justify-center pt-20">
-        <Face level={level} />
-      </div>
+    </div>
+    <div className="pointer-events-none absolute right-10 top-1/2 -translate-y-1/2 opacity-40 -z-10">
+      <Face level={level} />
     </div>
   </div>
   )

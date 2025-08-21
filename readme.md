@@ -1,6 +1,6 @@
-# PM Control Suite
+# OINTment
 
-Early documentation and starter UI for a project manager control platform. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture, data model, and execution plan.
+Early documentation and starter UI for the Onboarding Insights Neural Toolset. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the full architecture, data model, and execution plan.
 
 ## Getting Started
 
@@ -13,7 +13,7 @@ The home page now links to key interfaces:
 
 - **Upload ZIP / GitHub Repo** &mdash; manual ingestion or GitHub analysis at `/ingest`
 - **View Matrix** &mdash; integration matrix prototype at `/matrix`
-- **Track Commits** &mdash; 3D commit map at `/tracking`
+- **3D Map** &mdash; commit map at `/3d-map`
 
 `npm test` runs a TypeScript type check.
 

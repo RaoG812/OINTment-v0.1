@@ -1,0 +1,155 @@
+<svg viewBox="0 0 270 270" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <pattern id="micro" width="5" height="5" patternUnits="userSpaceOnUse">
+      <path d="M5 0H0V5" stroke="#1f2937" stroke-width="0.5"/>
+    </pattern>
+  </defs>
+  <rect width="270" height="270" fill="#0a0a0a"/>
+  <rect width="270" height="270" fill="url(#micro)" opacity="0.12"/>
+  <g id="skullOutline" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M135 15c-40 0-75 35-75 75v60c0 20-10 30-10 45s15 30 45 30h80c30 0 45-15 45-30s-10-25-10-45v-60c0-40-35-75-75-75z"/>
+    <path d="M85 150h100"/>
+    <path d="M105 180v25h60v-25"/>
+  </g>
+  <g id="teeth" stroke="#38bdf8" stroke-width="1">
+    <path d="M115 180v25"/>
+    <path d="M125 180v25"/>
+    <path d="M135 180v25"/>
+    <path d="M145 180v25"/>
+    <path d="M155 180v25"/>
+  </g>
+  <!-- spinning eyes -->
+  <g transform="translate(100 105)">
+    <circle r="18" stroke="#38bdf8" stroke-width="2"/>
+    <g>
+      <circle r="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="-8" y1="0" x2="8" y2="0" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="0" y1="-8" x2="0" y2="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/>
+    </g>
+  </g>
+  <g transform="translate(170 105)">
+    <circle r="18" stroke="#38bdf8" stroke-width="2"/>
+    <g>
+      <circle r="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="-8" y1="0" x2="8" y2="0" stroke="#38bdf8" stroke-width="1.5"/>
+      <line x1="0" y1="-8" x2="0" y2="8" stroke="#38bdf8" stroke-width="1.5"/>
+      <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="4s" repeatCount="indefinite"/>
+    </g>
+  </g>
+  <!-- dense circuitry -->
+  <g id="circuits" stroke="#38bdf8" stroke-width="1">
+    <path d="M135 50v160"/>
+    <path d="M95 70h80"/><path d="M90 90h90"/><path d="M75 110h120"/>
+    <path d="M65 130h140"/><path d="M75 150h120"/><path d="M90 170h90"/>
+    <path d="M95 190h80"/><path d="M115 210h40"/>
+    <path d="M95 70l-30-30"/><path d="M175 70l30-30"/>
+    <path d="M90 90l-40-40"/><path d="M180 90l40-40"/>
+    <path d="M75 110l-45-45"/><path d="M195 110l45-45"/>
+    <path d="M75 150l-45 45"/><path d="M195 150l45 45"/>
+    <path d="M90 170l-40 40"/><path d="M180 170l40 40"/>
+    <path d="M105 190l-30 30"/><path d="M165 190l30 30"/>
+    <path d="M115 60v30"/><path d="M155 60v30"/>
+    <path d="M115 210v30"/><path d="M155 210v30"/>
+    <path d="M60 140h30"/><path d="M210 140h-30"/>
+  </g>
+  <!-- microchips grid -->
+  <g id="chips" stroke="#4ade80" stroke-width="1" fill="none">
+    <rect x="75" y="70" width="20" height="12"/>
+    <rect x="175" y="70" width="20" height="12"/>
+    <rect x="70" y="170" width="18" height="12"/>
+    <rect x="182" y="170" width="18" height="12"/>
+    <rect x="125" y="140" width="20" height="12"/>
+    <rect x="125" y="210" width="20" height="12"/>
+    <rect x="50" y="110" width="16" height="10"/>
+    <rect x="204" y="110" width="16" height="10"/>
+    <rect x="90" y="90" width="14" height="9"/>
+    <rect x="166" y="90" width="14" height="9"/>
+    <rect x="90" y="190" width="14" height="9"/>
+    <rect x="166" y="190" width="14" height="9"/>
+    <rect x="98" y="130" width="14" height="9"/>
+    <rect x="158" y="130" width="14" height="9"/>
+    <rect x="98" y="150" width="14" height="9"/>
+    <rect x="158" y="150" width="14" height="9"/>
+    <rect x="80" y="210" width="16" height="10"/>
+    <rect x="174" y="210" width="16" height="10"/>
+    <rect x="60" y="150" width="16" height="10"/>
+    <rect x="194" y="150" width="16" height="10"/>
+  </g>
+  <!-- additional wiring detail -->
+  <g id="extraDetail" stroke="#38bdf8" stroke-width="0.8">
+    <path d="M135 80v-25"/>
+    <path d="M135 80h30l10-10"/>
+    <path d="M135 80h-30l-10-10"/>
+    <path d="M135 190v25"/>
+    <path d="M135 190h30l10 10"/>
+    <path d="M135 190h-30l-10 10"/>
+    <circle cx="135" cy="80" r="2"/>
+    <circle cx="135" cy="190" r="2"/>
+    <path d="M110 115l-20-20"/><path d="M160 115l20-20"/>
+    <path d="M110 195l-20 20"/><path d="M160 195l20 20"/>
+  </g>
+  <!-- extra microchips -->
+  <g id="extraChips" stroke="#4ade80" stroke-width="1" fill="none">
+    <rect x="120" y="100" width="18" height="10"/>
+    <rect x="150" y="100" width="18" height="10"/>
+    <rect x="120" y="160" width="18" height="10"/>
+    <rect x="150" y="160" width="18" height="10"/>
+  </g>
+  <!-- flickering bulbs -->
+  <g id="bulbs" filter="url(#glow)">
+    <circle cx="135" cy="40" r="3" fill="#f87171">
+      <animate attributeName="opacity" values="1;0.2;1" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="135" cy="230" r="3" fill="#4ade80">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="35" cy="135" r="3" fill="#facc15">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="235" cy="135" r="3" fill="#fb923c">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="80" cy="40" r="2.5" fill="#fb7185">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="190" cy="40" r="2.5" fill="#fb7185">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="90" r="2" fill="#f472b6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2.2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="210" cy="90" r="2" fill="#f472b6">
+      <animate attributeName="opacity" values="1;0.3;1" dur="2.4s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="60" cy="180" r="2" fill="#a78bfa">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="210" cy="180" r="2" fill="#a78bfa">
+      <animate attributeName="opacity" values="1;0.2;1" dur="2.9s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="90" cy="230" r="2.5" fill="#38bdf8">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="180" cy="230" r="2.5" fill="#38bdf8">
+      <animate attributeName="opacity" values="1;0.1;1" dur="1.9s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  <!-- frame ticks -->
+  <g stroke="#4ade80" stroke-width="1.5" stroke-linecap="round">
+    <path d="M135 0v20M100 0v20M170 0v20"/>
+    <path d="M135 270v-20M100 270v-20M170 270v-20"/>
+    <path d="M0 135h20M0 100h20M0 170h20"/>
+    <path d="M270 135h-20M270 100h-20M270 170h-20"/>
+  </g>
+  <!-- digital sign -->
+  <rect x="105" y="26" width="60" height="20" fill="#111" stroke="#f87171" stroke-width="2" rx="2" ry="2"/>
+  <text x="135" y="41" text-anchor="middle" font-size="14" font-weight="700" fill="#f87171" font-family="monospace">GPT-5</text>
+</svg>

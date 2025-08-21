@@ -2,6 +2,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import type { RepoAnalysis } from '../../lib/openai'
+import HexBackground from '../../components/HexBackground'
 
 type Result = { files: string[]; analysis: RepoAnalysis }
 
@@ -106,6 +107,7 @@ export default function IngestPage() {
     if (!file) return
     const form = new FormData()
     form.append('file', file)
+    setShowConsole(true)
     setLoading(true)
     try {
       const res = await fetch('/api/ingest', { method: 'POST', body: form })
@@ -144,6 +146,7 @@ export default function IngestPage() {
     const form = new FormData()
     form.append('repo', repo)
     form.append('branch', branch)
+    setShowConsole(true)
     setLoading(true)
     try {
       const res = await fetch('/api/ingest', { method: 'POST', body: form })
@@ -164,10 +167,21 @@ export default function IngestPage() {
     }
   }
 
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
-      <div className="space-y-8 max-w-md">
+    <div className="relative min-h-screen text-zinc-200">
+      <HexBackground />
+      <div
+        className="fixed inset-0 -z-10"
+        style={{
+          background: 'radial-gradient(circle at 50% 50%, rgba(30,58,138,0.4), rgba(0,0,0,0.9))',
+          backgroundSize: '200% 200%',
+          animation: 'bgMove 20s ease infinite'
+        }}
+      />
+      <div className="relative z-10 p-10 space-y-6">
+        <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
+        <div className="space-y-8 max-w-md">
         <section className="space-y-4">
           <h2 className="text-lg font-medium">GitHub Repository</h2>
           <div className="flex gap-2">
@@ -243,26 +257,34 @@ export default function IngestPage() {
         </div>
       )}
 
-      {result && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <div className="text-sm font-semibold mb-2">Takeaways</div>
-            <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
-              {result.analysis.takeaways.map(t => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-          </Card>
-          {(['complexity', 'documentation', 'tests'] as const).map(key => (
-          <Card key={key}>
-            <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
-            <div className="max-w-[100px] mx-auto">
-              <Gauge value={result.analysis.metrics[key]} />
-            </div>
-          </Card>
-        ))}
+        {result && (
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <div className="text-sm font-semibold mb-2">Takeaways</div>
+              <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
+                {result.analysis.takeaways.map(t => (
+                  <li key={t}>{t}</li>
+                ))}
+              </ul>
+            </Card>
+            {(['complexity', 'documentation', 'tests'] as const).map(key => (
+              <Card key={key}>
+                <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
+                <div className="max-w-[100px] mx-auto">
+                  <Gauge value={result.analysis.metrics[key]} />
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
-    )}
-  </div>
+      <style jsx>{`
+        @keyframes bgMove {
+          0% { background-position: 0 0; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0 0; }
+        }
+      `}</style>
+    </div>
   )
 }

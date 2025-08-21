@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { ArrowUpDown, Search, ShieldAlert, Cpu } from 'lucide-react'
+import HexBackground from '../../components/HexBackground'
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
 
 ChartJS.register(ArcElement, Tooltip, Legend)
@@ -81,9 +82,57 @@ const INDICATORS: Record<keyof Omit<Row,'logoUrl'|'name'|'category'>, { label: s
 export default function MatrixPage(){
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState<Row[]>([])
+  const [repo, setRepo] = useState('')
+  const [branches, setBranches] = useState<string[]>([])
+  const [branch, setBranch] = useState('main')
+
+  useEffect(() => {
+    if (branch) localStorage.setItem('branch', branch)
+  }, [branch])
+
+  useEffect(() => {
+    const r = localStorage.getItem('repo') || ''
+    const b = localStorage.getItem('branch') || 'main'
+    setRepo(r)
+    setBranch(b)
+  }, [])
+
+  useEffect(() => {
+    if (!repo) return
+    fetch(`/api/github/branches?repo=${repo}`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) && setBranches(d.map((x: any) => x.name)))
+      .catch(() => setBranches([]))
+  }, [repo])
+
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === 'repo') setRepo(localStorage.getItem('repo') || '')
+      if (e.key === 'branch') setBranch(localStorage.getItem('branch') || 'main')
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   useEffect(()=>{
-    fetch('/api/components').then(r=>r.json()).then(setRows).catch(()=>setRows([]))
-  },[])
+    let active = true
+    async function load(){
+      if(!repo) { if(active) setRows([]); return }
+      try{
+        const data = await fetch(`/api/components?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(r=>r.json())
+        if(active) setRows(data)
+      }catch{
+        if(active) setRows([])
+      }
+    }
+    load()
+    const id = setInterval(load,5000)
+    return ()=>{active=false; clearInterval(id)}
+  },[repo,branch])
+
+  useEffect(() => {
+    setRows([])
+  }, [repo, branch])
   const filtered = useMemo(()=>rows.filter(r=>
     r.name.includes(query) || r.category.toLowerCase().includes(query.toLowerCase())
   ),[rows,query])
@@ -101,7 +150,7 @@ export default function MatrixPage(){
   const [selected, setSelected] = useState<{row: Row; code: any[]}|null>(null)
 
   async function showDetails(r: Row){
-    const code = await fetch(`/api/code/${encodeURIComponent(r.name)}`).then(res=>res.json()).catch(()=>[])
+    const code = await fetch(`/api/code/${encodeURIComponent(r.name)}?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(res=>res.json()).catch(()=>[])
     setSelected({ row: r, code })
   }
 
@@ -110,6 +159,8 @@ export default function MatrixPage(){
     rows.forEach(r=>{ map[r.category]=(map[r.category]||0)+1 })
     return map
   },[rows])
+  const riskyAll = useMemo(()=>rows.filter(r=>r.security<60).sort((a,b)=>a.security-b.security),[rows])
+  const risky = useMemo(()=>riskyAll.slice(0,2),[riskyAll])
   const pieData = useMemo(
     () => ({
       labels: Object.keys(categoryCounts),
@@ -125,14 +176,31 @@ export default function MatrixPage(){
   )
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200">
-      <div className="mx-auto max-w-7xl px-6 py-10 space-y-6">
+    <div className="relative min-h-screen text-zinc-200">
+      <HexBackground />
+      <div className="fixed inset-0 -z-10">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(229,231,235,0.3), rgba(51,65,85,0.9))',
+            backgroundSize: '200% 200%',
+            animation: 'bgMove 20s ease infinite'
+          }}
+        />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Integration Matrix</h1>
             <p className="text-sm text-zinc-400">Evidence-backed snapshot of repo integrations</p>
           </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+            {repo && (
+              <select value={branch} onChange={e=>setBranch(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm">
+                {branches.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            )}
             <div className="relative">
               <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search integrations…" className="pl-9 pr-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm outline-none focus:ring-2 focus:ring-emerald-500/30"/>
               <Search className="w-4 h-4 absolute left-2 top-2.5 text-zinc-500"/>
@@ -180,13 +248,12 @@ export default function MatrixPage(){
         </Card>
 
         <div className="grid md:grid-cols-4 gap-4">
-          <ExpandableCard title="Risk Highlights" summary={<span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>2 pending actions</span>}>
-            <div>• Upgrade redis to v7 – high</div>
-            <div>• Audit supabase env vars – medium</div>
+          <ExpandableCard title="Risk Highlights" summary={<span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>{riskyAll.length} pending actions</span>}>
+            {risky.length>0 ? risky.map(r=>(<div key={r.name}>• {r.name} – security {r.security}</div>)) : <div>No major risks</div>}
           </ExpandableCard>
-          <ExpandableCard title="Coverage" summary="96% files scanned • 100% manifests parsed">
-            <div>• 123/128 files scanned</div>
-            <div>• 12 manifests parsed</div>
+          <ExpandableCard title="Coverage" summary={`${rows.length} integrations • ${Object.keys(categoryCounts).length} categories`}>
+            <div>• {rows.length} integrations loaded</div>
+            <div>• {Object.keys(categoryCounts).length} categories</div>
           </ExpandableCard>
           <ExpandableCard title="Timeline" summary={`${weeksRemaining} weeks remaining`}>
             <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-2">
@@ -249,6 +316,13 @@ export default function MatrixPage(){
           </Card>
         )}
       </div>
+      <style jsx>{`
+        @keyframes bgMove {
+          0% { background-position: 0 0; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0 0; }
+        }
+      `}</style>
     </div>
   )
 }

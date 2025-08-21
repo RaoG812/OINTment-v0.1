@@ -1,4 +1,4 @@
-# PM Control Suite — Architecture, Data Model, and Starter UI
+# OINTment — Architecture, Data Model, and Starter UI
 
 A platform for project managers joining a project mid-stream that turns a GitHub repository into an actionable, trustworthy control panel: integrations discovered, risks, ownership, and consistency — all with a sleek, contemporary UI.
 

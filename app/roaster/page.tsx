@@ -53,18 +53,19 @@ function Face({ level }: { level: number }) {
     if (!el) return
     function move(e: PointerEvent) {
       const rect = el.getBoundingClientRect()
-      el.style.setProperty('--mx', `${e.clientX - rect.left}px`)
-      el.style.setProperty('--my', `${e.clientY - rect.top}px`)
+      const x = e.clientX - rect.left
+      const y = e.clientY - rect.top
+      if (x >= 0 && x <= rect.width && y >= 0 && y <= rect.height) {
+        el.style.setProperty('--mx', `${x}px`)
+        el.style.setProperty('--my', `${y}px`)
+      } else {
+        el.style.setProperty('--mx', `-999px`)
+        el.style.setProperty('--my', `-999px`)
+      }
     }
-    function leave() {
-      el.style.setProperty('--mx', `-999px`)
-      el.style.setProperty('--my', `-999px`)
-    }
-    el.addEventListener('pointermove', move)
-    el.addEventListener('pointerleave', leave)
+    window.addEventListener('pointermove', move)
     return () => {
-      el.removeEventListener('pointermove', move)
-      el.removeEventListener('pointerleave', leave)
+      window.removeEventListener('pointermove', move)
     }
   }, [])
 
@@ -223,13 +224,15 @@ function HexOverlay() {
   return (
     <div
       ref={ref}
-      className="fixed inset-0 pointer-events-none z-10 opacity-40"
+      className="fixed inset-0 pointer-events-none z-50"
       style={{
         backgroundImage:
-          "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'60\' height=\'52\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.2\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
-        backgroundSize: '30px 26px',
-        mask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 40px, black 60px 120px, transparent 140px)',
-        WebkitMask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 40px, black 60px 120px, transparent 140px)'
+          "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'34\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.15\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
+        backgroundSize: '20px 17px',
+        mixBlendMode: 'overlay',
+        opacity: 0.6,
+        mask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 60px, black 90px, transparent 140px)',
+        WebkitMask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 60px, black 90px, transparent 140px)'
       }}
     />
   )
@@ -432,10 +435,11 @@ export default function RoasterPage() {
           left: 0;
           right: 0;
           bottom: 0;
-          height: 160px;
+          height: 180px;
           pointer-events: none;
           z-index: 5;
           background:
+            linear-gradient(to top, rgba(255,90,0,0.5), transparent),
             radial-gradient(at 10% 120%, rgba(255,80,0,0.6), transparent 60%),
             radial-gradient(at 30% 120%, rgba(255,140,0,0.5), transparent 60%),
             radial-gradient(at 70% 120%, rgba(255,200,0,0.4), transparent 60%),

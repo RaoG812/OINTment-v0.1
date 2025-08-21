@@ -171,8 +171,8 @@ function Face({ level }: { level: number }) {
           position: absolute;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -50%) translateY(-10px);
-          font-size: 260px;
+          transform: translate(-50%, -58%);
+          font-size: 270px;
           color: #f87171;
           filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
         }
@@ -199,6 +199,38 @@ function Face({ level }: { level: number }) {
           left: 50%;
           transform: translateX(-50%);
           transition: all 0.3s;
+        }
+      `}</style>
+    </div>
+  )
+}
+
+function HexCursorLayer() {
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    function move(e: PointerEvent) {
+      el.style.setProperty('--hx', `${e.clientX}px`)
+      el.style.setProperty('--hy', `${e.clientY}px`)
+    }
+    window.addEventListener('pointermove', move)
+    return () => window.removeEventListener('pointermove', move)
+  }, [])
+  return (
+    <div
+      ref={ref}
+      className="pointer-events-none fixed inset-0 z-0"
+      style={{ '--hx': '-999px', '--hy': '-999px' } as CSSProperties}
+    >
+      <div className="absolute inset-0 hex-layer" />
+      <style jsx>{`
+        .hex-layer {
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8.66'%3E%3Cpath d='M2.5 0h5l2.5 4.33-2.5 4.33h-5L0 4.33z' fill='none' stroke='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+          background-size: 18px 15.6px;
+          opacity: 0.15;
+          mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
+          -webkit-mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
         }
       `}</style>
     </div>
@@ -364,6 +396,7 @@ export default function RoasterPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
+      <HexCursorLayer />
       {level > 0.95 && <FireLayer />}
       <div
         className="absolute -bottom-40 -right-40 opacity-20 z-10"

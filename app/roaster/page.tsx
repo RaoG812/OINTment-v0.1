@@ -46,7 +46,7 @@ function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: num
   )
 }
 
-function Face({ level }: { level: number }) {
+function Face({ level, onCursor }: { level: number; onCursor?: (inside: boolean) => void }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
@@ -57,19 +57,21 @@ function Face({ level }: { level: number }) {
       const scaleY = rect.height / el.offsetHeight || 1
       const x = (e.clientX - rect.left) / scaleX
       const y = (e.clientY - rect.top) / scaleY
-      if (x >= 0 && x <= el.offsetWidth && y >= 0 && y <= el.offsetHeight) {
+      const inside = x >= 0 && x <= el.offsetWidth && y >= 0 && y <= el.offsetHeight
+      if (inside) {
         el.style.setProperty('--mx', `${x}px`)
         el.style.setProperty('--my', `${y}px`)
       } else {
         el.style.setProperty('--mx', `-999px`)
         el.style.setProperty('--my', `-999px`)
       }
+      onCursor?.(inside)
     }
     window.addEventListener('pointermove', move)
     return () => {
       window.removeEventListener('pointermove', move)
     }
-  }, [])
+  }, [onCursor])
 
   function eyePolygon(t: number) {
     const circle = [
@@ -171,8 +173,8 @@ function Face({ level }: { level: number }) {
           position: absolute;
           top: 50%;
           left: 50%;
-          transform: translate(-50%, -58%);
-          font-size: 270px;
+          transform: translate(-50%, -60%);
+          font-size: 250px;
           color: #f87171;
           filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
         }
@@ -205,7 +207,7 @@ function Face({ level }: { level: number }) {
   )
 }
 
-function HexCursorLayer() {
+function HexCursorLayer({ hidden = false }: { hidden?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = ref.current
@@ -221,14 +223,14 @@ function HexCursorLayer() {
     <div
       ref={ref}
       className="pointer-events-none fixed inset-0 z-0"
-      style={{ '--hx': '-999px', '--hy': '-999px' } as CSSProperties}
+      style={{ '--hx': '-999px', '--hy': '-999px', opacity: hidden ? 0 : 1 } as CSSProperties}
     >
       <div className="absolute inset-0 hex-layer" />
       <style jsx>{`
         .hex-layer {
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8.66'%3E%3Cpath d='M2.5 0h5l2.5 4.33-2.5 4.33h-5L0 4.33z' fill='none' stroke='rgba(255,255,255,0.1)'/%3E%3C/svg%3E");
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 8.66'%3E%3Cpath d='M2.5 0h5l2.5 4.33-2.5 4.33h-5L0 4.33z' fill='none' stroke='rgba(255,255,255,0.2)'/%3E%3C/svg%3E");
           background-size: 18px 15.6px;
-          opacity: 0.15;
+          opacity: 0.25;
           mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
           -webkit-mask: radial-gradient(circle 80px at var(--hx) var(--hy), black 0 50px, transparent 80px);
         }
@@ -313,6 +315,7 @@ export default function RoasterPage() {
   const [fixing, setFixing] = useState(false)
   const [error, setError] = useState('')
   const [healed, setHealed] = useState(false)
+  const [faceHover, setFaceHover] = useState(false)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -396,14 +399,14 @@ export default function RoasterPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
-      <HexCursorLayer />
+      <HexCursorLayer hidden={faceHover} />
       {level > 0.95 && <FireLayer />}
       <div
         className="absolute -bottom-40 -right-40 opacity-20 z-10"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
-        <Face level={level} />
+        <Face level={level} onCursor={setFaceHover} />
       </div>
       <div className="relative z-30 space-y-8">
         <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>

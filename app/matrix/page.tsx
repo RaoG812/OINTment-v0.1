@@ -158,6 +158,8 @@ export default function MatrixPage(){
     rows.forEach(r=>{ map[r.category]=(map[r.category]||0)+1 })
     return map
   },[rows])
+  const riskyAll = useMemo(()=>rows.filter(r=>r.security<60).sort((a,b)=>a.security-b.security),[rows])
+  const risky = useMemo(()=>riskyAll.slice(0,2),[riskyAll])
   const pieData = useMemo(
     () => ({
       labels: Object.keys(categoryCounts),
@@ -233,13 +235,12 @@ export default function MatrixPage(){
         </Card>
 
         <div className="grid md:grid-cols-4 gap-4">
-          <ExpandableCard title="Risk Highlights" summary={<span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>2 pending actions</span>}>
-            <div>• Upgrade redis to v7 – high</div>
-            <div>• Audit supabase env vars – medium</div>
+          <ExpandableCard title="Risk Highlights" summary={<span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>{riskyAll.length} pending actions</span>}>
+            {risky.length>0 ? risky.map(r=>(<div key={r.name}>• {r.name} – security {r.security}</div>)) : <div>No major risks</div>}
           </ExpandableCard>
-          <ExpandableCard title="Coverage" summary="96% files scanned • 100% manifests parsed">
-            <div>• 123/128 files scanned</div>
-            <div>• 12 manifests parsed</div>
+          <ExpandableCard title="Coverage" summary={`${rows.length} integrations • ${Object.keys(categoryCounts).length} categories`}>
+            <div>• {rows.length} integrations loaded</div>
+            <div>• {Object.keys(categoryCounts).length} categories</div>
           </ExpandableCard>
           <ExpandableCard title="Timeline" summary={`${weeksRemaining} weeks remaining`}>
             <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-2">

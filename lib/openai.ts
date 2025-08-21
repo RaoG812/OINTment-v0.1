@@ -67,13 +67,13 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
   return JSON.parse(txt)
 }
 
-export async function roastRepo(fileList: string[]): Promise<RoastComment[]> {
+export async function roastRepo(fileList: string[], level = 0.5): Promise<RoastComment[]> {
   const content = fileList.slice(0, 200).join('\n')
   const messages: any = [
     {
       role: 'system',
       content:
-        'Provide a concise code review from multiple departments (frontend, backend, ops). Respond with JSON {"reviews":[{"department":string,"comment":string,"temperature":number}]}. Temperature is between 0 and 1 indicating criticism level.'
+        `Provide a concise code review from multiple departments (frontend, backend, ops) at criticism level ${level} (0=gently, 1=brutal). Respond with JSON {"reviews":[{"department":string,"comment":string,"temperature":number}]}. Temperature is between 0 and 1 indicating criticism level.`
     },
     { role: 'user', content }
   ]

@@ -153,7 +153,7 @@ function Face({ level }: { level: number }) {
       </div>
       <style jsx>{`
         .skull {
-          background: radial-gradient(circle at 50% 35%, #450a0a, #000);
+          background: radial-gradient(circle at 50% 35%, #b91c1c, #000);
           position: absolute;
           overflow: hidden;
         }
@@ -170,8 +170,8 @@ function Face({ level }: { level: number }) {
         .top-face {
           --mx: -999px;
           --my: -999px;
-          mask: radial-gradient(circle 60px at var(--mx) var(--my), transparent 0 40px, black 41px);
-          -webkit-mask: radial-gradient(circle 60px at var(--mx) var(--my), transparent 0 40px, black 41px);
+          mask: radial-gradient(circle 90px at var(--mx) var(--my), transparent 0 60px, black 61px);
+          -webkit-mask: radial-gradient(circle 90px at var(--mx) var(--my), transparent 0 60px, black 61px);
           transition: background 0.3s;
         }
         .eye {
@@ -227,12 +227,12 @@ function HexOverlay() {
       className="fixed inset-0 pointer-events-none z-50"
       style={{
         backgroundImage:
-          "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'34\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.15\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
+          "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'34\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.2\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
         backgroundSize: '20px 17px',
-        mixBlendMode: 'overlay',
-        opacity: 0.6,
-        mask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 60px, black 90px, transparent 140px)',
-        WebkitMask: 'radial-gradient(circle at var(--x) var(--y), transparent 0 60px, black 90px, transparent 140px)'
+        mixBlendMode: 'screen',
+        opacity: 0.8,
+        mask: 'radial-gradient(circle at var(--x) var(--y), black 0 80px, transparent 120px)',
+        WebkitMask: 'radial-gradient(circle at var(--x) var(--y), black 0 80px, transparent 120px)'
       }}
     />
   )
@@ -438,6 +438,12 @@ export default function RoasterPage() {
           height: 180px;
           pointer-events: none;
           z-index: 5;
+          overflow: hidden;
+        }
+        .fire-overlay::before {
+          content: '';
+          position: absolute;
+          inset: 0;
           background:
             linear-gradient(to top, rgba(255,90,0,0.5), transparent),
             radial-gradient(at 10% 120%, rgba(255,80,0,0.6), transparent 60%),
@@ -445,10 +451,11 @@ export default function RoasterPage() {
             radial-gradient(at 70% 120%, rgba(255,200,0,0.4), transparent 60%),
             radial-gradient(at 90% 120%, rgba(255,100,0,0.6), transparent 60%);
           animation: flicker 1.2s infinite alternate;
+          transform-origin: bottom;
         }
         @keyframes flicker {
-          from { transform: translateY(0); }
-          to { transform: translateY(-10px); }
+          from { transform: scaleY(1); }
+          to { transform: scaleY(1.1); }
         }
       `}</style>
     </div>

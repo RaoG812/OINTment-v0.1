@@ -135,7 +135,7 @@ function Face({ level }: { level: number }) {
   })()
 
   return (
-    <div ref={ref} className="relative w-[270px] h-[270px]">
+    <div ref={ref} className="relative w-[270px] h-[270px] pointer-events-none">
       <div className="absolute inset-0 skull rounded-full" />
       <div
         className="absolute inset-0 rounded-full overflow-hidden top-face"
@@ -166,6 +166,14 @@ function Face({ level }: { level: number }) {
           font-size: 160px;
           color: #f87171;
           filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
+        }
+        .skull::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='34' viewBox='0 0 60 52'%3E%3Cpath fill='%23fff' fill-opacity='0.15' d='M30 0l30 17v18L30 52 0 35V17z'/%3E%3C/svg%3E");
+          background-size: 20px 17px;
+          mix-blend-mode: overlay;
         }
         .top-face {
           --mx: -999px;
@@ -200,47 +208,8 @@ function Face({ level }: { level: number }) {
   )
 }
 
-function HexOverlay() {
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    function move(e: PointerEvent) {
-      el.style.setProperty('--x', `${e.clientX}px`)
-      el.style.setProperty('--y', `${e.clientY}px`)
-    }
-    function leave() {
-      el.style.setProperty('--x', `-999px`)
-      el.style.setProperty('--y', `-999px`)
-    }
-    leave()
-    window.addEventListener('pointermove', move)
-    window.addEventListener('pointerleave', leave)
-    return () => {
-      window.removeEventListener('pointermove', move)
-      window.removeEventListener('pointerleave', leave)
-    }
-  }, [])
-  return (
-    <div
-      ref={ref}
-      className="fixed inset-0 pointer-events-none z-40"
-      style={{
-        backgroundImage:
-          "url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'40\' height=\'34\' viewBox=\'0 0 60 52\'%3E%3Cpath fill=\'%23fff\' fill-opacity=\'0.2\' d=\'M30 0l30 17v18L30 52 0 35V17z\'/%3E%3C/svg%3E')",
-        backgroundSize: '20px 17px',
-        mixBlendMode: 'screen',
-        opacity: 0.8,
-        mask: 'radial-gradient(circle at var(--x) var(--y), black 0 80px, transparent 120px)',
-        WebkitMask: 'radial-gradient(circle at var(--x) var(--y), black 0 80px, transparent 120px)'
-      }}
-    />
-  )
-}
-
-
 function FireLayer() {
-  const flames = Array.from({ length: 8 })
+  const flames = Array.from({ length: 20 })
   return (
     <div className="fire-layer" aria-hidden="true">
       {flames.map((_, i) => (
@@ -248,8 +217,8 @@ function FireLayer() {
           key={i}
           style={{
             left: `${(i / (flames.length - 1)) * 100}%`,
-            animationDelay: `${i * 0.4}s`,
-            animationDuration: `${4 + (i % 3)}s`
+            animationDelay: `${i * 0.2}s`,
+            animationDuration: `${3 + (i % 4)}s`
           }}
         />
       ))}
@@ -267,10 +236,10 @@ function FireLayer() {
         .fire-layer span {
           position: absolute;
           bottom: -40px;
-          width: 80px;
-          height: 80px;
-          background: radial-gradient(circle at 50% 100%, rgba(255,120,0,0.45), transparent 70%);
-          filter: blur(6px);
+          width: 100px;
+          height: 100px;
+          background: radial-gradient(circle at 50% 100%, rgba(255,160,0,0.6), transparent 70%);
+          filter: blur(4px);
           transform-origin: 50% 100%;
           animation: ember ease-in-out infinite;
         }
@@ -288,11 +257,11 @@ function FireLayer() {
         @keyframes ember {
           0%,100% {
             transform: translateY(0) scale(1);
-            opacity: 0.5;
+            opacity: 0.7;
           }
           50% {
-            transform: translateY(-30px) scale(1.1) translateX(-10px);
-            opacity: 0.2;
+            transform: translateY(-40px) scale(1.2) translateX(-15px);
+            opacity: 0.3;
           }
         }
       `}</style>
@@ -485,7 +454,6 @@ export default function RoasterPage() {
           </ul>
         </div>
       )}
-      <HexOverlay />
       <style jsx>{`
         @keyframes bgMove {
           0% { background-position: 0 0; }

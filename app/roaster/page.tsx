@@ -135,8 +135,11 @@ function Face({ level }: { level: number }) {
   })()
 
   return (
-    <div ref={ref} className="relative w-[270px] h-[270px] pointer-events-none">
-      <div className="absolute inset-0 skull rounded-full" />
+    <div
+      ref={ref}
+      className="relative w-[270px] h-[270px] pointer-events-none"
+      style={{ '--mx': '-999px', '--my': '-999px' } as CSSProperties}
+    >
       <div
         className="absolute inset-0 rounded-full overflow-hidden top-face"
         style={{ background: `radial-gradient(circle at 50% 35%, hsl(${hue},40%,30%), #000)` }}
@@ -151,11 +154,15 @@ function Face({ level }: { level: number }) {
         />
         <div className="mouth" style={mouthStyle} />
       </div>
+      <div className="absolute inset-0 skull rounded-full pointer-events-none" />
       <style jsx>{`
         .skull {
           background: radial-gradient(circle at 50% 35%, #b91c1c, #000);
           position: absolute;
           overflow: hidden;
+          mask: radial-gradient(circle 90px at var(--mx) var(--my), black 0 40px, transparent 60px);
+          -webkit-mask: radial-gradient(circle 90px at var(--mx) var(--my), black 0 40px, transparent 60px);
+          transition: mask 0.3s;
         }
         .skull::before {
           content: '☠️';
@@ -167,19 +174,7 @@ function Face({ level }: { level: number }) {
           color: #f87171;
           filter: drop-shadow(0 0 10px rgba(127,29,29,0.6));
         }
-        .skull::after {
-          content: '';
-          position: absolute;
-          inset: 0;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='34' viewBox='0 0 60 52'%3E%3Cpath fill='%23fff' fill-opacity='0.15' d='M30 0l30 17v18L30 52 0 35V17z'/%3E%3C/svg%3E");
-          background-size: 20px 17px;
-          mix-blend-mode: overlay;
-        }
         .top-face {
-          --mx: -999px;
-          --my: -999px;
-          mask: radial-gradient(circle 90px at var(--mx) var(--my), transparent 0 60px, black 61px);
-          -webkit-mask: radial-gradient(circle 90px at var(--mx) var(--my), transparent 0 60px, black 61px);
           transition: background 0.3s;
         }
         .eye {

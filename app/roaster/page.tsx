@@ -1,6 +1,6 @@
 // @ts-nocheck
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, CSSProperties } from 'react'
 
 type Result = { files: string[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -9,22 +9,36 @@ const departments = ['frontend', 'backend', 'ops'] as const
 type Department = typeof departments[number]
 
 function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const percent = Math.round(value * 100)
+  const color = value > 0.66 ? '#dc2626' : value > 0.33 ? '#fbbf24' : '#10b981'
   return (
     <div
-      className="relative w-24 h-24 rounded-full shadow-lg shadow-emerald-500/20"
-      style={{ background: `conic-gradient(#10b981 ${value * 100}%, #27272a 0)` }}
+      className="relative w-24 h-24 select-none"
+      style={{
+        '--pct': `${percent}%`,
+        '--col': color
+      } as CSSProperties}
     >
-      <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
+      <div className="absolute inset-0 rounded-full bg-zinc-800 shadow-lg shadow-emerald-500/20" />
+      <div
+        className="absolute inset-0 rounded-full transition-[background] duration-300"
+        style={{ background: `conic-gradient(var(--col) var(--pct), #27272a 0)` }}
+      />
+      <div className="absolute inset-2 rounded-full bg-black flex items-center justify-center">
         <div
-          className="w-1 rounded-full bg-emerald-500 origin-bottom"
-          style={{ height: '45%', transform: `rotate(${value * 270 - 135}deg)` }}
+          className="w-1 h-8 rounded-full origin-bottom"
+          style={{
+            transform: `rotate(${value * 270 - 135}deg)`,
+            background: 'var(--col)',
+            transition: 'transform 0.3s ease-out, background 0.3s ease-out'
+          }}
         />
       </div>
       <input
         type="range"
         min="0"
         max="100"
-        value={Math.round(value * 100)}
+        value={percent}
         onChange={e => onChange(parseInt(e.target.value) / 100)}
         className="absolute inset-0 opacity-0 cursor-pointer"
       />
@@ -67,6 +81,12 @@ function Face({ level }: { level: number }) {
           position: absolute;
           top: 55px;
           transition: transform 0.3s;
+          animation: blink 5s infinite;
+          transform-origin: center;
+        }
+        @keyframes blink {
+          0%, 97%, 100% { transform: scaleY(1); }
+          98%, 99% { transform: scaleY(0.1); }
         }
         .eye.left {
           left: 55px;
@@ -186,86 +206,88 @@ export default function RoasterPage() {
     : 0
 
   return (
-    <div className="relative overflow-hidden min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-8">
-      <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
-      <div className="flex flex-wrap items-center gap-8">
-        <TemperatureKnob value={level} onChange={setLevel} />
-        <div className="flex flex-col gap-2">
-          <div className="text-sm font-medium">Criticism Level: {Math.round(level * 100)}%</div>
-          <div className="flex gap-2">
-            <button
-              onClick={runRoaster}
-              className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-            >
-              Run Roaster
-            </button>
-            <button
-              onClick={runFixes}
-              className="px-4 py-2 bg-rose-600 text-sm font-medium rounded-lg hover:bg-rose-500 transition"
-            >
-              Fix
-            </button>
-          </div>
-        </div>
-        <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-4">
-          <div className="relative h-20 w-20">
-            <div className="absolute inset-0 rounded-full bg-zinc-800" />
-            <div
-              className="absolute inset-0 rounded-full"
-              style={{ background: `conic-gradient(#10b981 ${health}%, transparent 0)` }}
-            />
-            <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
-              <span className="text-sm font-semibold">{health}</span>
-            </div>
-          </div>
-          <div>
-            <div className="text-sm font-medium">Health</div>
-            <div className="text-xs text-zinc-400">Overall project vitality</div>
-          </div>
-        </div>
-      </div>
-      {error && <div className="text-xs text-rose-400">{error}</div>}
-      <div className="grid sm:grid-cols-3 gap-4">
-        {departments.map(d => {
-          const w = widgets[d]
-          return (
-            <div key={d} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-              <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-semibold capitalize">{d}</span>
-                <span className="text-xs text-zinc-400">{Math.round(w.temperature * 100)}%</span>
-              </div>
-              <div
-                className={`text-sm ${w.temperature > 0.66 ? 'text-rose-400' : w.temperature > 0.33 ? 'text-amber-300' : 'text-emerald-400'}`}
-              >
-                {w.comment}
-              </div>
-              <div className="h-1 bg-zinc-800 rounded-full mt-2">
-                <div
-                  className={`h-full rounded-full ${w.temperature > 0.66 ? 'bg-rose-500' : w.temperature > 0.33 ? 'bg-amber-400' : 'bg-emerald-500'}`}
-                  style={{ width: `${w.temperature * 100}%` }}
-                />
-              </div>
-            </div>
-          )
-        })}
-      </div>
-      {fixes && (
-        <div className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
-          <div className="text-sm font-semibold mb-2">Suggested Fixes</div>
-          <ul className="list-disc pl-5 space-y-1 text-sm">
-            {fixes.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {(roasting || fixing) && (
-        <div className="flex items-center justify-center mt-4">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-        </div>
-      )}
-      <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-20 -z-10 scale-[2.5]">
+    <div className="relative overflow-hidden min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10">
+      <div className="pointer-events-none absolute right-0 top-1/2 -translate-y-1/2 opacity-20 scale-[2.5]" aria-hidden="true">
         <Face level={level} />
+      </div>
+      <div className="relative z-10 space-y-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
+        <div className="flex flex-wrap items-center gap-8">
+          <TemperatureKnob value={level} onChange={setLevel} />
+          <div className="flex flex-col gap-2">
+            <div className="text-sm font-medium">Criticism Level: {Math.round(level * 100)}%</div>
+            <div className="flex gap-2">
+              <button
+                onClick={runRoaster}
+                className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+              >
+                Run Roaster
+              </button>
+              <button
+                onClick={runFixes}
+                className="px-4 py-2 bg-rose-600 text-sm font-medium rounded-lg hover:bg-rose-500 transition"
+              >
+                Fix
+              </button>
+            </div>
+          </div>
+          <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-4">
+            <div className="relative h-20 w-20">
+              <div className="absolute inset-0 rounded-full bg-zinc-800" />
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ background: `conic-gradient(#10b981 ${health}%, transparent 0)` }}
+              />
+              <div className="absolute inset-2 bg-black rounded-full flex items-center justify-center">
+                <span className="text-sm font-semibold">{health}</span>
+              </div>
+            </div>
+            <div>
+              <div className="text-sm font-medium">Health</div>
+              <div className="text-xs text-zinc-400">Overall project vitality</div>
+            </div>
+          </div>
+        </div>
+        {error && <div className="text-xs text-rose-400">{error}</div>}
+        <div className="grid sm:grid-cols-3 gap-4">
+          {departments.map(d => {
+            const w = widgets[d]
+            return (
+              <div key={d} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-semibold capitalize">{d}</span>
+                  <span className="text-xs text-zinc-400">{Math.round(w.temperature * 100)}%</span>
+                </div>
+                <div
+                  className={`text-sm ${w.temperature > 0.66 ? 'text-rose-400' : w.temperature > 0.33 ? 'text-amber-300' : 'text-emerald-400'}`}
+                >
+                  {w.comment}
+                </div>
+                <div className="h-1 bg-zinc-800 rounded-full mt-2">
+                  <div
+                    className={`h-full rounded-full ${w.temperature > 0.66 ? 'bg-rose-500' : w.temperature > 0.33 ? 'bg-amber-400' : 'bg-emerald-500'}`}
+                    style={{ width: `${w.temperature * 100}%` }}
+                  />
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        {fixes && (
+          <div className="mt-6 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+            <div className="text-sm font-semibold mb-2">Suggested Fixes</div>
+            <ul className="list-disc pl-5 space-y-1 text-sm">
+              {fixes.map((f, i) => (
+                <li key={i}>{f}</li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {(roasting || fixing) && (
+          <div className="flex items-center justify-center mt-4">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+          </div>
+        )}
       </div>
     </div>
   )

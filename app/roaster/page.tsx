@@ -10,30 +10,27 @@ type Department = typeof departments[number]
 
 function TemperatureKnob({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const percent = Math.round(value * 100)
-  const color = value > 0.66 ? '#dc2626' : value > 0.33 ? '#fbbf24' : '#10b981'
+  const angle = value * 270 - 135
+  const hue = 120 - value * 120
   return (
-    <div
-      className="relative w-24 h-24 select-none"
-      style={{
-        '--pct': `${percent}%`,
-        '--col': color
-      } as CSSProperties}
-    >
-      <div className="absolute inset-0 rounded-full bg-zinc-800 shadow-lg shadow-emerald-500/20" />
+    <div className="relative w-32 h-32 select-none">
+      <div className="absolute inset-0 rounded-full bg-zinc-800 shadow-inner shadow-black/40" />
       <div
-        className="absolute inset-0 rounded-full transition-[background] duration-300"
-        style={{ background: `conic-gradient(var(--col) var(--pct), #27272a 0)` }}
+        className="absolute inset-0 rounded-full transition-all"
+        style={{
+          background: `conic-gradient(hsl(${hue},80%,50%) ${percent}%, #27272a ${percent}% 100%)`
+        }}
       />
-      <div className="absolute inset-2 rounded-full bg-black relative">
+      <div className="absolute inset-[6px] rounded-full bg-black flex items-center justify-center">
         <div
-          className="absolute top-1/2 left-1/2 w-1 h-8 -translate-x-1/2 -translate-y-full rounded-full origin-bottom"
+          className="w-2 h-14 rounded-full origin-bottom"
           style={{
-            transform: `rotate(${value * 270 - 135}deg)`,
-            background: 'var(--col)',
+            transform: `rotate(${angle}deg)`,
+            background: `hsl(${hue},80%,50%)`,
             transition: 'transform 0.3s ease-out, background 0.3s ease-out'
           }}
         />
-        <div className="absolute top-1/2 left-1/2 w-2 h-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-zinc-200" />
+        <div className="absolute w-3 h-3 bg-zinc-200 rounded-full" />
       </div>
       <input
         type="range"
@@ -56,8 +53,8 @@ function Face({ level }: { level: number }) {
       <div className="mouth" />
       <style jsx>{`
         .face {
-          width: 180px;
-          height: 180px;
+          width: 270px;
+          height: 270px;
           border-radius: 50%;
           position: relative;
           background: radial-gradient(circle at 50% 35%, #27272a 0%, #000 100%);
@@ -75,13 +72,13 @@ function Face({ level }: { level: number }) {
           filter: drop-shadow(0 0 20px rgba(127,29,29,0.4));
         }
         .eye {
-          width: 24px;
-          height: 24px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           background: #fff;
           position: absolute;
-          top: 55px;
-          transition: transform 0.3s;
+          top: 82px;
+          transition: transform 0.3s, clip-path 0.3s;
           animation: blink 5s infinite;
           transform-origin: center;
         }
@@ -90,39 +87,44 @@ function Face({ level }: { level: number }) {
           98%, 99% { transform: scaleY(0.1); }
         }
         .eye.left {
-          left: 55px;
+          left: 82px;
         }
         .eye.right {
-          right: 55px;
+          right: 82px;
+        }
+        .face.furious .eye {
+          clip-path: polygon(50% 0, 0 100%, 100% 100%);
         }
         .face.furious .eye.left {
-          transform: rotate(20deg) translateY(-4px);
+          transform: translateY(-6px) rotate(10deg);
         }
         .face.furious .eye.right {
-          transform: rotate(-20deg) translateY(-4px);
+          transform: translateY(-6px) rotate(-10deg);
         }
         .mouth {
-          width: 80px;
-          height: 40px;
-          border: 5px solid #fff;
+          width: 120px;
+          height: 60px;
+          border: 8px solid #fff;
           border-top: none;
-          border-radius: 0 0 80px 80px;
+          border-radius: 0 0 120px 120px;
           position: absolute;
           left: 50%;
           transform: translateX(-50%);
-          bottom: 55px;
+          bottom: 82px;
           transition: all 0.3s;
         }
         .face.poker .mouth {
           height: 0;
           border-radius: 0;
-          bottom: 80px;
+          bottom: 120px;
         }
         .face.furious .mouth {
-          border-bottom: none;
-          border-top: 5px solid #fff;
-          border-radius: 80px 80px 0 0;
-          bottom: 90px;
+          width: 120px;
+          height: 60px;
+          background: #fff;
+          border: none;
+          bottom: 110px;
+          clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
         }
       `}</style>
     </div>
@@ -206,9 +208,17 @@ export default function RoasterPage() {
     ? 100 - Math.round((temps.reduce((s, t) => s + t, 0) / temps.length) * 100)
     : 0
 
+  const hue = 120 - level * 120
+  const bgStyle: CSSProperties = {
+    background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,15%), #000)` ,
+    backgroundSize: '200% 200%',
+    animation: 'bgMove 20s ease infinite',
+    transition: 'background 0.5s'
+  }
+
   return (
-    <div className="relative overflow-hidden min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10">
-      <div className="pointer-events-none absolute bottom-10 right-10 opacity-20 scale-[2]" aria-hidden="true">
+    <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
+      <div className="pointer-events-none absolute bottom-10 right-10 opacity-20" aria-hidden="true">
         <Face level={level} />
       </div>
       <div className="relative z-10 space-y-8">
@@ -290,6 +300,13 @@ export default function RoasterPage() {
           </div>
         )}
       </div>
+      <style jsx>{`
+        @keyframes bgMove {
+          0% { background-position: 0 0; }
+          50% { background-position: 100% 100%; }
+          100% { background-position: 0 0; }
+        }
+      `}</style>
     </div>
   )
 }

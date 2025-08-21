@@ -81,11 +81,44 @@ const INDICATORS: Record<keyof Omit<Row,'logoUrl'|'name'|'category'>, { label: s
 export default function MatrixPage(){
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState<Row[]>([])
+  const [repo, setRepo] = useState('')
+  const [branches, setBranches] = useState<string[]>([])
+  const [branch, setBranch] = useState('main')
+
+  useEffect(() => {
+    if (branch) localStorage.setItem('branch', branch)
+  }, [branch])
+
+  useEffect(() => {
+    const r = localStorage.getItem('repo') || ''
+    const b = localStorage.getItem('branch') || 'main'
+    setRepo(r)
+    setBranch(b)
+  }, [])
+
+  useEffect(() => {
+    if (!repo) return
+    fetch(`/api/github/branches?repo=${repo}`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) && setBranches(d.map((x: any) => x.name)))
+      .catch(() => setBranches([]))
+  }, [repo])
+
+  useEffect(() => {
+    function onStorage(e: StorageEvent) {
+      if (e.key === 'repo') setRepo(localStorage.getItem('repo') || '')
+      if (e.key === 'branch') setBranch(localStorage.getItem('branch') || 'main')
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   useEffect(()=>{
     let active = true
     async function load(){
+      if(!repo) { if(active) setRows([]); return }
       try{
-        const data = await fetch('/api/components').then(r=>r.json())
+        const data = await fetch(`/api/components?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(r=>r.json())
         if(active) setRows(data)
       }catch{
         if(active) setRows([])
@@ -94,7 +127,11 @@ export default function MatrixPage(){
     load()
     const id = setInterval(load,5000)
     return ()=>{active=false; clearInterval(id)}
-  },[])
+  },[repo,branch])
+
+  useEffect(() => {
+    setRows([])
+  }, [repo, branch])
   const filtered = useMemo(()=>rows.filter(r=>
     r.name.includes(query) || r.category.toLowerCase().includes(query.toLowerCase())
   ),[rows,query])
@@ -112,7 +149,7 @@ export default function MatrixPage(){
   const [selected, setSelected] = useState<{row: Row; code: any[]}|null>(null)
 
   async function showDetails(r: Row){
-    const code = await fetch(`/api/code/${encodeURIComponent(r.name)}`).then(res=>res.json()).catch(()=>[])
+    const code = await fetch(`/api/code/${encodeURIComponent(r.name)}?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(res=>res.json()).catch(()=>[])
     setSelected({ row: r, code })
   }
 
@@ -143,7 +180,12 @@ export default function MatrixPage(){
             <h1 className="text-2xl font-semibold tracking-tight">Integration Matrix</h1>
             <p className="text-sm text-zinc-400">Evidence-backed snapshot of repo integrations</p>
           </div>
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+            {repo && (
+              <select value={branch} onChange={e=>setBranch(e.target.value)} className="px-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm">
+                {branches.map(b => <option key={b} value={b}>{b}</option>)}
+              </select>
+            )}
             <div className="relative">
               <input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Search integrations…" className="pl-9 pr-3 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-sm outline-none focus:ring-2 focus:ring-emerald-500/30"/>
               <Search className="w-4 h-4 absolute left-2 top-2.5 text-zinc-500"/>

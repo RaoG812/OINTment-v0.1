@@ -58,6 +58,7 @@ export default function IngestPage() {
   const [error, setError] = useState('')
   const [roasting, setRoasting] = useState(false)
   const [roast, setRoast] = useState<{department:string;comment:string;temperature:number}[]|null>(null)
+  const [tab, setTab] = useState<'overview' | 'roaster'>('overview')
 
   async function prefetchTracking(repo: string) {
     try {
@@ -187,6 +188,12 @@ export default function IngestPage() {
     }
   }
 
+  useEffect(() => {
+    if (tab === 'roaster' && !roast && !roasting && result) {
+      runRoaster()
+    }
+  }, [tab, roast, roasting, result])
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
@@ -266,50 +273,71 @@ export default function IngestPage() {
         </div>
       )}
 
-      {result && (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <div className="text-sm font-semibold mb-2">Takeaways</div>
-            <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
-              {result.analysis.takeaways.map(t => (
-                <li key={t}>{t}</li>
-              ))}
-            </ul>
-          </Card>
-          {(['complexity', 'documentation', 'tests'] as const).map(key => (
-          <Card key={key}>
-            <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
-            <div className="max-w-[100px] mx-auto">
-              <Gauge value={result.analysis.metrics[key]} />
-            </div>
-          </Card>
-        ))}
-          <Card>
-            <div className="text-sm font-semibold mb-2 flex items-center justify-between">
-              <span>Roaster Comments</span>
+        {result && (
+          <div className="space-y-4">
+            <div className="flex gap-4 border-b border-zinc-800">
               <button
-                onClick={runRoaster}
-                disabled={roasting}
-                className="px-2 py-1 text-xs bg-zinc-800 rounded disabled:opacity-50"
-              >
-                Run
-              </button>
+                className={`pb-2 text-sm font-medium ${tab==='overview'?'border-b-2 border-emerald-500 text-zinc-200':'text-zinc-400'}`}
+                onClick={()=>setTab('overview')}
+              >Overview</button>
+              <button
+                className={`pb-2 text-sm font-medium ${tab==='roaster'?'border-b-2 border-emerald-500 text-zinc-200':'text-zinc-400'}`}
+                onClick={()=>setTab('roaster')}
+              >Roaster</button>
             </div>
-            <ul className="text-xs text-zinc-400 space-y-2 relative">
-              {roast && roast.map(r => (
-                <li key={r.department}>
-                  <span className="font-semibold">{r.department}</span>: <span className={`${r.temperature>0.66?'text-rose-400':r.temperature>0.33?'text-amber-300':'text-emerald-400'}`}>{r.comment}</span>
-                </li>
-              ))}
-            </ul>
-            {roasting && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
-                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+
+            {tab === 'overview' && (
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                <Card>
+                  <div className="text-sm font-semibold mb-2">Takeaways</div>
+                  <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
+                    {result.analysis.takeaways.map(t => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                </Card>
+                {(['complexity', 'documentation', 'tests'] as const).map(key => (
+                  <Card key={key}>
+                    <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
+                    <div className="max-w-[100px] mx-auto">
+                      <Gauge value={result.analysis.metrics[key]} />
+                    </div>
+                  </Card>
+                ))}
               </div>
             )}
-          </Card>
-        </div>
-      )}
+
+            {tab === 'roaster' && (
+              <div className="relative">
+                <ul className="space-y-4">
+                  {roast && roast.map(r => (
+                    <li key={r.department} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold">{r.department}</span>
+                        <span className="text-xs text-zinc-400">{Math.round(r.temperature*100)}%</span>
+                      </div>
+                      <div className={`text-sm ${r.temperature>0.66?'text-rose-400':r.temperature>0.33?'text-amber-300':'text-emerald-400'}`}>{r.comment}</div>
+                      <div className="h-1 bg-zinc-800 rounded-full mt-2">
+                        <div className={`h-full rounded-full ${r.temperature>0.66?'bg-rose-500':r.temperature>0.33?'bg-amber-400':'bg-emerald-500'}`} style={{width:`${r.temperature*100}%`}} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+                {roasting && (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+                    <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+                  </div>
+                )}
+                {!roasting && !roast && (
+                  <button
+                    onClick={runRoaster}
+                    className="mt-4 px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                  >Run Roaster</button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
   </div>
   )
 }

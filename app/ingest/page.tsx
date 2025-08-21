@@ -56,6 +56,8 @@ export default function IngestPage() {
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
+  const [roasting, setRoasting] = useState(false)
+  const [roast, setRoast] = useState<{department:string;comment:string;temperature:number}[]|null>(null)
 
   async function prefetchTracking(repo: string) {
     try {
@@ -164,6 +166,27 @@ export default function IngestPage() {
     }
   }
 
+  async function runRoaster() {
+    if (!result) return
+    setRoasting(true)
+    try {
+      const res = await fetch('/api/roaster', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: result.files })
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'roaster failed')
+      setRoast(data.comments || [])
+      setError('')
+    } catch (err) {
+      setRoast(null)
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setRoasting(false)
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-950 to-black text-zinc-200 p-10 space-y-6">
       <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
@@ -261,8 +284,32 @@ export default function IngestPage() {
             </div>
           </Card>
         ))}
-      </div>
-    )}
+          <Card>
+            <div className="text-sm font-semibold mb-2 flex items-center justify-between">
+              <span>Roaster Comments</span>
+              <button
+                onClick={runRoaster}
+                disabled={roasting}
+                className="px-2 py-1 text-xs bg-zinc-800 rounded disabled:opacity-50"
+              >
+                Run
+              </button>
+            </div>
+            <ul className="text-xs text-zinc-400 space-y-2 relative">
+              {roast && roast.map(r => (
+                <li key={r.department}>
+                  <span className="font-semibold">{r.department}</span>: <span className={`${r.temperature>0.66?'text-rose-400':r.temperature>0.33?'text-amber-300':'text-emerald-400'}`}>{r.comment}</span>
+                </li>
+              ))}
+            </ul>
+            {roasting && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-xl">
+                <div className="h-6 w-6 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+              </div>
+            )}
+          </Card>
+        </div>
+      )}
   </div>
   )
 }

@@ -11,6 +11,12 @@ export interface RepoAnalysis {
   }
 }
 
+export interface RoastComment {
+  department: string
+  comment: string
+  temperature: number
+}
+
 // Create a client that can talk to AIMLAPI when AIML_API_KEY is provided.
 // Otherwise, it falls back to the standard OpenAI endpoint using OPENAI_API_KEY.
 const apiKey = process.env.AIML_API_KEY || process.env.OPENAI_API_KEY
@@ -59,6 +65,25 @@ export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
 
   const txt = await chat(messages, { type: 'json_object' })
   return JSON.parse(txt)
+}
+
+export async function roastRepo(fileList: string[]): Promise<RoastComment[]> {
+  const content = fileList.slice(0, 200).join('\n')
+  const messages: any = [
+    {
+      role: 'system',
+      content:
+        'Provide a concise code review from multiple departments (frontend, backend, ops). Respond with JSON {"reviews":[{"department":string,"comment":string,"temperature":number}]}. Temperature is between 0 and 1 indicating criticism level.'
+    },
+    { role: 'user', content }
+  ]
+  const txt = await chat(messages, { type: 'json_object' })
+  try {
+    const parsed = JSON.parse(txt)
+    return Array.isArray(parsed.reviews) ? parsed.reviews : []
+  } catch {
+    return []
+  }
 }
 
 // Categorize commit messages into domain (frontend/backend/db/other) and

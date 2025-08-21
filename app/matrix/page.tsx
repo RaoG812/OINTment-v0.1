@@ -82,7 +82,18 @@ export default function MatrixPage(){
   const [query, setQuery] = useState('')
   const [rows, setRows] = useState<Row[]>([])
   useEffect(()=>{
-    fetch('/api/components').then(r=>r.json()).then(setRows).catch(()=>setRows([]))
+    let active = true
+    async function load(){
+      try{
+        const data = await fetch('/api/components').then(r=>r.json())
+        if(active) setRows(data)
+      }catch{
+        if(active) setRows([])
+      }
+    }
+    load()
+    const id = setInterval(load,5000)
+    return ()=>{active=false; clearInterval(id)}
   },[])
   const filtered = useMemo(()=>rows.filter(r=>
     r.name.includes(query) || r.category.toLowerCase().includes(query.toLowerCase())

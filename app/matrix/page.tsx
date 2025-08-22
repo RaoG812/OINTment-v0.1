@@ -6,10 +6,18 @@ import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { ArrowUpDown, Search, ShieldAlert, Cpu } from 'lucide-react'
 import HexBackground from '../../components/HexBackground'
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from 'chart.js'
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+} from 'chart.js'
 
-ChartJS.register(ArcElement, Tooltip, Legend)
-const Pie = dynamic(() => import('react-chartjs-2').then(m => m.Pie), { ssr: false })
+ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
+const Radar = dynamic(() => import('react-chartjs-2').then(m => m.Radar), { ssr: false })
 
 // Minimal shadcn pieces (replace with imported components in real app)
 function Card({children}:{children:React.ReactNode}){return <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 shadow-xl p-4 backdrop-blur-sm">{children}</div>}
@@ -182,14 +190,18 @@ export default function MatrixPage(){
   },[rows])
   const riskyAll = useMemo(()=>rows.filter(r=>r.security<60).sort((a,b)=>a.security-b.security),[rows])
   const risky = useMemo(()=>riskyAll.slice(0,2),[riskyAll])
-  const pieData = useMemo(
+  const radarData = useMemo(
     () => ({
       labels: Object.keys(categoryCounts),
       datasets: [
         {
+          label: 'Categories',
           data: Object.values(categoryCounts),
-          backgroundColor: ['#10b981', '#3b82f6', '#a855f7', '#f59e0b', '#ef4444', '#f472b6'],
-          borderColor: 'transparent'
+          backgroundColor: 'rgba(16,185,129,0.3)',
+          borderColor: '#10b981',
+          pointBackgroundColor: '#10b981',
+          pointBorderColor: '#10b981',
+          fill: true
         }
       ]
     }),
@@ -300,9 +312,22 @@ export default function MatrixPage(){
             </div>
           </ExpandableCard>
           <Card>
-            <div className="text-sm font-semibold mb-2">Category Breakdown</div>
+            <div className="text-sm font-semibold mb-2">Category Radar</div>
             {Object.keys(categoryCounts).length > 0 ? (
-              <Pie data={pieData} options={{ plugins: { legend: { display: false } } }} />
+              <Radar
+                data={radarData}
+                options={{
+                  plugins: { legend: { display: false } },
+                  scales: {
+                    r: {
+                      beginAtZero: true,
+                      angleLines: { color: '#27272a' },
+                      grid: { color: '#27272a' },
+                      ticks: { display: false }
+                    }
+                  }
+                }}
+              />
             ) : (
               <div className="text-xs text-zinc-400">No data</div>
             )}

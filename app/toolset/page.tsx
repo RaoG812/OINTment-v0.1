@@ -1,6 +1,19 @@
 'use client'
 import { useState } from 'react'
 import { Card, Badge, Metric } from '../../lib/ui'
+import dynamic from 'next/dynamic'
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+} from 'chart.js'
+
+ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
+const Radar = dynamic(() => import('react-chartjs-2').then(m => m.Radar), { ssr: false })
 import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
@@ -180,6 +193,40 @@ export default function ToolsetPage() {
                   <Metric label="Coverage" value={data.reliability.coveragePct} />
                   <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
                   <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
+                </div>
+                <div className="mt-4">
+                  <Radar
+                    data={{
+                      labels: ['Coverage', 'Evidence', 'LLM Agreement'],
+                      datasets: [
+                        {
+                          label: 'Reliability',
+                          data: [
+                            data.reliability.coveragePct,
+                            data.reliability.evidenceCompletenessPct,
+                            data.reliability.llmStaticAgreementPct
+                          ],
+                          backgroundColor: 'rgba(16,185,129,0.3)',
+                          borderColor: '#10b981',
+                          pointBackgroundColor: '#10b981',
+                          pointBorderColor: '#10b981',
+                          fill: true
+                        }
+                      ]
+                    }}
+                    options={{
+                      plugins: { legend: { display: false } },
+                      scales: {
+                        r: {
+                          beginAtZero: true,
+                          angleLines: { color: '#27272a' },
+                          grid: { color: '#27272a' },
+                          max: 100,
+                          ticks: { display: false }
+                        }
+                      }
+                    }}
+                  />
                 </div>
               </Card>
             </div>

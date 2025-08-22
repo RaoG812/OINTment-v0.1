@@ -7,7 +7,8 @@ const POSITIONS = [
   { x: 390, y: 330 } // bottom right
 ]
 const PATH_D = `M${POSITIONS[0].x},${POSITIONS[0].y} L${POSITIONS[1].x},${POSITIONS[1].y} L${POSITIONS[2].x},${POSITIONS[2].y} Z`
-const POINTER_POS = { x: POSITIONS[0].x - 40, y: POSITIONS[0].y }
+// position pointer slightly left of the selected ring
+const POINTER_POS = { x: POSITIONS[0].x - 110, y: POSITIONS[0].y }
 const ORDER = [
   [0, 1, 2],
   [2, 0, 1],
@@ -25,14 +26,14 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
     },
     {
       key: 'repo',
-      label: 'Repo Data',
+      label: 'Repo',
       pct: repo ? 100 : 0,
       color: '#0ea5e9',
       comment: repo ? 'Repository analyzed' : 'Repo not analyzed'
     },
     {
       key: 'roast',
-      label: 'Roast Results',
+      label: 'Roast',
       pct: roast ? 100 : 0,
       color: '#22c55e',
       comment: roast ? 'Roaster run complete' : 'Roast not run'
@@ -151,7 +152,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               )}
             </div>
             {!active && (
-              <div className="absolute left-full ml-12 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap z-30">
+              <div className="absolute left-full ml-10 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap z-30">
                 {a.label}
               </div>
             )}
@@ -168,14 +169,14 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         }}
       >
         <svg
-          width="40"
-          height="40"
-          viewBox="0 0 40 40"
+          width="60"
+          height="60"
+          viewBox="0 0 60 60"
           className="pointer-events-none"
-          style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}
+          style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' }}
         >
-          <polygon points="0,0 20,20 0,40" fill="rgba(255,255,255,0.9)" />
-          <polygon points="20,20 40,0 40,40" fill="rgba(255,255,255,0.9)" />
+          <polygon points="0,30 60,0 60,60" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={3} />
+          <polygon points="8,30 50,12 50,48" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">

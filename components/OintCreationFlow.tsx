@@ -8,7 +8,7 @@ const POSITIONS = [
 ]
 const PATH_D = `M${POSITIONS[0].x},${POSITIONS[0].y} L${POSITIONS[1].x},${POSITIONS[1].y} L${POSITIONS[2].x},${POSITIONS[2].y} Z`
 // position pointer slightly left of the selected ring
-const POINTER_POS = { x: POSITIONS[0].x - 110, y: POSITIONS[0].y }
+const POINTER_POS = { x: POSITIONS[0].x - 150, y: POSITIONS[0].y }
 const ORDER = [
   [0, 1, 2],
   [2, 0, 1],
@@ -152,7 +152,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               )}
             </div>
             {!active && (
-              <div className="absolute left-full ml-10 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap z-30">
+              <div className="absolute left-full ml-16 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap z-30">
                 {a.label}
               </div>
             )}
@@ -169,20 +169,20 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         }}
       >
         <svg
-          width="60"
-          height="60"
-          viewBox="0 0 60 60"
+          width="40"
+          height="40"
+          viewBox="0 0 40 40"
           className="pointer-events-none"
           style={{ filter: 'drop-shadow(0 0 6px rgba(255,255,255,0.8))' }}
         >
-          <polygon points="0,30 60,0 60,60" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={3} />
-          <polygon points="8,30 50,12 50,48" fill="rgba(255,255,255,0.9)" />
+          <polygon points="40,20 0,0 0,40" fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth={3} />
+          <polygon points="32,20 8,8 8,32" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">
         <div key={idx} className="animate-fade-large">
-          <div className="text-3xl font-semibold mb-2">{aspects[idx].label}</div>
-          <div className="text-xl">{aspects[idx].comment}</div>
+          <div className="text-5xl font-semibold mb-2">{aspects[idx].label}</div>
+          <div className="text-2xl">{aspects[idx].comment}</div>
         </div>
       </div>
       <style jsx>{`

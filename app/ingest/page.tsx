@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import type { RepoAnalysis } from '../../lib/openai'
 import HexBackground from '../../components/HexBackground'
 
-type Result = { files: string[]; analysis: RepoAnalysis }
+type Result = { files: string[]; analysis: RepoAnalysis; code?: any[] }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (

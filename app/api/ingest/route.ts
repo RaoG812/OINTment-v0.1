@@ -25,11 +25,17 @@ export async function POST(req: NextRequest) {
   }
   const zip = new AdmZip(buffer)
   const allEntries = zip.getEntries()
-  const files = allEntries.filter(e => !e.isDirectory).map(e => e.entryName)
+  const fileEntries = allEntries.filter(e => !e.isDirectory)
+  const files = fileEntries.map(e => e.entryName)
+  const code = fileEntries.slice(0, 50).map(e => ({
+    path: e.entryName,
+    language: (e.entryName.split('.').pop() || '').toLowerCase(),
+    content: e.getData().toString('utf8').slice(0, 10000)
+  }))
 
   try {
     const analysis = await summarizeRepo(files)
-    return NextResponse.json({ files, analysis })
+    return NextResponse.json({ files, code, analysis })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'analysis failed'
     console.error('analysis failed', err)

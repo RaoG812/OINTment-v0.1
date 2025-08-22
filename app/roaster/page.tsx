@@ -294,10 +294,6 @@ export default function RoasterPage() {
     setRoasterState({ level, widgets, ointWidgets, healed, steps: ointSteps })
   }, [level, widgets, ointWidgets, healed, ointSteps])
 
-  useEffect(() => {
-    if (ointCreated) setRoast(null)
-  }, [ointCreated])
-
   async function runRoaster() {
     if (!result) return
     setHealed(false)

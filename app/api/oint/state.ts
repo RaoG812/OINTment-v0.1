@@ -8,10 +8,10 @@ let knowledge: { docs: { name: string; text: string }[]; files: string[] } = {
 export function markCreated(
   docs: { name: string; text: string }[],
   repoFiles: string[],
-  vuln: boolean,
+  _vuln: boolean,
   hasFinance = false
 ) {
-  created = docs.length > 0 && repoFiles.length > 0 && vuln
+  created = docs.length > 0 && repoFiles.length > 0
   finance = hasFinance
   knowledge = { docs, files: repoFiles }
 }

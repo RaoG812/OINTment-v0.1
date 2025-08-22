@@ -20,8 +20,15 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'at least one doc required for OINT' }, { status: 400 })
   }
 
-  if (parsedDocs.length > 5 || repoFiles.length === 0 || !hasVuln) {
+  if (parsedDocs.length > 5 || repoFiles.length === 0) {
     return NextResponse.json({ error: 'insufficient data for OINT' }, { status: 400 })
+  }
+
+  for (const _ of repoFiles) {
+    await new Promise(r => setTimeout(r, 10))
+  }
+  for (const d of parsedDocs) {
+    await new Promise(r => setTimeout(r, Math.min(d.text.length / 50, 20)))
   }
 
   const hasFinance = parsedDocs.some(d =>

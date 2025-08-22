@@ -327,7 +327,11 @@ export default function RoasterPage() {
     if (!result || !roast) return
     setFixing(true)
     try {
-      const res = await fetch('/api/oint/recommendations')
+      const res = await fetch('/api/oint/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roast })
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'apply OINT failed')
       const updated = { ...empty }

@@ -22,6 +22,51 @@ function Bar({ value }: { value: number }) {
   )
 }
 
+function Gauge({ value }: { value: number }) {
+  const radius = 30
+  const circ = 2 * Math.PI * radius
+  const offset = circ - (Math.min(100, Math.max(0, value)) / 100) * circ
+  return (
+    <svg width="80" height="80" className="mx-auto">
+      <circle
+        cx="40"
+        cy="40"
+        r={radius}
+        strokeWidth="6"
+        className="text-zinc-800"
+        stroke="currentColor"
+        fill="none"
+      />
+      <circle
+        cx="40"
+        cy="40"
+        r={radius}
+        strokeWidth="6"
+        className="text-emerald-500"
+        stroke="currentColor"
+        strokeDasharray={circ}
+        strokeDashoffset={offset}
+        strokeLinecap="round"
+        fill="none"
+      />
+      <text x="40" y="45" textAnchor="middle" className="text-sm fill-white">
+        {Math.round(Math.min(100, Math.max(0, value)))}%
+      </text>
+    </svg>
+  )
+}
+
+function ImpactBadge({ level }: { level?: string }) {
+  const colors: any = {
+    low: 'bg-emerald-600',
+    med: 'bg-yellow-600',
+    high: 'bg-orange-600',
+    critical: 'bg-rose-600'
+  }
+  const color = colors[level as keyof typeof colors] || 'bg-zinc-700'
+  return <span className={`px-2 py-0.5 rounded text-[10px] ${color}`}>{level || 'low'}</span>
+}
+
 export default function VibeKillerPage() {
   const [files, setFiles] = useState<any[]>([])
   const [commits, setCommits] = useState<any[]>([])
@@ -63,7 +108,15 @@ export default function VibeKillerPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'scan failed')
-      setResult(data)
+      const fs = Array.isArray(data.files) ? data.files : []
+      const summary = data.repo_summary || {}
+      if (!summary.files_scanned) summary.files_scanned = fs.length
+      if (!summary.ai_files) summary.ai_files = fs.filter((f: any) => (f.ai_likelihood || 0) > 0).length
+      if (!summary.percent_ai_repo)
+        summary.percent_ai_repo = summary.files_scanned
+          ? summary.ai_files / summary.files_scanned
+          : 0
+      setResult({ ...data, repo_summary: summary })
       setError('')
     } catch (err) {
       setResult(null)
@@ -91,9 +144,7 @@ export default function VibeKillerPage() {
             <div className="grid gap-4 md:grid-cols-3">
               <Card>
                 <div className="text-sm font-semibold mb-2">AI Presence</div>
-                <div className="text-2xl font-bold">
-                  {Math.round((result.repo_summary?.percent_ai_repo || 0) * 100)}%
-                </div>
+                <Gauge value={(result.repo_summary?.percent_ai_repo || 0) * 100} />
               </Card>
               <Card>
                 <div className="text-sm font-semibold mb-2">Files Scanned</div>
@@ -119,6 +170,8 @@ export default function VibeKillerPage() {
                         <th className="p-2">Path</th>
                         <th className="p-2 w-32">Likelihood</th>
                         <th className="p-2 w-32">AI Lines</th>
+                        <th className="p-2 w-24">Impact</th>
+                        <th className="p-2 w-32">Confidence</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -133,6 +186,12 @@ export default function VibeKillerPage() {
                             </td>
                             <td className="p-2">
                               <Bar value={(f.percent_ai_lines || 0) * 100} />
+                            </td>
+                            <td className="p-2">
+                              <ImpactBadge level={f.impact} />
+                            </td>
+                            <td className="p-2">
+                              <Bar value={(f.confidence || 0) * 100} />
                             </td>
                           </tr>
                         ))}
@@ -152,6 +211,7 @@ export default function VibeKillerPage() {
                         <th className="p-2">Hash</th>
                         <th className="p-2 w-32">Likelihood</th>
                         <th className="p-2 w-32">AI Lines</th>
+                        <th className="p-2 w-32">Confidence</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -166,6 +226,9 @@ export default function VibeKillerPage() {
                             </td>
                             <td className="p-2">
                               <Bar value={(c.percent_ai_lines || 0) * 100} />
+                            </td>
+                            <td className="p-2">
+                              <Bar value={(c.confidence || 0) * 100} />
                             </td>
                           </tr>
                         ))}

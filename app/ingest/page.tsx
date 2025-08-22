@@ -1,7 +1,6 @@
 // @ts-nocheck
 'use client'
 import { useEffect, useState } from 'react'
-import Link from 'next/link'
 import type { RepoAnalysis } from '../../lib/openai'
 import HexBackground from '../../components/HexBackground'
 import { OintCreationFlow } from '../../components/OintCreationFlow'
@@ -62,8 +61,6 @@ export default function IngestPage() {
   const [error, setError] = useState('')
   const [docs, setDocs] = useState<File[]>(getDocsState())
   const [hasVuln, setHasVuln] = useState(false)
-  const [creating, setCreating] = useState(false)
-  const [created, setCreated] = useState(false)
 
   useEffect(() => {
     setHasVuln(localStorage.getItem('vulnChecked') === 'true')
@@ -182,28 +179,6 @@ export default function IngestPage() {
     const files = Array.from(e.target.files || []).slice(0, 5)
     setDocs(files)
     setDocsState(files)
-  }
-
-  async function createOint() {
-    if (!result || docs.length === 0 || !hasVuln) {
-      setError('Please ingest repo data, upload docs and run vulnerability check before creating an OINT')
-      return
-    }
-    const form = new FormData()
-    docs.forEach(f => form.append('docs', f))
-    form.append('hasRepo', String(!!result))
-    form.append('hasVuln', String(hasVuln))
-    setCreating(true)
-    try {
-      const res = await fetch('/api/oint/create', { method: 'POST', body: form })
-      if (!res.ok) throw new Error('creation failed')
-      setCreated(true)
-      setError('')
-    } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
-    } finally {
-      setCreating(false)
-    }
   }
 
 
@@ -337,19 +312,6 @@ export default function IngestPage() {
             ))}
           </div>
         )}
-        <div className="pt-4">
-          {created ? (
-            <Link href="/toolset" className="text-sm text-emerald-400 underline">Go to OINT Mission Control</Link>
-          ) : (
-            <button
-              onClick={createOint}
-              disabled={creating || docs.length === 0 || !result || !hasVuln}
-              className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg hover:bg-blue-500 disabled:opacity-50"
-            >
-              Create OINT
-            </button>
-          )}
-        </div>
       </div>
       <style jsx>{`
         @keyframes bgMove {

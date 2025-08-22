@@ -4,12 +4,10 @@ import { Card, Badge, Metric } from '../../lib/ui'
 import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
-
-interface Recommendation { department: 'frontend'|'backend'|'ops'; insight: string }
+import { getDocs } from '../../lib/docsState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
-  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null)
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
 
@@ -17,19 +15,26 @@ export default function ToolsetPage() {
     setCreating(true)
     setError('')
     try {
+      const docs = getDocs()
+      const ingest = localStorage.getItem('ingestResult')
+      const hasRepo = !!ingest
+      const hasVuln = localStorage.getItem('vulnChecked') === 'true'
+      if (docs.length === 0 || !hasRepo || !hasVuln) {
+        throw new Error('insufficient data for OINT')
+      }
       const form = new FormData()
-      form.append('docs', new Blob(['placeholder'], { type: 'text/plain' }), 'docs.txt')
-      form.append('hasRepo', 'true')
-      form.append('hasVuln', 'true')
+      docs.forEach(f => form.append('docs', f))
+      form.append('hasRepo', String(hasRepo))
+      form.append('hasVuln', String(hasVuln))
+      if (ingest) {
+        try {
+          const parsed = JSON.parse(ingest)
+          form.append('files', JSON.stringify(parsed.files || []))
+        } catch {}
+      }
       const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })
       const createJson = await createRes.json()
       if (!createRes.ok) throw new Error(createJson.error || 'create failed')
-
-      const recRes = await fetch('/api/oint/apply', { method: 'POST' })
-      const recJson = await recRes.json()
-      if (!recRes.ok) throw new Error(recJson.error || 'apply failed')
-      setRecommendations((recJson as { recommendations: Recommendation[] }).recommendations)
-
       const res = await fetch('/api/oint/summary')
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'summary failed')
@@ -37,7 +42,6 @@ export default function ToolsetPage() {
       setOintData(json as DashboardData)
     } catch (err) {
       setData(null)
-      setRecommendations(null)
       setOintData(null)
       setError(err instanceof Error ? err.message : String(err))
     } finally {
@@ -150,19 +154,6 @@ export default function ToolsetPage() {
                 <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
               </div>
             </Card>
-            {recommendations && (
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Departmental Recommendations</h2>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  {recommendations.map(r => (
-                    <Card key={r.department} className="space-y-2">
-                      <div className="text-sm font-semibold capitalize">{r.department}</div>
-                      <div className="text-xs text-zinc-400">{r.insight}</div>
-                    </Card>
-                  ))}
-                </div>
-              </Card>
-            )}
           </div>
         )}
       </div>

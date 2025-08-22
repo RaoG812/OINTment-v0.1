@@ -3,13 +3,13 @@ import { useRef, useEffect, useState, CSSProperties } from 'react'
 
 type Cell = { id: number; x: number; y: number; start: number }
 
-export default function HexBackground({ className = "" }: { className?: string }) {
+export default function HexBackground({ className = "", reveal = true }: { className?: string; reveal?: boolean }) {
   const ref = useRef<HTMLDivElement>(null)
   const [cells, setCells] = useState<Cell[]>([])
 
   // track pointer for reveal mask
   useEffect(() => {
-    if (!ref.current) return
+    if (!reveal || !ref.current) return
     const el = ref.current as HTMLDivElement
     function move(e: PointerEvent) {
       const t = e.target as HTMLElement
@@ -23,7 +23,7 @@ export default function HexBackground({ className = "" }: { className?: string }
     }
     window.addEventListener('pointermove', move)
     return () => window.removeEventListener('pointermove', move)
-  }, [])
+  }, [reveal])
 
   // spawn red hexes independently of cursor
   useEffect(() => {
@@ -48,13 +48,15 @@ export default function HexBackground({ className = "" }: { className?: string }
     return () => clearInterval(t)
   }, [])
 
-  const mask = 'radial-gradient(circle 120px at var(--mx) var(--my), rgba(0,0,0,1) 0 80px, rgba(0,0,0,0) 120px)'
+  const mask = reveal
+    ? 'radial-gradient(circle 120px at var(--mx) var(--my), rgba(0,0,0,1) 0 80px, rgba(0,0,0,0) 120px)'
+    : undefined
 
   return (
     <div
       ref={ref}
-      className={`pointer-events-none fixed inset-0 z-0 ${className}`}
-      style={{ '--mx': '-999px', '--my': '-999px', mask, WebkitMask: mask } as CSSProperties}
+      className={`pointer-events-none fixed inset-0 -z-20 ${className}`}
+      style={{ '--mx': '-999px', '--my': '-999px', ...(mask ? { mask, WebkitMask: mask } : {}) } as CSSProperties}
     >
       <div className="absolute inset-0 pattern" />
       {cells.map(c => (

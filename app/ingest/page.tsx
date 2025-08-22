@@ -286,7 +286,7 @@ export default function IngestPage() {
               </form>
             </section>
           </div>
-          <div className="flex-1 flex justify-center md:justify-end">
+          <div className="flex-none w-[260px] flex justify-center">
             <OintCreationFlow docs={docs.length} repo={!!result} roast={hasVuln} />
           </div>
         </div>

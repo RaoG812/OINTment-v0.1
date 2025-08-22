@@ -1,14 +1,16 @@
 'use client'
 import { useEffect, useState } from 'react'
 
-const CENTER = { x: 150, y: 150 }
+const SIZE = 300
+const CENTER = { x: SIZE / 2, y: SIZE / 2 }
 const POSITIONS = [
   { x: 250, y: 40 },
   { x: 40, y: 260 },
   { x: 260, y: 260 }
 ]
-const ANGLES = POSITIONS.map(p => Math.atan2(p.y - CENTER.y, p.x - CENTER.x) * 180 / Math.PI + 90)
 const TRI_POINTS = POSITIONS.map(p => `${p.x},${p.y}`).join(' ')
+const POINTER_POS = POSITIONS[0]
+const POINTER_ANGLE = Math.atan2(CENTER.y - POINTER_POS.y, CENTER.x - POINTER_POS.x) * 180 / Math.PI
 
 export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: boolean; roast: boolean }) {
   const aspects = [
@@ -42,21 +44,84 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
   }, [aspects.length])
 
   const totalPct = Math.round(aspects.reduce((s, a) => s + a.pct, 0) / aspects.length)
+  const rotation = -idx * 120
 
   return (
-    <div className="relative w-[300px] h-[300px]">
-      <svg className="absolute inset-0" viewBox="0 0 300 300">
-        <polygon
-          points={TRI_POINTS}
-          fill="none"
-          stroke="rgba(255,255,255,0.2)"
-          strokeWidth={2}
-          strokeDasharray="4 8"
-        />
-      </svg>
+    <div className="relative w-[260px] h-[260px]">
       <div
-        className="absolute left-1/2 top-1/2"
-        style={{ transform: `translate(-50%, -50%) rotate(${ANGLES[idx]}deg)`, transition: 'transform 0.7s ease' }}
+        className="absolute inset-0"
+        style={{ transform: `rotate(${rotation}deg)`, transition: 'transform 0.7s ease' }}
+      >
+        <svg className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
+          <polygon
+            points={TRI_POINTS}
+            fill="none"
+            stroke="rgba(255,255,255,0.2)"
+            strokeWidth={2}
+            strokeDasharray="4 8"
+          />
+        </svg>
+        {aspects.map((a, i) => {
+          const p = POSITIONS[i]
+          const active = i === idx
+          return (
+            <div
+              key={a.key}
+              className="absolute text-center cursor-pointer"
+              style={{
+                left: p.x,
+                top: p.y,
+                transform: `translate(-50%, -50%) rotate(${idx * 120}deg)`
+              }}
+              onClick={() => setIdx(i)}
+            >
+              <div
+                className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-transform duration-500 ${
+                  active ? 'scale-110' : ''
+                }`}
+              >
+                <svg viewBox="0 0 100 100" className="absolute inset-0">
+                  <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={4} fill="none" />
+                  <circle
+                    cx="50"
+                    cy="50"
+                    r="45"
+                    stroke={a.color}
+                    strokeWidth={4}
+                    fill="none"
+                    pathLength={100}
+                    strokeDasharray={`${a.pct} 100`}
+                    strokeLinecap="round"
+                    style={{ filter: `drop-shadow(0 0 4px ${a.color})` }}
+                  />
+                </svg>
+                <div className="relative z-10 text-base font-semibold">{a.pct}%</div>
+                {active && (
+                  <svg viewBox="0 0 120 120" className="absolute -inset-3 animate-spin" style={{ filter: `drop-shadow(0 0 4px ${a.color})` }}>
+                    <circle
+                      cx="60"
+                      cy="60"
+                      r="56"
+                      stroke={a.color}
+                      strokeWidth={2}
+                      fill="none"
+                      strokeDasharray="6 6"
+                    />
+                  </svg>
+                )}
+              </div>
+              <div className="mt-1 text-sm text-zinc-300">{a.label}</div>
+            </div>
+          )
+        })}
+      </div>
+      <div
+        className="absolute"
+        style={{
+          left: POINTER_POS.x,
+          top: POINTER_POS.y,
+          transform: `translate(-50%, -50%) rotate(${POINTER_ANGLE}deg)`
+        }}
       >
         <svg viewBox="0 0 20 20" className="pointer animate-pointer">
           <polygon points="10,0 20,20 0,20" fill="rgba(255,255,255,0.6)" />
@@ -83,58 +148,9 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           </div>
         </div>
       </div>
-      {aspects.map((a, i) => {
-        const p = POSITIONS[i]
-        const active = i === idx
-        return (
-          <div
-            key={a.key}
-            className="absolute text-center cursor-pointer"
-            style={{ left: p.x, top: p.y, transform: 'translate(-50%, -50%)' }}
-            onClick={() => setIdx(i)}
-          >
-            <div
-              className={`relative w-20 h-20 rounded-full flex items-center justify-center transition-transform duration-500 ${
-                active ? 'scale-110' : ''
-              }`}
-            >
-              <svg viewBox="0 0 100 100" className="absolute inset-0">
-                <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={4} fill="none" />
-                <circle
-                  cx="50"
-                  cy="50"
-                  r="45"
-                  stroke={a.color}
-                  strokeWidth={4}
-                  fill="none"
-                  pathLength={100}
-                  strokeDasharray={`${a.pct} 100`}
-                  strokeLinecap="round"
-                  style={{ filter: `drop-shadow(0 0 4px ${a.color})` }}
-                />
-              </svg>
-              <div className="relative z-10 text-sm font-semibold">{a.pct}%</div>
-              {active && (
-                <svg viewBox="0 0 120 120" className="absolute -inset-3 animate-spin" style={{ filter: `drop-shadow(0 0 4px ${a.color})` }}>
-                  <circle
-                    cx="60"
-                    cy="60"
-                    r="56"
-                    stroke={a.color}
-                    strokeWidth={2}
-                    fill="none"
-                    strokeDasharray="6 6"
-                  />
-                </svg>
-              )}
-            </div>
-            <div className="mt-1 text-xs text-zinc-300">{a.label}</div>
-          </div>
-        )
-      })}
-      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-48 text-center text-xs text-zinc-300">
-        <div key={idx} className="animate-fade">
-          <div className="font-semibold">{aspects[idx].label}</div>
+      <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-56 text-center text-sm text-zinc-300">
+        <div key={idx} className="animate-fade-large">
+          <div className="text-lg font-semibold mb-1">{aspects[idx].label}</div>
           <div>{aspects[idx].comment}</div>
         </div>
       </div>
@@ -144,8 +160,8 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           50% { transform: scale(1.05); }
         }
         .animate-pointer { animation: pointer 4s infinite ease-in-out; }
-        @keyframes fade { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade { animation: fade 0.5s ease; }
+        @keyframes fadeLarge { from { opacity: 0; } to { opacity: 1; } }
+        .animate-fade-large { animation: fadeLarge 0.7s ease; }
       `}</style>
     </div>
   )

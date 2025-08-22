@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const SIZE = 450
 const POSITIONS = [
@@ -8,11 +8,11 @@ const POSITIONS = [
   { x: 390, y: 330 } // bottom right
 ]
 const TRI_POINTS = POSITIONS.map(p => `${p.x},${p.y}`).join(' ')
-const POINTER_POS = { x: POSITIONS[0].x - 30, y: POSITIONS[0].y }
+const POINTER_POS = { x: POSITIONS[0].x - 40, y: POSITIONS[0].y }
 const ORDER = [
   [0, 1, 2],
-  [1, 2, 0],
-  [2, 0, 1]
+  [2, 0, 1],
+  [1, 2, 0]
 ]
 
 export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: boolean; roast: boolean }) {
@@ -42,10 +42,20 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
 
   const [idx, setIdx] = useState(0)
   const [pointerScale, setPointerScale] = useState(1)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+  const resumeRef = useRef<NodeJS.Timeout | null>(null)
+
+  function startAuto() {
+    intervalRef.current = setInterval(() => setIdx(i => (i + 1) % aspects.length), 4000)
+  }
+
   // auto-rotate rings every 4s
   useEffect(() => {
-    const id = setInterval(() => setIdx(i => (i + 1) % aspects.length), 4000)
-    return () => clearInterval(id)
+    startAuto()
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      if (resumeRef.current) clearTimeout(resumeRef.current)
+    }
   }, [aspects.length])
   // pointer pulse when active ring reaches apex
   useEffect(() => {
@@ -76,23 +86,33 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       {aspects.map((a, i) => {
         const pos = POSITIONS[order[i]]
         const active = order[i] === 0
+        function handleSelect() {
+          if (active) {
+            setIdx(prev => (prev + aspects.length - 1) % aspects.length)
+          } else {
+            setIdx(i)
+          }
+          if (intervalRef.current) clearInterval(intervalRef.current)
+          if (resumeRef.current) clearTimeout(resumeRef.current)
+          resumeRef.current = setTimeout(() => startAuto(), 10000)
+        }
         return (
           <div
             key={a.key}
             className="absolute text-center cursor-pointer"
-              style={{
-                left: pos.x,
-                top: pos.y,
-                transform: 'translate(-50%, -50%)',
-                transition: 'left 0.7s ease, top 0.7s ease'
-              }}
-              onClick={() => setIdx(i)}
+            style={{
+              left: pos.x,
+              top: pos.y,
+              transform: 'translate(-50%, -50%)',
+              transition: 'left 0.7s ease, top 0.7s ease'
+            }}
+            onClick={handleSelect}
+          >
+            <div
+              className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 ${
+                active ? 'scale-150' : ''
+              }`}
             >
-              <div
-                className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 ${
-                  active ? 'scale-125' : ''
-                }`}
-              >
               <svg viewBox="0 0 100 100" className="absolute inset-0">
                 <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={6} fill="none" />
                 <circle
@@ -140,9 +160,9 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           transition: 'transform 0.6s ease'
         }}
       >
-        <svg viewBox="0 0 24 24" className="pointer-events-none">
-          <polygon points="24,12 0,0 0,24" fill="rgba(255,255,255,0.6)" />
-          <polygon points="18,12 0,3 0,21" fill="rgba(255,255,255,0.9)" />
+        <svg viewBox="0 0 20 20" className="pointer-events-none">
+          <polygon points="20,10 0,0 0,20" fill="rgba(255,255,255,0.5)" />
+          <polygon points="14,10 0,3 0,17" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">

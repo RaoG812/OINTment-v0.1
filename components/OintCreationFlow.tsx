@@ -154,7 +154,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
             </div>
             {!active && (
               <div
-                className="absolute text-sm text-zinc-300 whitespace-nowrap z-30"
+                className="absolute text-base font-semibold text-zinc-300 whitespace-nowrap z-30"
                 style={{ left: pos.x + 96, top: pos.y, transform: 'translateY(-50%)' }}
               >
                 {a.label}

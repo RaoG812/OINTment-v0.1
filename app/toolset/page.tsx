@@ -4,24 +4,46 @@ import { Card, Badge, Metric } from '../../lib/ui'
 import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
-
-interface Recommendation { department: 'frontend'|'backend'|'ops'; insight: string }
+import { getDocs } from '../../lib/docsState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
-  const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null)
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
 
   async function create() {
     setCreating(true)
+    setError('')
     try {
-      const recRes = await fetch('/api/oint/apply', { method: 'POST' })
-      const recJson = (await recRes.json()) as { recommendations: Recommendation[] }
-      setRecommendations(recJson.recommendations)
+      const docs = getDocs()
+      const ingest = localStorage.getItem('ingestResult')
+      const hasRepo = !!ingest
+      const hasVuln = localStorage.getItem('vulnChecked') === 'true'
+      if (docs.length === 0 || !hasRepo || !hasVuln) {
+        throw new Error('insufficient data for OINT')
+      }
+      const form = new FormData()
+      docs.forEach(f => form.append('docs', f))
+      form.append('hasRepo', String(hasRepo))
+      form.append('hasVuln', String(hasVuln))
+      if (ingest) {
+        try {
+          const parsed = JSON.parse(ingest)
+          form.append('files', JSON.stringify(parsed.files || []))
+        } catch {}
+      }
+      const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })
+      const createJson = await createRes.json()
+      if (!createRes.ok) throw new Error(createJson.error || 'create failed')
       const res = await fetch('/api/oint/summary')
-      const json = (await res.json()) as DashboardData
-      setData(json)
-      setOintData(json)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'summary failed')
+      setData(json as DashboardData)
+      setOintData(json as DashboardData)
+    } catch (err) {
+      setData(null)
+      setOintData(null)
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setCreating(false)
     }
@@ -59,21 +81,24 @@ export default function ToolsetPage() {
       <div className="relative z-10 p-6 space-y-6">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
-          <Card className="max-w-md">
-            {creating ? (
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-                <span className="text-sm">Running OINT analysis…</span>
-              </div>
-            ) : (
-              <button
-                onClick={create}
-                className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-              >
-                Create OINT
-              </button>
-            )}
-          </Card>
+          <>
+            <Card className="max-w-md">
+              {creating ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+                  <span className="text-sm">Running OINT analysis…</span>
+                </div>
+              ) : (
+                <button
+                  onClick={create}
+                  className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                >
+                  Create OINT
+                </button>
+              )}
+            </Card>
+            {error && <div className="text-xs text-rose-400">{error}</div>}
+          </>
         )}
         {data && (
           <div className="space-y-6">
@@ -129,19 +154,6 @@ export default function ToolsetPage() {
                 <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
               </div>
             </Card>
-            {recommendations && (
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Departmental Recommendations</h2>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  {recommendations.map(r => (
-                    <Card key={r.department} className="space-y-2">
-                      <div className="text-sm font-semibold capitalize">{r.department}</div>
-                      <div className="text-xs text-zinc-400">{r.insight}</div>
-                    </Card>
-                  ))}
-                </div>
-              </Card>
-            )}
           </div>
         )}
       </div>

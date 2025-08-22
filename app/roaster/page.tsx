@@ -324,10 +324,14 @@ export default function RoasterPage() {
   }
 
   async function applyOint() {
-    if (!result) return
+    if (!result || !roast) return
     setFixing(true)
     try {
-      const res = await fetch('/api/oint/recommendations')
+      const res = await fetch('/api/oint/apply', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ roast })
+      })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'apply OINT failed')
       const updated = { ...empty }
@@ -407,9 +411,9 @@ export default function RoasterPage() {
               </button>
               <button
                 onClick={applyOint}
-                disabled={!ointCreated}
+                disabled={!ointCreated || !roast}
                 className={`px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg transition ${
-                  ointCreated ? 'hover:bg-blue-500' : 'opacity-50 cursor-not-allowed'
+                  ointCreated && roast ? 'hover:bg-blue-500' : 'opacity-50 cursor-not-allowed'
                 }`}
               >
                 Apply OINT

@@ -6,7 +6,7 @@ import HexBackground from '../../components/HexBackground'
 import { OintCreationFlow } from '../../components/OintCreationFlow'
 import { getDocs as getDocsState, setDocs as setDocsState } from '../../lib/docsState'
 
-type Result = { files: string[]; analysis: RepoAnalysis }
+type Result = { files: string[]; analysis: RepoAnalysis; code?: any[] }
 
 function Card({ children }: { children: React.ReactNode }) {
   return (

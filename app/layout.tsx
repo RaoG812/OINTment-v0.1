@@ -2,6 +2,8 @@
 import './globals.css';
 import { ReactNode } from 'react';
 import Link from 'next/link';
+import { cookies } from 'next/headers';
+import AuthControls from '../components/AuthControls';
 
 
 export const metadata = {
@@ -12,6 +14,7 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const isLoggedIn = cookies().has('github_token');
   return (
     <html lang="en">
       <body className="min-h-screen bg-black text-zinc-200">
@@ -38,6 +41,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/3d-map" className="hover:text-emerald-400">
               3D Map
             </Link>
+            <AuthControls isLoggedIn={isLoggedIn} />
           </nav>
         </header>
         {children}

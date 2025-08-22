@@ -1,10 +1,10 @@
 // @ts-nocheck
 'use client'
-import { useEffect, useState, CSSProperties, useRef } from 'react'
+import { useEffect, useState, CSSProperties, useRef, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import HexBackground from '../../components/HexBackground'
 import { getRoasterState, setRoasterState } from '../../lib/roasterState'
-import { getOintData } from '../../lib/toolsetState'
+import { getOintData, subscribeOintData } from '../../lib/toolsetState'
 
 type Result = { files: string[]; docs: { name: string; type: string; content: string }[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -282,7 +282,7 @@ export default function RoasterPage() {
     const [fixing, setFixing] = useState(false)
     const [error, setError] = useState('')
     const [healed, setHealed] = useState(init.healed)
-    const ointCreated = !!getOintData()
+    const ointCreated = !!useSyncExternalStore(subscribeOintData, getOintData)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -396,7 +396,11 @@ export default function RoasterPage() {
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
-        <Link href="/toolset" className="text-sm text-zinc-400 underline">Apply OINT</Link>
+        {ointCreated && (
+          <Link href="/toolset" className="text-sm text-zinc-400 underline">
+            Apply OINT
+          </Link>
+        )}
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">

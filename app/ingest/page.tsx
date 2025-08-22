@@ -10,6 +10,7 @@ import {
   setDocs as setDocsState,
   type DocItem
 } from '../../lib/docsState'
+import { setOintData } from '../../lib/toolsetState'
 
 type Result = {
   repo?: string
@@ -141,6 +142,7 @@ export default function IngestPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
+      setOintData(null)
       localStorage.setItem('ingestResult', JSON.stringify(data))
       if (repo) localStorage.setItem('repo', repo)
       if (branch) localStorage.setItem('branch', branch)

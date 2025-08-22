@@ -104,10 +104,21 @@ export default function ToolsetPage() {
         )}
         {data && (
           <div className="space-y-6">
+            <div>
+              <button
+                onClick={create}
+                disabled={creating}
+                className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+              >
+                {creating ? 'Recreating…' : 'Recreate OINT'}
+              </button>
+            </div>
             <Card className="flex flex-wrap gap-6 text-sm">
               <div>Envs: {data.pulse.envs.join(', ')}</div>
               <div>Deploys today: {data.pulse.deploysToday}</div>
               <div>Critical alerts: {data.pulse.criticalAlerts}</div>
+              <div>Files analyzed: {data.pulse.filesAnalyzed}</div>
+              <div>Docs reviewed: {data.pulse.docsReviewed}</div>
             </Card>
             <Card>
               <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>

@@ -59,7 +59,9 @@ stability. Upload & Analyse, Roaster, and Vibe Killer all run on `gpt-5-nano`,
 while OINT defaults to `gpt-5-nano` with a `gpt-4o` fallback. The last
 ingest result along with your selected repo and branch are cached in the browser
 so you can navigate away and return without losing context. Below the console,
-AI‑extracted takeaways and metrics render in animated widgets.
+AI‑extracted takeaways and metrics render in animated widgets. The OINT toolset
+can be recreated after updating docs or running a new ingest, and the Matrix
+view now reflects dependencies from manually uploaded ZIPs.
 
 Click a row on the Matrix page to drill into indicator explanations, improvement
 tips and code references gathered from the repo.

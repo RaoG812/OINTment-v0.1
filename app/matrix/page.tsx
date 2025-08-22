@@ -117,7 +117,28 @@ export default function MatrixPage(){
   useEffect(()=>{
     let active = true
     async function load(){
-      if(!repo) { if(active) setRows([]); return }
+      if(!repo){
+        const ingest = localStorage.getItem('ingestResult')
+        if(!ingest){ if(active) setRows([]); return }
+        let deps: string[] = []
+        try{
+          const parsed = JSON.parse(ingest)
+          const pkg = parsed.code?.find((c: any) => c.path.endsWith('package.json'))
+          if(pkg){
+            const obj = JSON.parse(pkg.content)
+            deps = Object.keys(obj.dependencies || {})
+          }
+        }catch{}
+        if(deps.length===0){ if(active) setRows([]); return }
+        try{
+          const url = `/api/components?deps=${encodeURIComponent(deps.join(','))}`
+          const data = await fetch(url).then(r=>r.json())
+          if(active) setRows(data)
+        }catch{
+          if(active) setRows([])
+        }
+        return
+      }
       try{
         const data = await fetch(`/api/components?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(r=>r.json())
         if(active) setRows(data)

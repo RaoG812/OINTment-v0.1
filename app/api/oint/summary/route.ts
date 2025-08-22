@@ -41,12 +41,35 @@ export async function GET() {
     step: `Review ${d.name}`
   }))
 
+  const extraSteps = [
+    'Codebase orientation',
+    'Audit dependencies',
+    'Establish CI pipeline',
+    'Set up testing framework',
+    'Implement monitoring',
+    'Plan deployment strategy',
+    'Conduct security review',
+    'Optimize performance',
+    'Review team responsibilities',
+    'Finalize onboarding'
+  ]
+  let idx = 0
+  while (onboardingPlan.length < 10) {
+    onboardingPlan.push({
+      day: `Day ${onboardingPlan.length + 1}`,
+      step: extraSteps[idx % extraSteps.length]
+    })
+    idx++
+  }
+
   const data: DashboardData = {
     generatedAt: new Date().toISOString(),
     pulse: {
       envs,
       deploysToday: files.filter(f => /deploy/i.test(f)).length,
-      criticalAlerts: docs.some(d => /alert/i.test(d.text)) ? 1 : 0
+      criticalAlerts: docs.some(d => /alert/i.test(d.text)) ? 1 : 0,
+      filesAnalyzed: files.length,
+      docsReviewed: docs.length
     },
     stack: {
       appName: pkg.name || 'app',

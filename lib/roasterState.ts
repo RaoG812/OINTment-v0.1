@@ -12,13 +12,15 @@ export type RoasterState = {
   widgets: Record<Department, Comment>
   ointWidgets: Record<Department, Comment> | null
   healed: boolean
+  steps: string[]
 }
 
 let state: RoasterState = {
   level: 0.5,
   widgets: empty,
   ointWidgets: null,
-  healed: false
+  healed: false,
+  steps: []
 }
 
 export function getRoasterState(): RoasterState {

@@ -31,17 +31,29 @@ const baseURL = process.env.AIML_API_KEY
 
 const client = new OpenAI({ apiKey, baseURL })
 
-async function chat(messages: any[], response_format: any) {
+async function chat(
+  messages: any[],
+  response_format: any,
+  models?: string | string[]
+) {
   if (!apiKey) throw new Error('LLM API key missing')
-  const primary = process.env.LLM_MODEL || 'gpt-5'
-  const models = [primary, 'gpt-4o'].filter((v, i, a) => a.indexOf(v) === i)
+  const base = Array.isArray(models)
+    ? models
+    : models
+    ? [models]
+    : [process.env.LLM_MODEL || 'gpt-5-nano']
+  const modelList = [...base, 'gpt-4o'].filter(
+    (v, i, a) => a.indexOf(v) === i
+  )
   let lastErr: any
-  for (const m of models) {
+  for (const m of modelList) {
     try {
       const res = await client.chat.completions.create({
         model: m,
         messages,
-        reasoning: m.startsWith('gpt-5') ? ({ effort: 'medium' } as any) : undefined,
+        reasoning: m.startsWith('gpt-5')
+          ? (({ effort: 'medium' } as unknown) as any)
+          : undefined,
         response_format
       } as any)
       return res.choices[0]?.message?.content ?? '{}'
@@ -51,7 +63,9 @@ async function chat(messages: any[], response_format: any) {
   }
   const status = lastErr?.status || lastErr?.response?.status
   const body = lastErr?.response?.data
-  const detail = status ? `${status}${body ? ` ${JSON.stringify(body)}` : ''}` : lastErr?.message
+  const detail = status
+    ? `${status}${body ? ` ${JSON.stringify(body)}` : ''}`
+    : lastErr?.message
   console.error('LLM analysis failed', lastErr)
   throw new Error(`LLM analysis failed: ${detail}`)
 }
@@ -75,7 +89,7 @@ export async function summarizeRepo(
     { role: 'user', content }
   ]
 
-  const txt = await chat(messages, { type: 'json_object' })
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
   return JSON.parse(txt)
 }
 
@@ -97,7 +111,7 @@ export async function roastRepo(
     },
     { role: 'user', content }
   ]
-  const txt = await chat(messages, { type: 'json_object' })
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
   try {
     const parsed = JSON.parse(txt)
     return Array.isArray(parsed.reviews) ? parsed.reviews : []
@@ -117,7 +131,7 @@ export async function suggestFixes(fileList: string[]): Promise<string[]> {
     { role: 'user', content }
   ]
 
-  const txt = await chat(messages, { type: 'json_object' })
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
   try {
     const parsed = JSON.parse(txt)
     return Array.isArray(parsed.suggestions) ? parsed.suggestions : []
@@ -141,7 +155,8 @@ export async function categorizeCommits(
       },
       { role: 'user', content: prompt }
     ],
-    { type: 'json_object' }
+    { type: 'json_object' },
+    'gpt-5-nano'
   )
   try {
     const parsed = JSON.parse(txt)
@@ -172,7 +187,8 @@ export async function jitterOffsets(
       },
       { role: 'user', content: prompt }
     ],
-    { type: 'json_object' }
+    { type: 'json_object' },
+    'gpt-5-nano'
   )
   try {
     const parsed = JSON.parse(txt)
@@ -386,7 +402,7 @@ async function detectAiArtifactsBatch(
     }
   ]
 
-  const txt = await chat(messages, { type: 'json_object' })
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
   try {
     const parsed = JSON.parse(txt)
     const fs = Array.isArray(parsed.files) ? parsed.files : []

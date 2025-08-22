@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import type { DocItem } from '../lib/docsState'
+import { setOintData } from '../lib/toolsetState'
 
 const SLOT_LABELS = [
   { type: 'prd' as const, label: 'PRD' },
@@ -22,18 +23,21 @@ export default function DocsUploader({
     const next = [...docs]
     next[idx] = { file, name: file.name, type: SLOT_LABELS[idx].type }
     setDocs(next)
+    setOintData(null)
   }
 
   function handleName(idx: number, name: string) {
     const next = [...docs]
     if (next[idx]) next[idx]!.name = name
     setDocs(next)
+    setOintData(null)
   }
 
   function handleDelete(idx: number) {
     const next = [...docs]
     next[idx] = null
     setDocs(next)
+    setOintData(null)
   }
 
   return (

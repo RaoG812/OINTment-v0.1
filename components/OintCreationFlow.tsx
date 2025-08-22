@@ -8,7 +8,7 @@ const POSITIONS = [
 ]
 const PATH_D = `M${POSITIONS[0].x},${POSITIONS[0].y} L${POSITIONS[1].x},${POSITIONS[1].y} L${POSITIONS[2].x},${POSITIONS[2].y} Z`
 // position pointer slightly left of the selected ring
-const POINTER_POS = { x: POSITIONS[0].x - 150, y: POSITIONS[0].y }
+const POINTER_POS = { x: POSITIONS[0].x - 110, y: POSITIONS[0].y }
 const ORDER = [
   [0, 1, 2],
   [2, 0, 1],
@@ -21,7 +21,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       key: 'docs',
       label: 'DOX',
       pct: Math.round((docs / 5) * 100),
-      color: '#f97316',
+      color: '#22c55e',
       comment: docs > 0 ? `${docs}/5 docs uploaded` : 'No docs uploaded'
     },
     {
@@ -35,7 +35,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       key: 'roast',
       label: 'Roast',
       pct: roast ? 100 : 0,
-      color: '#22c55e',
+      color: '#ef4444',
       comment: roast ? 'Roaster run complete' : 'Roast not run'
     }
   ]

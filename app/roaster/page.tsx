@@ -355,14 +355,14 @@ export default function RoasterPage() {
   const hue = 120 - level * 120
   const gradientStyle: CSSProperties = healed
     ? {
-        background: 'radial-gradient(circle at 50% 50%, hsl(210,60%,25%), #000)',
+        background: 'radial-gradient(circle at 50% 50%, hsl(210,60%,20%), #000)',
         backgroundSize: '200% 200%',
         animation: 'bgMove 20s ease infinite',
         transition: 'background 0.5s',
         filter: 'blur(40px)'
       }
     : {
-        background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,18%), #000)`,
+        background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,13%), #000)`,
         backgroundSize: '200% 200%',
         animation: 'bgMove 20s ease infinite',
         transition: 'background 0.5s',

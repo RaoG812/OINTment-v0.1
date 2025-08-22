@@ -16,16 +16,17 @@ export default function EvilEyes() {
 
   const offsetX = pos.x * 20
   const offsetY = pos.y * 10
-  const base = 150
+  const base = 200
 
   return (
     <div className="evil-eyes fixed inset-0 flex items-center justify-center pointer-events-none z-0">
-      <div className="eye" style={{ transform: `translate(${offsetX - base}px, ${offsetY}px)` }}>
-        <div className="inner-eye" />
+      <div className="eye left" style={{ transform: `translate(${offsetX - base}px, ${offsetY}px)` }}>
+        <div className="inner-eye left" />
       </div>
-      <div className="eye" style={{ transform: `translate(${offsetX + base}px, ${offsetY}px)` }}>
-        <div className="inner-eye" style={{ animationDelay: '0.2s' }} />
+      <div className="eye right" style={{ transform: `translate(${offsetX + base}px, ${offsetY}px)` }}>
+        <div className="inner-eye right" style={{ animationDelay: '0.2s' }} />
       </div>
+      <div className="mist" />
     </div>
   )
 }

@@ -65,8 +65,8 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
     const grow = setTimeout(() => {
       setPointerScale(1.1)
       setSettled(true)
-    }, 600)
-    const settle = setTimeout(() => setPointerScale(1), 1200)
+    }, 700)
+    const settle = setTimeout(() => setPointerScale(1), 1400)
     return () => {
       clearTimeout(grow)
       clearTimeout(settle)
@@ -82,10 +82,11 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           key={idx}
           points={TRI_POINTS}
           fill="none"
-          stroke="rgba(255,255,255,0.2)"
-          strokeWidth={2}
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth={3}
           strokeDasharray="4 8"
           className="triangle-path"
+          style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }}
         />
       </svg>
       {aspects.map((a, i) => {
@@ -114,18 +115,17 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
             onClick={handleSelect}
           >
             <div
-              className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 ${
-                active && settled ? 'scale-150' : 'scale-100'
-              }`}
+              className="relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500"
+              style={{ transform: `scale(${active && settled ? 1.5 : 1})` }}
             >
               <svg viewBox="0 0 100 100" className="absolute inset-0">
-                <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={6} fill="none" />
+                <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={8} fill="none" />
                 <circle
                   cx="50"
                   cy="50"
                   r="45"
                   stroke={a.color}
-                  strokeWidth={6}
+                  strokeWidth={8}
                   fill="none"
                   pathLength={100}
                   strokeDasharray={`${a.pct} 100`}
@@ -145,7 +145,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
                     cy="70"
                     r="66"
                     stroke={a.color}
-                    strokeWidth={3}
+                    strokeWidth={4}
                     fill="none"
                     strokeDasharray="8 8"
                   />
@@ -157,7 +157,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         )
       })}
       <div
-        className="absolute z-20"
+        className="absolute z-30"
         style={{
           left: POINTER_POS.x,
           top: POINTER_POS.y,
@@ -165,7 +165,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           transition: 'transform 0.6s ease'
         }}
       >
-        <svg viewBox="0 0 20 20" className="pointer-events-none">
+        <svg viewBox="0 0 20 20" className="pointer-events-none" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}>
           <polygon points="20,10 0,0 0,20" fill="rgba(255,255,255,0.5)" />
           <polygon points="14,10 0,3 0,17" fill="rgba(255,255,255,0.9)" />
         </svg>

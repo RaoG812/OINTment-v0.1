@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { RepoAnalysis } from '../../lib/openai'
 import HexBackground from '../../components/HexBackground'
 import { OintCreationFlow } from '../../components/OintCreationFlow'
+import { getDocs as getDocsState, setDocs as setDocsState } from '../../lib/docsState'
 
 type Result = { files: string[]; analysis: RepoAnalysis }
 
@@ -59,7 +60,7 @@ export default function IngestPage() {
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
-  const [docs, setDocs] = useState<File[]>([])
+  const [docs, setDocs] = useState<File[]>(getDocsState())
   const [hasVuln, setHasVuln] = useState(false)
   const [creating, setCreating] = useState(false)
   const [created, setCreated] = useState(false)
@@ -180,6 +181,7 @@ export default function IngestPage() {
   function onDocsChange(e: React.ChangeEvent<HTMLInputElement>) {
     const files = Array.from(e.target.files || []).slice(0, 5)
     setDocs(files)
+    setDocsState(files)
   }
 
   async function createOint() {

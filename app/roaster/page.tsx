@@ -277,12 +277,13 @@ export default function RoasterPage() {
   const [level, setLevel] = useState(init.level)
   const [roast, setRoast] = useState<Comment[] | null>(null)
   const [widgets, setWidgets] = useState<Record<Department, Comment>>(init.widgets)
-    const [roasting, setRoasting] = useState(false)
-    const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
-    const [fixing, setFixing] = useState(false)
-    const [error, setError] = useState('')
-    const [healed, setHealed] = useState(init.healed)
-    const ointCreated = !!useSyncExternalStore(subscribeOintData, getOintData)
+  const [roasting, setRoasting] = useState(false)
+  const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
+  const [ointSteps, setOintSteps] = useState<string[]>(init.steps)
+  const [fixing, setFixing] = useState(false)
+  const [error, setError] = useState('')
+  const [healed, setHealed] = useState(init.healed)
+  const ointCreated = !!useSyncExternalStore(subscribeOintData, getOintData)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -290,12 +291,14 @@ export default function RoasterPage() {
   }, [])
 
   useEffect(() => {
-    setRoasterState({ level, widgets, ointWidgets, healed })
-  }, [level, widgets, ointWidgets, healed])
+    setRoasterState({ level, widgets, ointWidgets, healed, steps: ointSteps })
+  }, [level, widgets, ointWidgets, healed, ointSteps])
 
   async function runRoaster() {
     if (!result) return
     setHealed(false)
+    setOintWidgets(null)
+    setOintSteps([])
     setRoasting(true)
     try {
       const res = await fetch('/api/roaster', {
@@ -341,10 +344,13 @@ export default function RoasterPage() {
         if (updated[key]) updated[key] = c
       })
       setOintWidgets(updated)
+      const steps = Array.isArray(data.steps) ? data.steps : []
+      setOintSteps(steps)
       setHealed(true)
       setError('')
     } catch (err) {
       setOintWidgets(null)
+      setOintSteps([])
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setFixing(false)
@@ -499,6 +505,21 @@ export default function RoasterPage() {
               )
             })}
           </div>
+        </div>
+      )}
+      {ointSteps.length > 0 && (
+        <div className="mt-8">
+          <div className="text-sm font-semibold mb-2">Action Plan</div>
+          <ol className="space-y-2 text-sm text-zinc-300 list-decimal list-inside">
+            {ointSteps.map(step => (
+              <li
+                key={step}
+                className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-lg"
+              >
+                {step}
+              </li>
+            ))}
+          </ol>
         </div>
       )}
       <style jsx>{`

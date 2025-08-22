@@ -1,6 +1,19 @@
 'use client'
 import { useState } from 'react'
 import { Card, Badge, Metric } from '../../lib/ui'
+import dynamic from 'next/dynamic'
+import {
+  Chart as ChartJS,
+  RadialLinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend
+} from 'chart.js'
+
+ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
+const Radar = dynamic(() => import('react-chartjs-2').then(m => m.Radar), { ssr: false })
 import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
@@ -166,13 +179,18 @@ export default function ToolsetPage() {
               )}
               <Card>
                 <h2 className="text-lg font-semibold mb-4">30-Day Onboarding Plan</h2>
-                <ol className="list-decimal pl-5 space-y-1 text-sm">
-                  {data.onboardingPlan.map(item => (
-                    <li key={item.day}>
-                      <span className="font-medium">{item.day}:</span> {item.step}
-                    </li>
-                  ))}
-                </ol>
+                <div className="relative pl-4">
+                  <div className="absolute left-1 top-0 bottom-0 w-px bg-emerald-700/50" />
+                  <ul className="space-y-4">
+                    {data.onboardingPlan.map(item => (
+                      <li key={item.day} className="relative pl-6">
+                        <span className="absolute left-1 top-1 w-2 h-2 rounded-full bg-emerald-500" />
+                        <div className="text-xs text-emerald-400 font-medium">{item.day}</div>
+                        <div className="text-sm text-zinc-300">{item.step}</div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </Card>
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
@@ -180,6 +198,40 @@ export default function ToolsetPage() {
                   <Metric label="Coverage" value={data.reliability.coveragePct} />
                   <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
                   <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
+                </div>
+                <div className="mt-4">
+                  <Radar
+                    data={{
+                      labels: ['Coverage', 'Evidence', 'LLM Agreement'],
+                      datasets: [
+                        {
+                          label: 'Reliability',
+                          data: [
+                            data.reliability.coveragePct,
+                            data.reliability.evidenceCompletenessPct,
+                            data.reliability.llmStaticAgreementPct
+                          ],
+                          backgroundColor: 'rgba(16,185,129,0.3)',
+                          borderColor: '#10b981',
+                          pointBackgroundColor: '#10b981',
+                          pointBorderColor: '#10b981',
+                          fill: true
+                        }
+                      ]
+                    }}
+                    options={{
+                      plugins: { legend: { display: false } },
+                      scales: {
+                        r: {
+                          beginAtZero: true,
+                          angleLines: { color: '#27272a' },
+                          grid: { color: '#27272a' },
+                          max: 100,
+                          ticks: { display: false }
+                        }
+                      }
+                    }}
+                  />
                 </div>
               </Card>
             </div>

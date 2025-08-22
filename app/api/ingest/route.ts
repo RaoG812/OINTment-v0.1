@@ -7,7 +7,21 @@ import { githubHeaders } from '../../../lib/github'
 export async function POST(req: NextRequest) {
   const form = await req.formData()
   const repo = form.get('repo')
-  const branch = form.get('branch') || 'main'
+  let branch = form.get('branch')?.toString() || ''
+  if (!branch && typeof repo === 'string' && repo) {
+    try {
+      const infoRes = await fetch(`https://api.github.com/repos/${repo}`, {
+        headers: githubHeaders(req)
+      })
+      if (infoRes.ok) {
+        const info = await infoRes.json()
+        branch = info.default_branch || 'main'
+      }
+    } catch {
+      branch = 'main'
+    }
+  }
+  if (!branch) branch = 'main'
   const docsMetaRaw = form.get('docs_meta')
   let docsMeta: any[] = []
   if (typeof docsMetaRaw === 'string') {

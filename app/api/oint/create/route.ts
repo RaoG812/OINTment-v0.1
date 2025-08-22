@@ -24,18 +24,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'insufficient data for OINT' }, { status: 400 })
   }
 
-  for (const _ of repoFiles) {
-    await new Promise(r => setTimeout(r, 10))
-  }
-  for (const d of parsedDocs) {
-    await new Promise(r => setTimeout(r, Math.min(d.text.length / 50, 20)))
-  }
-
   const hasFinance = parsedDocs.some(d =>
     /fin|budget|cost|expense/i.test(d.name + d.text)
   )
 
   markCreated(parsedDocs, repoFiles, hasVuln, hasFinance)
 
-  return NextResponse.json({ status: 'created', jobId: 'analysis-job' })
+  return NextResponse.json({ status: 'created' })
 }

@@ -56,27 +56,11 @@ export async function GET() {
     day: `Day ${i + 1}`,
     step: `Review ${d.name}`
   }))
-
-  const extraSteps = [
-    'Codebase orientation',
-    'Audit dependencies',
-    'Establish CI pipeline',
-    'Set up testing framework',
-    'Implement monitoring',
-    'Plan deployment strategy',
-    'Conduct security review',
-    'Optimize performance',
-    'Review team responsibilities',
-    'Finalize onboarding'
-  ]
-  let idx = 0
-  while (onboardingPlan.length < 10) {
-    onboardingPlan.push({
-      day: `Day ${onboardingPlan.length + 1}`,
-      step: extraSteps[idx % extraSteps.length]
-    })
-    idx++
-  }
+  const planFiles = files.filter(f => /\.(js|ts|jsx|tsx|py|rb|go|java|rs)$/i.test(f))
+  const remaining = 10 - onboardingPlan.length
+  planFiles.slice(0, remaining).forEach(f => {
+    onboardingPlan.push({ day: `Day ${onboardingPlan.length + 1}`, step: `Explore ${f}` })
+  })
 
   const data: DashboardData = {
     generatedAt: new Date().toISOString(),

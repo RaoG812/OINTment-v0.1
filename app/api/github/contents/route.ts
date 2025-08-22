@@ -6,7 +6,21 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const repo = searchParams.get('repo');
   const path = searchParams.get('path') || '';
-  const branch = searchParams.get('branch') || 'main';
+  let branch = searchParams.get('branch') || '';
+  if (!branch && repo) {
+    try {
+      const infoRes = await fetch(`https://api.github.com/repos/${repo}`, {
+        headers: githubHeaders(req)
+      });
+      if (infoRes.ok) {
+        const info = await infoRes.json();
+        branch = info.default_branch || 'main';
+      }
+    } catch {
+      branch = 'main';
+    }
+  }
+  if (!branch) branch = 'main';
   if (!repo) {
     return NextResponse.json({ error: 'repo required' }, { status: 400 });
   }

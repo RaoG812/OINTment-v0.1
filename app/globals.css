@@ -30,20 +30,20 @@
 .evil-eyes {
   opacity: 0;
   animation: eyesFade 2s forwards;
-  filter: brightness(0.5);
+  filter: brightness(0.3);
 }
 
 .evil-eyes .eye {
   position: relative;
   width: 200px;
   height: 200px;
-  margin: 0 80px;
+  margin: 0 40px;
 }
 
 .evil-eyes .inner-eye {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(120,0,0,0.7) 40%, rgba(120,0,0,0.3) 65%, transparent 80%);
+  background: radial-gradient(circle at 50% 50%, rgba(120,0,0,0.5) 40%, rgba(120,0,0,0.15) 65%, transparent 80%);
   filter: drop-shadow(0 0 12px rgba(120,0,0,0.6));
   animation: blink 5s infinite;
 }
@@ -63,7 +63,7 @@
   background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.06), transparent 60%),
     radial-gradient(circle at 80% 30%, rgba(255,255,255,0.04), transparent 60%),
     radial-gradient(circle at 50% 80%, rgba(255,255,255,0.05), transparent 60%);
-  opacity: 0.2;
+  opacity: 0.3;
   filter: blur(40px);
   animation: mistMove 30s linear infinite;
 }
@@ -82,7 +82,7 @@
 
 @keyframes eyesFade {
   to {
-    opacity: 1;
+    opacity: 0.6;
   }
 }
 

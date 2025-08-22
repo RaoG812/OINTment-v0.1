@@ -55,7 +55,7 @@ export default function HexBackground({ className = "", reveal = true }: { class
   return (
     <div
       ref={ref}
-      className={`pointer-events-none fixed inset-0 z-0 ${className}`}
+      className={`pointer-events-none fixed inset-0 -z-20 ${className}`}
       style={{ '--mx': '-999px', '--my': '-999px', ...(mask ? { mask, WebkitMask: mask } : {}) } as CSSProperties}
     >
       <div className="absolute inset-0 pattern" />

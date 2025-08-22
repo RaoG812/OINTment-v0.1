@@ -16,10 +16,10 @@ export default function EvilEyes() {
 
   const offsetX = pos.x * 20
   const offsetY = pos.y * 10
-  const base = 200
+  const base = 120
 
   return (
-    <div className="evil-eyes fixed inset-0 flex items-center justify-center pointer-events-none z-0">
+    <div className="evil-eyes fixed inset-0 flex items-center justify-center pointer-events-none -z-10">
       <div className="eye left" style={{ transform: `translate(${offsetX - base}px, ${offsetY}px)` }}>
         <div className="inner-eye left" />
       </div>

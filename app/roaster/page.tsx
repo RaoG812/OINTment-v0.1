@@ -353,23 +353,29 @@ export default function RoasterPage() {
     : 0
 
   const hue = 120 - level * 120
-  const bgStyle: CSSProperties = healed
+  const gradientStyle: CSSProperties = healed
     ? {
         background: 'radial-gradient(circle at 50% 50%, hsl(210,60%,15%), #000)',
         backgroundSize: '200% 200%',
         animation: 'bgMove 20s ease infinite',
-        transition: 'background 0.5s'
+        transition: 'background 0.5s',
+        filter: 'blur(40px)'
       }
     : {
         background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,8%), #000)`,
         backgroundSize: '200% 200%',
         animation: 'bgMove 20s ease infinite',
-        transition: 'background 0.5s'
+        transition: 'background 0.5s',
+        filter: 'blur(40px)'
       }
 
   return (
-    <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
+    <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10">
       <HexBackground />
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0" style={gradientStyle} />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
       {level > 0.95 && <FireLayer />}
       <div
         className="absolute -bottom-40 -right-40 opacity-20 z-10"

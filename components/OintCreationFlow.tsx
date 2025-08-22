@@ -151,7 +151,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               )}
             </div>
             {!active && (
-              <div className="absolute left-full ml-8 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
+              <div className="absolute left-full ml-12 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap z-30">
                 {a.label}
               </div>
             )}
@@ -159,7 +159,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         )
       })}
       <div
-        className="absolute z-50"
+        className="absolute z-[60] pointer-events-none"
         style={{
           left: POINTER_POS.x,
           top: POINTER_POS.y,
@@ -168,6 +168,8 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         }}
       >
         <svg
+          width="40"
+          height="40"
           viewBox="0 0 40 40"
           className="pointer-events-none"
           style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}

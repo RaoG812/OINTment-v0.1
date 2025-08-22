@@ -43,6 +43,18 @@ export default function ToolsetPage() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <HexBackground />
+      <div className="fixed inset-0 -z-10">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(229,231,235,0.3), rgba(51,65,85,0.9))',
+            backgroundSize: '200% 200%',
+            animation: 'bgMove 20s ease infinite',
+            filter: 'blur(40px)'
+          }}
+        />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
       <div className="relative z-10 p-6 space-y-6">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (

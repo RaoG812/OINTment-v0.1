@@ -210,14 +210,18 @@ export default function IngestPage() {
   return (
     <div className="relative min-h-screen text-zinc-200">
       <HexBackground className="-z-20" />
-      <div
-        className="fixed inset-0 -z-30"
-        style={{
-          background: 'radial-gradient(circle at 50% 50%, rgba(30,58,138,0.4), rgba(0,0,0,0.9))',
-          backgroundSize: '200% 200%',
-          animation: 'bgMove 20s ease infinite'
-        }}
-      />
+      <div className="fixed inset-0 -z-30">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: 'radial-gradient(circle at 50% 50%, rgba(229,231,235,0.3), rgba(51,65,85,0.9))',
+            backgroundSize: '200% 200%',
+            animation: 'bgMove 20s ease infinite',
+            filter: 'blur(40px)'
+          }}
+        />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
       <div className="relative z-10 p-10 space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
         <div className="flex flex-col md:flex-row md:gap-8">

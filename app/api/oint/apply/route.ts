@@ -8,7 +8,7 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}))
   const roast = Array.isArray(body.roast) ? body.roast : []
-  const { docs } = getKnowledge()
+  const { docs, files } = getKnowledge()
   const docText = docs.map(d => d.text.toLowerCase()).join(' ')
 
   const STOP = new Set(
@@ -37,9 +37,17 @@ export async function POST(req: Request) {
 
   const comments = roast.map((c: any) => {
     const keywords = extractKeywords(docText, c.department)
-    const comment = keywords.length
-      ? `Key topics: ${keywords.join(', ')}`
-      : `No documentation found for ${c.department}`
+    let comment: string
+    if (keywords.length) {
+      comment = `Key topics: ${keywords.join(', ')}`
+    } else {
+      const related = files
+        .filter(f => f.toLowerCase().includes(c.department.toLowerCase()))
+        .slice(0, 2)
+      comment = related.length
+        ? `Review ${related.join(', ')}`
+        : `Audit ${c.department} code and add documentation`
+    }
     return {
       department: c.department,
       comment,
@@ -55,10 +63,16 @@ export async function POST(req: Request) {
             .replace('Key topics: ', '')
             .split(', ')
             .map((k: string) => `Investigate ${c.department} ${k}`)
-        : [`Investigate ${c.department}`]
+        : []
   )
-  const roastSteps = roast.map((c: any) => `Resolve ${c.department} feedback`)
-  const steps = Array.from(new Set([...docSteps, ...keywordSteps, ...roastSteps])).slice(0, 5)
+  const fileSteps = roast.flatMap((c: any) =>
+    files
+      .filter(f => f.toLowerCase().includes(c.department.toLowerCase()))
+      .slice(0, 2)
+      .map(f => `Refine ${c.department} work in ${f}`)
+  )
+  const fallbackSteps = roast.map((c: any) => `Resolve ${c.department} feedback`)
+  const steps = Array.from(new Set([...docSteps, ...keywordSteps, ...fileSteps, ...fallbackSteps])).slice(0, 8)
 
   return NextResponse.json({ comments, steps })
 }

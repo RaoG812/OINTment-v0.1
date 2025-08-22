@@ -69,6 +69,7 @@ export default function IngestPage() {
   // hide console by default; users can reveal as needed
   const [showConsole, setShowConsole] = useState(false)
   const [repo, setRepo] = useState('')
+  const [branch, setBranch] = useState('')
   const [repos, setRepos] = useState<string[]>([])
   const [reposError, setReposError] = useState('')
   const [error, setError] = useState('')
@@ -76,6 +77,7 @@ export default function IngestPage() {
   const [hasVuln, setHasVuln] = useState(false)
   const [mode, setMode] = useState<'manual' | 'github'>('manual')
   const [localRepo, setLocalRepo] = useState('')
+  const [branches, setBranches] = useState<string[]>([])
 
   useEffect(() => {
     setHasVuln(localStorage.getItem('vulnChecked') === 'true')
@@ -115,10 +117,28 @@ export default function IngestPage() {
     if (storedRepo) setRepo(storedRepo)
     const storedLocal = localStorage.getItem('localRepo')
     if (storedLocal) setLocalRepo(storedLocal)
+    const storedBranch = localStorage.getItem('ingestBranch')
+    if (storedBranch) setBranch(storedBranch)
   }, [])
 
   useEffect(() => {
     if (repo) localStorage.setItem('repo', repo)
+  }, [repo])
+
+  useEffect(() => {
+    if (branch) localStorage.setItem('ingestBranch', branch)
+    else localStorage.removeItem('ingestBranch')
+  }, [branch])
+
+  useEffect(() => {
+    if (!repo) {
+      setBranches([])
+      return
+    }
+    fetch(`/api/github/branches?repo=${repo}`)
+      .then(r => r.json())
+      .then(d => Array.isArray(d) && setBranches(d.map((x: any) => x.name)))
+      .catch(() => setBranches([]))
   }, [repo])
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -162,17 +182,21 @@ export default function IngestPage() {
     setLocalRepo('')
     localStorage.removeItem('ingestResult')
     localStorage.removeItem('localRepo')
+    setBranch('')
+    localStorage.removeItem('ingestBranch')
     setOintData(null)
   }
 
   function handleRepoChange(value: string) {
     setRepo(value)
+    setBranch('')
   }
 
   async function analyzeRepo() {
     if (!repo) return
     const form = new FormData()
     form.append('repo', repo)
+    if (branch) form.append('branch', branch)
     const docItems = docs.filter(Boolean) as DocItem[]
     docItems.forEach(d =>
       form.append('docs', new File([d.file], d.name, { type: d.file.type }))
@@ -318,6 +342,20 @@ export default function IngestPage() {
                         </option>
                       ))}
                     </select>
+                    {branches.length > 0 && (
+                      <select
+                        value={branch}
+                        onChange={e => setBranch(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm"
+                      >
+                        <option value="">default branch</option>
+                        {branches.map(b => (
+                          <option key={b} value={b}>
+                            {b}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                 ) : (
                   <p className="text-xs text-zinc-400">

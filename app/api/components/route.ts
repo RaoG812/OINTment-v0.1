@@ -17,15 +17,14 @@ type Row = {
 };
 
 function categorize(name: string): string {
-  const categories: Record<string, string> = {
-    next: 'Frameworks/Libs',
-    react: 'Frameworks/Libs',
-    'react-dom': 'Frameworks/Libs',
-    openai: 'ML/AI',
-    'lucide-react': 'Frameworks/Libs',
-    'adm-zip': 'Infra & DevOps',
-  };
-  return categories[name] || 'Frameworks/Libs';
+  const n = name.toLowerCase()
+  if (/aws|azure|gcp|firebase|supabase/.test(n)) return 'Cloud'
+  if (/chart|d3|graph|plot/.test(n)) return 'Visualization'
+  if (/tailwind|bootstrap|css|sass|style|mui/.test(n)) return 'Styling'
+  if (/lint|eslint|prettier|babel|webpack|vite/.test(n)) return 'Tooling'
+  if (/zip|fs|path|express|axios|server/.test(n)) return 'Infra & DevOps'
+  if (/ai|ml|openai|tensorflow|torch/.test(n)) return 'ML/AI'
+  return 'Frameworks/Libs'
 }
 
 function scores(name: string) {

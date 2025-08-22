@@ -275,7 +275,7 @@ export default function RoasterPage() {
   const init = getRoasterState()
   const [result, setResult] = useState<Result | null>(null)
   const [level, setLevel] = useState(init.level)
-  const [roast, setRoast] = useState<Comment[] | null>(null)
+  const [roast, setRoast] = useState<Comment[] | null>(init.roast)
   const [widgets, setWidgets] = useState<Record<Department, Comment>>(init.widgets)
   const [roasting, setRoasting] = useState(false)
   const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
@@ -291,8 +291,8 @@ export default function RoasterPage() {
   }, [])
 
   useEffect(() => {
-    setRoasterState({ level, widgets, ointWidgets, healed, steps: ointSteps })
-  }, [level, widgets, ointWidgets, healed, ointSteps])
+    setRoasterState({ level, widgets, ointWidgets, healed, steps: ointSteps, roast })
+  }, [level, widgets, ointWidgets, healed, ointSteps, roast])
 
   async function runRoaster() {
     if (!result) return

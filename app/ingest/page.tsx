@@ -17,6 +17,7 @@ type Result = {
   files: string[]
   analysis: RepoAnalysis
   code?: any[]
+  docs: { name: string; type: string; content: string }[]
 }
 
 function Card({ children }: { children: React.ReactNode }) {
@@ -67,6 +68,7 @@ export default function IngestPage() {
   // hide console by default; users can reveal as needed
   const [showConsole, setShowConsole] = useState(false)
   const [repo, setRepo] = useState('')
+  const [repos, setRepos] = useState<string[]>([])
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
@@ -155,15 +157,21 @@ export default function IngestPage() {
     }
   }
 
-  async function loadBranches() {
-    if (!repo) return
-    const res = await fetch(`/api/github/branches?repo=${repo}`)
+  async function loadBranches(selectedRepo: string) {
+    if (!selectedRepo) return
+    const res = await fetch(`/api/github/branches?repo=${selectedRepo}`)
     const data = await (res.ok ? res.json() : Promise.resolve([]))
     if (Array.isArray(data)) {
       setBranches(data.map((d: any) => d.name))
     } else {
       setBranches([])
     }
+  }
+
+  function handleRepoChange(value: string) {
+    setRepo(value)
+    setBranch('')
+    loadBranches(value)
   }
 
   async function analyzeRepo() {
@@ -201,6 +209,19 @@ export default function IngestPage() {
     setDocs(newDocs)
     setDocsState(newDocs)
   }
+
+  useEffect(() => {
+    async function loadRepos() {
+      const res = await fetch('/api/github/repos')
+      const data = await (res.ok ? res.json() : [])
+      if (Array.isArray(data)) {
+        setRepos(data.map((r: any) => r.name))
+      } else {
+        setRepos([])
+      }
+    }
+    if (mode === 'github') loadRepos()
+  }, [mode])
 
 
   return (
@@ -263,34 +284,39 @@ export default function IngestPage() {
             {mode === 'github' && (
               <section className="space-y-4">
                 <h2 className="text-lg font-medium">GitHub Ingest</h2>
-                <div className="flex gap-2">
-                  <input
-                    value={repo}
-                    onChange={e => setRepo(e.target.value)}
-                    placeholder="owner/repo"
-                    className="flex-1 px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-                  />
-                  <button
-                    type="button"
-                    onClick={loadBranches}
-                    className="px-3 py-2 bg-zinc-800 rounded text-xs"
-                  >
-                    Load
-                  </button>
-                </div>
-                {branches.length > 0 && (
-                  <select
-                    value={branch}
-                    onChange={e => setBranch(e.target.value)}
-                    className="w-full px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-                  >
-                    <option value="">select branch</option>
-                    {branches.map(b => (
-                      <option key={b} value={b}>
-                        {b}
-                      </option>
-                    ))}
-                  </select>
+                {repos.length > 0 ? (
+                  <div className="space-y-2">
+                    <select
+                      value={repo}
+                      onChange={e => handleRepoChange(e.target.value)}
+                      className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm"
+                    >
+                      <option value="">select repo</option>
+                      {repos.map(r => (
+                        <option key={r} value={r}>
+                          {r}
+                        </option>
+                      ))}
+                    </select>
+                    {branches.length > 0 && (
+                      <select
+                        value={branch}
+                        onChange={e => setBranch(e.target.value)}
+                        className="w-full px-3 py-2 rounded-lg bg-zinc-900 border border-zinc-800 text-sm"
+                      >
+                        <option value="">select branch</option>
+                        {branches.map(b => (
+                          <option key={b} value={b}>
+                            {b}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-zinc-400">
+                    Login with GitHub to list repos.
+                  </p>
                 )}
                 <button
                   type="button"

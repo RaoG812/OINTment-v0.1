@@ -1,4 +1,5 @@
 'use client'
+import { useState } from 'react'
 import type { DocItem } from '../lib/docsState'
 
 const SLOT_LABELS = [
@@ -16,6 +17,7 @@ export default function DocsUploader({
   docs: (DocItem | null)[]
   setDocs: (d: (DocItem | null)[]) => void
 }) {
+  const [open, setOpen] = useState(true)
   function handleFile(idx: number, file: File) {
     const next = [...docs]
     next[idx] = { file, name: file.name, type: SLOT_LABELS[idx].type }
@@ -36,13 +38,23 @@ export default function DocsUploader({
 
   return (
     <div className="space-y-4">
-      <h2 className="text-lg font-medium">Supporting Documents</h2>
-      <div className="grid gap-4">
-        {SLOT_LABELS.map((slot, idx) => {
-          const item = docs[idx]
-          return (
-            <div
-              key={idx}
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-medium">Supporting Documents</h2>
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="text-xs text-emerald-400"
+        >
+          {open ? 'Hide' : 'Show'}
+        </button>
+      </div>
+      {open && (
+        <div className="grid gap-4">
+          {SLOT_LABELS.map((slot, idx) => {
+            const item = docs[idx]
+            return (
+              <div
+                key={idx}
               className="p-4 border border-zinc-800 rounded-lg bg-zinc-900/40"
             >
               {item ? (
@@ -76,7 +88,8 @@ export default function DocsUploader({
             </div>
           )
         })}
-      </div>
+        </div>
+      )}
       <p className="text-xs text-zinc-400">
         {docs.filter(Boolean).length}/5 files uploaded
       </p>

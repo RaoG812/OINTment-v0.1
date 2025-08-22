@@ -79,13 +79,21 @@ export async function summarizeRepo(
   return JSON.parse(txt)
 }
 
-export async function roastRepo(fileList: string[], level = 0.5): Promise<RoastComment[]> {
-  const content = fileList.slice(0, 200).join('\n')
+export async function roastRepo(
+  fileList: string[],
+  docs: { name: string; type: string; content: string }[] = [],
+  level = 0.5
+): Promise<RoastComment[]> {
+  const filesPart = fileList.slice(0, 200).join('\n')
+  const docsPart = docs
+    .map(d => `${d.type.toUpperCase()} (${d.name}):\n${d.content}`)
+    .join('\n---\n')
+  const content = `FILES:\n${filesPart}\nDOCS:\n${docsPart}`
   const messages: any = [
     {
       role: 'system',
       content:
-        `Provide a concise code review from multiple departments (frontend, backend, ops) at criticism level ${level} (0=gently, 1=brutal). Respond with JSON {"reviews":[{"department":string,"comment":string,"temperature":number}]}. Temperature is between 0 and 1 indicating criticism level.`
+        `Provide a concise code review from multiple departments (frontend, backend, ops) at criticism level ${level} (0=gently, 1=brutal). Consider supporting documents like PRDs or estimates and highlight any deviations from documented requirements or timelines. Respond with JSON {"reviews":[{"department":string,"comment":string,"temperature":number}]}. Temperature is between 0 and 1 indicating criticism level.`
     },
     { role: 'user', content }
   ]

@@ -11,17 +11,26 @@ export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
   const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null)
   const [creating, setCreating] = useState(false)
+  const [error, setError] = useState('')
 
   async function create() {
     setCreating(true)
+    setError('')
     try {
       const recRes = await fetch('/api/oint/apply', { method: 'POST' })
-      const recJson = (await recRes.json()) as { recommendations: Recommendation[] }
-      setRecommendations(recJson.recommendations)
+      const recJson = await recRes.json()
+      if (!recRes.ok) throw new Error(recJson.error || 'apply OINT failed')
+      setRecommendations((recJson as { recommendations: Recommendation[] }).recommendations)
       const res = await fetch('/api/oint/summary')
-      const json = (await res.json()) as DashboardData
-      setData(json)
-      setOintData(json)
+      const json = await res.json()
+      if (!res.ok) throw new Error(json.error || 'summary failed')
+      setData(json as DashboardData)
+      setOintData(json as DashboardData)
+    } catch (err) {
+      setData(null)
+      setRecommendations(null)
+      setOintData(null)
+      setError(err instanceof Error ? err.message : String(err))
     } finally {
       setCreating(false)
     }
@@ -59,21 +68,24 @@ export default function ToolsetPage() {
       <div className="relative z-10 p-6 space-y-6">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
-          <Card className="max-w-md">
-            {creating ? (
-              <div className="flex items-center gap-2">
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-                <span className="text-sm">Running OINT analysis…</span>
-              </div>
-            ) : (
-              <button
-                onClick={create}
-                className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-              >
-                Create OINT
-              </button>
-            )}
-          </Card>
+          <>
+            <Card className="max-w-md">
+              {creating ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+                  <span className="text-sm">Running OINT analysis…</span>
+                </div>
+              ) : (
+                <button
+                  onClick={create}
+                  className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                >
+                  Create OINT
+                </button>
+              )}
+            </Card>
+            {error && <div className="text-xs text-rose-400">{error}</div>}
+          </>
         )}
         {data && (
           <div className="space-y-6">

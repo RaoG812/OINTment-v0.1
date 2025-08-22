@@ -84,6 +84,12 @@ export default function VibeKillerPage() {
         setFiles(parsed.code || [])
       } catch {}
     }
+    const vr = localStorage.getItem('vibeResult')
+    if (vr) {
+      try {
+        setResult(JSON.parse(vr))
+      } catch {}
+    }
     const r = localStorage.getItem('repo') || ''
     const b = localStorage.getItem('branch') || 'main'
     setRepo(r)
@@ -109,6 +115,9 @@ export default function VibeKillerPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'scan failed')
       setResult(data)
+      try {
+        localStorage.setItem('vibeResult', JSON.stringify(data))
+      } catch {}
       setError('')
     } catch (err) {
       setResult(null)

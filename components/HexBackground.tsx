@@ -75,10 +75,10 @@ export default function HexBackground({ className = "" }: { className?: string }
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(59,130,246,0.25);
+          background: rgba(16,185,129,0.25);
           transform: scaleY(0);
           transform-origin: bottom;
-          filter: drop-shadow(0 0 3px rgba(59,130,246,0.25));
+          filter: drop-shadow(0 0 3px rgba(16,185,129,0.25));
           animation: fillHex 6s forwards;
         }
         @keyframes fillHex {

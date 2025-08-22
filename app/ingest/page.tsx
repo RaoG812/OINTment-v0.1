@@ -10,6 +10,7 @@ import {
   setDocs as setDocsState,
   type DocItem
 } from '../../lib/docsState'
+import { setOintData } from '../../lib/toolsetState'
 
 type Result = {
   repo?: string
@@ -141,6 +142,7 @@ export default function IngestPage() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
+      setOintData(null)
       localStorage.setItem('ingestResult', JSON.stringify(data))
       if (repo) localStorage.setItem('repo', repo)
       if (branch) localStorage.setItem('branch', branch)
@@ -211,13 +213,23 @@ export default function IngestPage() {
   }
 
   useEffect(() => {
+    const storedRepos = localStorage.getItem('repos')
+    if (storedRepos) {
+      try {
+        const parsed = JSON.parse(storedRepos)
+        if (Array.isArray(parsed)) setRepos(parsed)
+      } catch {}
+    }
     async function loadRepos() {
       const res = await fetch('/api/github/repos')
       const data = await (res.ok ? res.json() : [])
       if (Array.isArray(data)) {
-        setRepos(data.map((r: any) => r.name))
+        const names = data.map((r: any) => r.name)
+        setRepos(names)
+        localStorage.setItem('repos', JSON.stringify(names))
       } else {
         setRepos([])
+        localStorage.removeItem('repos')
       }
     }
     if (mode === 'github') loadRepos()
@@ -357,24 +369,32 @@ export default function IngestPage() {
       )}
 
         {result && (
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <div className="text-sm font-semibold mb-2">Takeaways</div>
-              <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
-                {result.analysis.takeaways.map(t => (
-                  <li key={t}>{t}</li>
-                ))}
-              </ul>
-            </Card>
-            {(['complexity', 'documentation', 'tests'] as const).map(key => (
-              <Card key={key}>
-                <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
-                <div className="max-w-[100px] mx-auto">
-                  <Gauge value={result.analysis.metrics[key]} />
-                </div>
+          <>
+            {result.repo && (
+              <div className="text-xs text-zinc-400 mb-2">
+                Analyzed {result.repo}
+                {result.branch ? `@${result.branch}` : ''}
+              </div>
+            )}
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <Card>
+                <div className="text-sm font-semibold mb-2">Takeaways</div>
+                <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
+                  {result.analysis.takeaways.map(t => (
+                    <li key={t}>{t}</li>
+                  ))}
+                </ul>
               </Card>
-            ))}
-          </div>
+              {(['complexity', 'documentation', 'tests'] as const).map(key => (
+                <Card key={key}>
+                  <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
+                  <div className="max-w-[100px] mx-auto">
+                    <Gauge value={result.analysis.metrics[key]} />
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </>
         )}
       </div>
       <style jsx>{`

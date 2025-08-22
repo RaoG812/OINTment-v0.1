@@ -19,5 +19,9 @@ export async function POST(req: Request) {
     temperature: Math.max(0, c.temperature - 0.1)
   }))
 
-  return NextResponse.json({ comments })
+  const steps = comments.slice(0, 5).map(
+    (c: any, i: number) => `Step ${i + 1}: Address ${c.department} - ${c.comment}`
+  )
+
+  return NextResponse.json({ comments, steps })
 }

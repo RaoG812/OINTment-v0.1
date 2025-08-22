@@ -4,7 +4,13 @@ export type FinanceInfo = { effectivenessPct: number };
 export type PlanItem = { day: string; step: string };
 export type DashboardData = {
   generatedAt: string;
-  pulse: { envs: string[]; deploysToday: number; criticalAlerts: number };
+  pulse: {
+    envs: string[];
+    deploysToday: number;
+    criticalAlerts: number;
+    filesAnalyzed: number;
+    docsReviewed: number;
+  };
   stack: StackInfo;
   actions: ActionItem[];
   onboardingPlan: PlanItem[];

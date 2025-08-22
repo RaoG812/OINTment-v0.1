@@ -1,10 +1,10 @@
 // @ts-nocheck
 'use client'
-import { useEffect, useState, CSSProperties, useRef } from 'react'
+import { useEffect, useState, CSSProperties, useRef, useSyncExternalStore } from 'react'
 import Link from 'next/link'
 import HexBackground from '../../components/HexBackground'
 import { getRoasterState, setRoasterState } from '../../lib/roasterState'
-import { getOintData } from '../../lib/toolsetState'
+import { getOintData, subscribeOintData } from '../../lib/toolsetState'
 
 type Result = { files: string[]; docs: { name: string; type: string; content: string }[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -277,12 +277,13 @@ export default function RoasterPage() {
   const [level, setLevel] = useState(init.level)
   const [roast, setRoast] = useState<Comment[] | null>(null)
   const [widgets, setWidgets] = useState<Record<Department, Comment>>(init.widgets)
-    const [roasting, setRoasting] = useState(false)
-    const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
-    const [fixing, setFixing] = useState(false)
-    const [error, setError] = useState('')
-    const [healed, setHealed] = useState(init.healed)
-    const ointCreated = !!getOintData()
+  const [roasting, setRoasting] = useState(false)
+  const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
+  const [ointSteps, setOintSteps] = useState<string[]>(init.steps)
+  const [fixing, setFixing] = useState(false)
+  const [error, setError] = useState('')
+  const [healed, setHealed] = useState(init.healed)
+  const ointCreated = !!useSyncExternalStore(subscribeOintData, getOintData)
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -290,12 +291,14 @@ export default function RoasterPage() {
   }, [])
 
   useEffect(() => {
-    setRoasterState({ level, widgets, ointWidgets, healed })
-  }, [level, widgets, ointWidgets, healed])
+    setRoasterState({ level, widgets, ointWidgets, healed, steps: ointSteps })
+  }, [level, widgets, ointWidgets, healed, ointSteps])
 
   async function runRoaster() {
     if (!result) return
     setHealed(false)
+    setOintWidgets(null)
+    setOintSteps([])
     setRoasting(true)
     try {
       const res = await fetch('/api/roaster', {
@@ -341,10 +344,13 @@ export default function RoasterPage() {
         if (updated[key]) updated[key] = c
       })
       setOintWidgets(updated)
+      const steps = Array.isArray(data.steps) ? data.steps : []
+      setOintSteps(steps)
       setHealed(true)
       setError('')
     } catch (err) {
       setOintWidgets(null)
+      setOintSteps([])
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setFixing(false)
@@ -396,6 +402,11 @@ export default function RoasterPage() {
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
+        {ointCreated && (
+          <Link href="/toolset" className="text-sm text-zinc-400 underline">
+            Apply OINT
+          </Link>
+        )}
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">
@@ -503,6 +514,21 @@ export default function RoasterPage() {
               )
             })}
           </div>
+        </div>
+      )}
+      {ointSteps.length > 0 && (
+        <div className="mt-8">
+          <div className="text-sm font-semibold mb-2">Action Plan</div>
+          <ol className="space-y-2 text-sm text-zinc-300 list-decimal list-inside">
+            {ointSteps.map(step => (
+              <li
+                key={step}
+                className="p-3 bg-zinc-900/60 border border-zinc-800 rounded-lg"
+              >
+                {step}
+              </li>
+            ))}
+          </ol>
         </div>
       )}
       <style jsx>{`

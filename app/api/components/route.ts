@@ -43,9 +43,12 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const repo = searchParams.get('repo')
   const branch = searchParams.get('branch') || 'main'
+  const depsParam = searchParams.get('deps')
 
   let deps: string[] = []
-  if (repo) {
+  if (depsParam) {
+    deps = depsParam.split(',').filter(Boolean)
+  } else if (repo) {
     try {
       const url = `https://codeload.github.com/${repo}/zip/${branch}`
       const res = await fetch(url, { headers: githubHeaders(req) })

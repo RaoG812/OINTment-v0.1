@@ -183,7 +183,10 @@ export default function IngestPage() {
   }
 
   async function createOint() {
-    if (!result || docs.length === 0 || !hasVuln) return
+    if (!result || docs.length === 0 || !hasVuln) {
+      setError('Please ingest repo data, upload docs and run vulnerability check before creating an OINT')
+      return
+    }
     const form = new FormData()
     docs.forEach(f => form.append('docs', f))
     form.append('hasRepo', String(!!result))
@@ -283,7 +286,9 @@ export default function IngestPage() {
               </form>
             </section>
           </div>
-          <OintCreationFlow docs={docs.length} repo={!!result} roast={hasVuln} />
+          <div className="flex-1 flex justify-center md:justify-end">
+            <OintCreationFlow docs={docs.length} repo={!!result} roast={hasVuln} />
+          </div>
         </div>
         <button
           onClick={() => setShowConsole(s => !s)}

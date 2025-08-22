@@ -4,7 +4,12 @@ import { useEffect, useState } from 'react'
 import type { RepoAnalysis } from '../../lib/openai'
 import HexBackground from '../../components/HexBackground'
 import { OintCreationFlow } from '../../components/OintCreationFlow'
-import { getDocs as getDocsState, setDocs as setDocsState } from '../../lib/docsState'
+import DocsUploader from '../../components/DocsUploader'
+import {
+  getDocs as getDocsState,
+  setDocs as setDocsState,
+  type DocItem
+} from '../../lib/docsState'
 
 type Result = {
   repo?: string
@@ -65,7 +70,7 @@ export default function IngestPage() {
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
-  const [docs, setDocs] = useState<File[]>(getDocsState())
+  const [docs, setDocs] = useState<(DocItem | null)[]>(getDocsState())
   const [hasVuln, setHasVuln] = useState(false)
   const [mode, setMode] = useState<'manual' | 'github'>('manual')
 
@@ -122,6 +127,11 @@ export default function IngestPage() {
     if (!file) return
     const form = new FormData()
     form.append('file', file)
+    const docItems = docs.filter(Boolean) as DocItem[]
+    docItems.forEach(d =>
+      form.append('docs', new File([d.file], d.name, { type: d.file.type }))
+    )
+    form.append('docs_meta', JSON.stringify(docItems.map(d => ({ name: d.name, type: d.type }))))
     setShowConsole(true)
     setLoading(true)
     try {
@@ -161,6 +171,11 @@ export default function IngestPage() {
     const form = new FormData()
     form.append('repo', repo)
     form.append('branch', branch)
+    const docItems = docs.filter(Boolean) as DocItem[]
+    docItems.forEach(d =>
+      form.append('docs', new File([d.file], d.name, { type: d.file.type }))
+    )
+    form.append('docs_meta', JSON.stringify(docItems.map(d => ({ name: d.name, type: d.type }))))
     setShowConsole(true)
     setLoading(true)
     try {
@@ -182,10 +197,9 @@ export default function IngestPage() {
     }
   }
 
-  function onDocsChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(e.target.files || []).slice(0, 5)
-    setDocs(files)
-    setDocsState(files)
+  function updateDocs(newDocs: (DocItem | null)[]) {
+    setDocs(newDocs)
+    setDocsState(newDocs)
   }
 
 
@@ -209,6 +223,7 @@ export default function IngestPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Ingest</h1>
         <div className="flex flex-col md:flex-row md:gap-8">
           <div className="space-y-8 max-w-md">
+            <DocsUploader docs={docs} setDocs={updateDocs} />
             <div className="flex gap-2 mb-4">
               <button
                 className={`px-3 py-1 text-sm rounded-lg ${mode === 'manual' ? 'bg-zinc-700' : 'bg-zinc-800'}`}
@@ -226,35 +241,22 @@ export default function IngestPage() {
             {mode === 'manual' && (
               <section className="space-y-4">
                 <h2 className="text-lg font-medium">Manual Ingest</h2>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Supporting Documents</h3>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Manual ZIP Upload</h3>
+                  <form onSubmit={onSubmit} className="space-y-4">
                     <input
                       type="file"
-                      multiple
-                      accept=".pdf,.docx,.xlsx,.csv"
-                      onChange={onDocsChange}
+                      name="file"
+                      accept=".zip"
                       className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
                     />
-                    <p className="text-xs text-zinc-400">{docs.length}/5 files selected</p>
-                  </div>
-                  <div className="space-y-2">
-                    <h3 className="text-sm font-medium">Manual ZIP Upload</h3>
-                    <form onSubmit={onSubmit} className="space-y-4">
-                      <input
-                        type="file"
-                        name="file"
-                        accept=".zip"
-                        className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-                      >
-                        Upload and Analyze
-                      </button>
-                    </form>
-                  </div>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                    >
+                      Upload and Analyze
+                    </button>
+                  </form>
                 </div>
               </section>
             )}
@@ -301,7 +303,11 @@ export default function IngestPage() {
             )}
           </div>
           <div className="flex-none w-[560px] ml-auto mr-4">
-            <OintCreationFlow docs={docs.length} repo={!!result} roast={hasVuln} />
+            <OintCreationFlow
+              docs={docs.filter(Boolean).map(d => ({ name: d!.name, type: d!.type }))}
+              repo={!!result}
+              roast={hasVuln}
+            />
           </div>
         </div>
         <button

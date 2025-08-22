@@ -2,6 +2,7 @@ export type ActionItem = { id: string; title: string; severity: 'critical'|'high
 export type StackInfo = { appName: string; description: string; integrations: { name: string; logoUrl?: string }[] };
 export type FinanceInfo = { effectivenessPct: number };
 export type PlanItem = { day: string; step: string };
+export type TimelineItem = { phase: string; days: number };
 export type DashboardData = {
   generatedAt: string;
   pulse: {
@@ -14,6 +15,7 @@ export type DashboardData = {
   stack: StackInfo;
   actions: ActionItem[];
   onboardingPlan: PlanItem[];
+  timeline: TimelineItem[];
   reliability: { coveragePct: number; evidenceCompletenessPct: number; llmStaticAgreementPct: number };
   finance?: FinanceInfo;
 };

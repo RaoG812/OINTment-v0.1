@@ -8,7 +8,19 @@ export async function POST(req: Request) {
 
   const body = await req.json().catch(() => ({}))
   const roast = Array.isArray(body.roast) ? body.roast : []
-  const { docs, files } = getKnowledge()
+
+  let { docs, files } = getKnowledge()
+  if (body.knowledge) {
+    const k = body.knowledge
+    if (Array.isArray(k.docs) && Array.isArray(k.files)) {
+      docs = k.docs.map((d: any) => ({
+        name: d.name,
+        text: (d.text || d.content || '').toString()
+      }))
+      files = k.files
+    }
+  }
+
   const docText = docs.map(d => d.text.toLowerCase()).join(' ')
 
   const STOP = new Set(

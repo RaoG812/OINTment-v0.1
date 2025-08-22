@@ -43,6 +43,22 @@ export async function GET() {
       rationale: 'No companion tests detected for key source files'
     })
   }
+  if (files.length > 100) {
+    actions.push({
+      id: 'act-audit',
+      title: 'Audit large codebase for dead code',
+      severity: 'medium',
+      rationale: `Repository contains ${files.length} files`
+    })
+  }
+  if (!files.some(f => /readme/i.test(f))) {
+    actions.push({
+      id: 'act-readme',
+      title: 'Add a project README',
+      severity: 'low',
+      rationale: 'No README detected in repository'
+    })
+  }
   if (actions.length === 0) {
     actions.push({
       id: 'act-review',
@@ -52,15 +68,30 @@ export async function GET() {
     })
   }
 
-  const onboardingPlan = docs.map((d, i) => ({
-    day: `Day ${i + 1}`,
-    step: `Review ${d.name}`
-  }))
-  const planFiles = files.filter(f => /\.(js|ts|jsx|tsx|py|rb|go|java|rs)$/i.test(f))
-  const remaining = 10 - onboardingPlan.length
-  planFiles.slice(0, remaining).forEach(f => {
-    onboardingPlan.push({ day: `Day ${onboardingPlan.length + 1}`, step: `Explore ${f}` })
-  })
+  const onboardingPlan: DashboardData['onboardingPlan'] = [
+    {
+      day: 'Days 1-5',
+      step: `Meet stakeholders and review ${docs.length} key docs`
+    },
+    {
+      day: 'Days 6-10',
+      step: `Explore codebase starting with ${files[0] || 'core modules'}`
+    },
+    { day: 'Days 11-15', step: 'Align on project goals and metrics' },
+    { day: 'Days 16-20', step: 'Establish team processes and priorities' },
+    { day: 'Days 21-25', step: 'Tackle high severity actions and quick wins' },
+    { day: 'Days 26-30', step: 'Plan next iteration and present findings' }
+  ]
+
+  const complexity = Math.ceil(files.length / 20)
+  const executionDays = Math.min(15, Math.max(5, complexity * 5))
+  const wrapDays = Math.max(0, 30 - 10 - executionDays)
+  const timeline = [
+    { phase: 'Orientation', days: 5 },
+    { phase: 'Planning', days: 5 },
+    { phase: 'Execution', days: executionDays },
+    { phase: 'Wrap-up', days: wrapDays }
+  ]
 
   const data: DashboardData = {
     generatedAt: new Date().toISOString(),
@@ -78,6 +109,7 @@ export async function GET() {
     },
     actions,
     onboardingPlan,
+    timeline,
     reliability: {
       coveragePct: coverage,
       evidenceCompletenessPct: Math.round((docs.length / 5) * 100),

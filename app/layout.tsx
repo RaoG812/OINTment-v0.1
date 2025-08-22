@@ -29,6 +29,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/roaster" className="hover:text-emerald-400">
               Roaster
             </Link>
+            <Link href="/vibe-killer" className="hover:text-emerald-400">
+              Vibe Killer
+            </Link>
             <Link href="/3d-map" className="hover:text-emerald-400">
               3D Map
             </Link>

@@ -174,3 +174,46 @@ export async function jitterOffsets(
   }
 }
 
+// Detect artifacts of AI-assisted coding within a repository. The model scans
+// provided files and commit metadata and returns JSON describing any signals of
+// AI-generated code.
+export async function detectAiArtifacts(
+  files: any[],
+  commits: any[]
+): Promise<any> {
+  const limited = {
+    files: files.slice(0, 50),
+    commits: commits.slice(0, 50)
+  }
+  const messages: any = [
+    {
+      role: 'system',
+      content:
+        `You analyze a repository to detect artifacts of AI-assisted coding (e.g., GitHub Copilot/Codex/ChatGPT/CodeWhisperer/Tabnine). ` +
+        `Work deterministically, use only provided inputs, and return strict JSON per the schema. ` +
+        `If unsure, leave fields empty rather than guessing.`
+    },
+    {
+      role: 'user',
+      content: JSON.stringify(limited)
+    }
+  ]
+
+  const txt = await chat(messages, { type: 'json_object' })
+  try {
+    return JSON.parse(txt)
+  } catch {
+    return {
+      repo_summary: {
+        percent_ai_repo: 0,
+        files_scanned: 0,
+        ai_files: 0,
+        notes: ['parse_error']
+      },
+      files: [],
+      commits: []
+    }
+  }
+}
+
+

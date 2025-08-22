@@ -12,6 +12,12 @@ export default function HexBackground({ className = "" }: { className?: string }
     if (!ref.current) return
     const el = ref.current as HTMLDivElement
     function move(e: PointerEvent) {
+      const t = e.target as HTMLElement
+      if (t.closest('.no-hex')) {
+        el.style.setProperty('--mx', '-999px')
+        el.style.setProperty('--my', '-999px')
+        return
+      }
       el.style.setProperty('--mx', `${e.clientX}px`)
       el.style.setProperty('--my', `${e.clientY}px`)
     }
@@ -47,7 +53,7 @@ export default function HexBackground({ className = "" }: { className?: string }
   return (
     <div
       ref={ref}
-      className={`pointer-events-none fixed inset-0 z-50 ${className}`}
+      className={`pointer-events-none fixed inset-0 z-0 ${className}`}
       style={{ '--mx': '-999px', '--my': '-999px', mask, WebkitMask: mask } as CSSProperties}
     >
       <div className="absolute inset-0 pattern" />

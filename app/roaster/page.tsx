@@ -1,6 +1,10 @@
 // @ts-nocheck
 'use client'
 import { useEffect, useState, CSSProperties, useRef } from 'react'
+import Link from 'next/link'
+import HexBackground from '../../components/HexBackground'
+import { getRoasterState, setRoasterState } from '../../lib/roasterState'
+import { getOintData } from '../../lib/toolsetState'
 
 type Result = { files: string[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -264,24 +268,30 @@ function FireLayer() {
 
 
 export default function RoasterPage() {
-  const [result, setResult] = useState<Result | null>(null)
-  const [level, setLevel] = useState(0.5)
-  const [roast, setRoast] = useState<Comment[] | null>(null)
   const empty = departments.reduce(
     (acc, d) => ({ ...acc, [d]: { department: d, comment: 'Awaiting review', temperature: 0 } }),
     {} as Record<Department, Comment>
   )
-  const [widgets, setWidgets] = useState<Record<Department, Comment>>(empty)
-  const [roasting, setRoasting] = useState(false)
-  const [fixes, setFixes] = useState<string[] | null>(null)
-  const [fixing, setFixing] = useState(false)
-  const [error, setError] = useState('')
-  const [healed, setHealed] = useState(false)
+  const init = getRoasterState()
+  const [result, setResult] = useState<Result | null>(null)
+  const [level, setLevel] = useState(init.level)
+  const [roast, setRoast] = useState<Comment[] | null>(null)
+  const [widgets, setWidgets] = useState<Record<Department, Comment>>(init.widgets)
+    const [roasting, setRoasting] = useState(false)
+    const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
+    const [fixing, setFixing] = useState(false)
+    const [error, setError] = useState('')
+    const [healed, setHealed] = useState(init.healed)
+    const ointCreated = !!getOintData()
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
     if (stored) setResult(JSON.parse(stored))
   }, [])
+
+  useEffect(() => {
+    setRoasterState({ level, widgets, ointWidgets, healed })
+  }, [level, widgets, ointWidgets, healed])
 
   async function runRoaster() {
     if (!result) return
@@ -303,6 +313,7 @@ export default function RoasterPage() {
       })
       setWidgets(updated)
       setRoast(comments)
+      localStorage.setItem('vulnChecked', 'true')
       setError('')
     } catch (err) {
       setRoast(null)
@@ -316,18 +327,20 @@ export default function RoasterPage() {
     if (!result) return
     setFixing(true)
     try {
-      const res = await fetch('/api/roaster/fix', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: result.files })
-      })
+      const res = await fetch('/api/oint/recommendations')
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'fix suggestions failed')
-      setFixes(data.suggestions || [])
+      if (!res.ok) throw new Error(data.error || 'apply OINT failed')
+      const updated = { ...empty }
+      const comments = Array.isArray(data.comments) ? data.comments : []
+      comments.forEach((c: Comment) => {
+        const key = c.department.toLowerCase() as Department
+        if (updated[key]) updated[key] = c
+      })
+      setOintWidgets(updated)
       setHealed(true)
       setError('')
     } catch (err) {
-      setFixes(null)
+      setOintWidgets(null)
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setFixing(false)
@@ -340,25 +353,32 @@ export default function RoasterPage() {
     : 0
 
   const hue = 120 - level * 120
-  const bgStyle: CSSProperties = healed
+  const gradientStyle: CSSProperties = healed
     ? {
-        background: 'radial-gradient(circle at 50% 50%, hsl(210,60%,15%), #000)',
+        background: 'radial-gradient(circle at 50% 50%, hsl(210,60%,20%), #000)',
         backgroundSize: '200% 200%',
         animation: 'bgMove 20s ease infinite',
-        transition: 'background 0.5s'
+        transition: 'background 0.5s',
+        filter: 'blur(40px)'
       }
     : {
-        background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,8%), #000)`,
+        background: `radial-gradient(circle at 50% 50%, hsl(${hue},60%,13%), #000)`,
         backgroundSize: '200% 200%',
         animation: 'bgMove 20s ease infinite',
-        transition: 'background 0.5s'
+        transition: 'background 0.5s',
+        filter: 'blur(40px)'
       }
 
   return (
-    <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10" style={bgStyle}>
+    <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10">
+      <HexBackground />
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute inset-0" style={gradientStyle} />
+        <div className="absolute inset-0 bg-black/60" />
+      </div>
       {level > 0.95 && <FireLayer />}
       <div
-        className="absolute -bottom-40 -right-40 opacity-20 z-10"
+        className="absolute -bottom-40 -right-40 opacity-20 z-10 no-hex"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
@@ -372,6 +392,7 @@ export default function RoasterPage() {
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
+        <Link href="/toolset" className="text-sm text-zinc-400 underline">Apply OINT</Link>
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">
@@ -386,7 +407,10 @@ export default function RoasterPage() {
               </button>
               <button
                 onClick={applyOint}
-                className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg hover:bg-blue-500 transition"
+                disabled={!ointCreated}
+                className={`px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg transition ${
+                  ointCreated ? 'hover:bg-blue-500' : 'opacity-50 cursor-not-allowed'
+                }`}
               >
                 Apply OINT
               </button>
@@ -440,14 +464,33 @@ export default function RoasterPage() {
           </div>
         )}
       </div>
-      {fixes && (
-        <div className="mt-8 p-4 rounded-xl bg-zinc-900/60 border border-zinc-700">
-          <div className="text-sm font-semibold mb-2">OINT Suggestions</div>
-          <ul className="list-disc pl-5 space-y-1 text-sm max-h-60 overflow-auto">
-            {fixes.map((f, i) => (
-              <li key={i}>{f}</li>
-            ))}
-          </ul>
+      {ointWidgets && (
+        <div className="mt-8">
+          <div className="text-sm font-semibold mb-2">OINT Recommendations</div>
+          <div className="grid sm:grid-cols-3 gap-4">
+            {departments.map(d => {
+              const w = ointWidgets[d]
+              return (
+                <div key={d} className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-700">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-sm font-semibold capitalize">{d}</span>
+                    <span className="text-xs text-zinc-400">{Math.round(w.temperature * 100)}%</span>
+                  </div>
+                  <div
+                    className={`text-sm ${w.temperature > 0.66 ? 'text-rose-400' : w.temperature > 0.33 ? 'text-amber-300' : 'text-emerald-400'}`}
+                  >
+                    {w.comment}
+                  </div>
+                  <div className="h-1 bg-zinc-800 rounded-full mt-2">
+                    <div
+                      className={`h-full rounded-full ${w.temperature > 0.66 ? 'bg-rose-500' : w.temperature > 0.33 ? 'bg-amber-400' : 'bg-emerald-500'}`}
+                      style={{ width: `${w.temperature * 100}%` }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
       <style jsx>{`

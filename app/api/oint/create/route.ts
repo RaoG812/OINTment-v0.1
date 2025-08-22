@@ -16,7 +16,11 @@ export async function POST(req: Request) {
     docs.map(async d => ({ name: d.name, text: await d.text() }))
   )
 
-  if (parsedDocs.length === 0 || parsedDocs.length > 5 || repoFiles.length === 0 || !hasVuln) {
+  if (parsedDocs.length === 0) {
+    return NextResponse.json({ error: 'at least one doc required for OINT' }, { status: 400 })
+  }
+
+  if (parsedDocs.length > 5 || repoFiles.length === 0 || !hasVuln) {
     return NextResponse.json({ error: 'insufficient data for OINT' }, { status: 400 })
   }
 

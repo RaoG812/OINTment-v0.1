@@ -19,9 +19,11 @@ export async function POST(req: Request) {
     temperature: Math.max(0, c.temperature - 0.1)
   }))
 
-  const steps = comments.slice(0, 5).map(
-    (c: any, i: number) => `Step ${i + 1}: Address ${c.department} - ${c.comment}`
+  const docSteps = docs.map(d => `Review ${d.name} for relevant requirements`)
+  const roastSteps = comments.map(
+    (c: any) => `Address ${c.department} issue: ${c.comment}`
   )
+  const steps = [...docSteps, ...roastSteps].slice(0, 5)
 
   return NextResponse.json({ comments, steps })
 }

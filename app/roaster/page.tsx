@@ -294,6 +294,10 @@ export default function RoasterPage() {
     setRoasterState({ level, widgets, ointWidgets, healed, steps: ointSteps })
   }, [level, widgets, ointWidgets, healed, ointSteps])
 
+  useEffect(() => {
+    if (ointCreated) setRoast(null)
+  }, [ointCreated])
+
   async function runRoaster() {
     if (!result) return
     setHealed(false)
@@ -402,24 +406,19 @@ export default function RoasterPage() {
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>
-        {ointCreated && (
-          <Link href="/toolset" className="text-sm text-zinc-400 underline">
-            Apply OINT
-          </Link>
-        )}
         <div className="flex flex-wrap items-center gap-8">
           <TemperatureKnob value={level} onChange={setLevel} />
           <div className="flex flex-col gap-2">
             <div className="text-sm font-medium">Roast Temperature: {Math.round(level * 100)}%</div>
             <div className="text-xs text-zinc-400">Higher heat yields harsher criticism.</div>
-            <div className="flex gap-2">
-              <button
-                onClick={runRoaster}
-                className="px-4 py-2 bg-red-600 text-sm font-medium rounded-lg hover:bg-red-500 transition"
-              >
-                Roast!
-              </button>
-              <div className="flex flex-col items-start">
+            <div className="flex flex-col gap-1">
+              <div className="flex gap-2">
+                <button
+                  onClick={runRoaster}
+                  className="px-4 py-2 bg-red-600 text-sm font-medium rounded-lg hover:bg-red-500 transition"
+                >
+                  Roast!
+                </button>
                 <button
                   onClick={applyOint}
                   disabled={!ointCreated || !roast}
@@ -429,10 +428,10 @@ export default function RoasterPage() {
                 >
                   Apply OINT
                 </button>
-                <Link href="/toolset" className="text-xs text-zinc-400 underline">
-                  Create OINT
-                </Link>
               </div>
+              <Link href="/toolset" className="text-xs text-zinc-400 underline">
+                Create OINT
+              </Link>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-4">

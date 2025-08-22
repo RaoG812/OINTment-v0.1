@@ -84,19 +84,24 @@ export default function ToolsetPage() {
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
           <>
-            <Card className="max-w-md">
+            <Card className="max-w-md space-y-2">
               {creating ? (
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
                   <span className="text-sm">Running OINT analysis…</span>
                 </div>
               ) : (
-                <button
-                  onClick={create}
-                  className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-                >
-                  Create OINT
-                </button>
+                <>
+                  <button
+                    onClick={create}
+                    className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                  >
+                    Create OINT
+                  </button>
+                  <p className="text-xs text-zinc-400">
+                    Requires at least one supporting document.
+                  </p>
+                </>
               )}
             </Card>
             {error && <div className="text-xs text-rose-400">{error}</div>}

@@ -61,7 +61,8 @@ ingest result along with your selected repo and branch are cached in the browser
 so you can navigate away and return without losing context. Below the console,
 AI‑extracted takeaways and metrics render in animated widgets. The OINT toolset
 can be recreated after updating docs or running a new ingest, and the Matrix
-view now reflects dependencies from manually uploaded ZIPs.
+view now reflects dependencies from manually uploaded ZIPs. Creating a toolset
+requires at least one supporting document.
 
 Click a row on the Matrix page to drill into indicator explanations, improvement
 tips and code references gathered from the repo.

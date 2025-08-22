@@ -30,34 +30,35 @@
 .evil-eyes {
   opacity: 0;
   animation: eyesFade 2s forwards;
+  filter: brightness(0.7);
 }
 
 .evil-eyes .eye {
   position: relative;
-  width: 100px;
-  height: 50px;
-  margin: 0 40px;
+  width: 160px;
+  height: 160px;
+  margin: 0 60px;
 }
 
 .evil-eyes .inner-eye {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(255,0,0,0.9) 35%, rgba(255,0,0,0.4) 60%, transparent 70%);
-  clip-path: polygon(0 30%,10% 0,90% 0,100% 30%,100% 70%,90% 100%,10% 100%,0 70%);
-  filter: drop-shadow(0 0 8px rgba(255,0,0,0.8));
+  background: radial-gradient(circle at 50% 50%, rgba(120,0,0,0.7) 40%, rgba(120,0,0,0.3) 65%, transparent 80%);
+  clip-path: polygon(50% 100%, 0 0, 100% 0);
+  filter: drop-shadow(0 0 12px rgba(120,0,0,0.6));
   animation: blink 5s infinite;
 }
 
-.evil-eyes .inner-eye::before {
+.hex-fade .pattern {
+  opacity: 0.05;
+}
+
+.hex-fade::after {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 24px;
-  height: 24px;
-  background: black;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.6) 60%, transparent 80%);
 }
 
 @keyframes eyesFade {

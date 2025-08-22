@@ -56,14 +56,21 @@ async function chat(messages: any[], response_format: any) {
   throw new Error(`LLM analysis failed: ${detail}`)
 }
 
-export async function summarizeRepo(fileList: string[]): Promise<RepoAnalysis> {
+export async function summarizeRepo(
+  fileList: string[],
+  docs: { name: string; type: string; content: string }[] = []
+): Promise<RepoAnalysis> {
   // Large repositories can exceed token limits; only send the first 200 entries
-  const content = fileList.slice(0, 200).join('\n')
+  const filesPart = fileList.slice(0, 200).join('\n')
+  const docsPart = docs
+    .map(d => `${d.type.toUpperCase()} (${d.name}):\n${d.content}`)
+    .join('\n---\n')
+  const content = `FILES:\n${filesPart}\nDOCS:\n${docsPart}`
   const messages: any = [
     {
       role: 'system',
       content:
-        'Summarize the repository file list. Respond with JSON of shape {"overview":string,"takeaways":string[],"metrics":{"complexity":number,"documentation":number,"tests":number}}. Values are 0-100. No extra text.'
+        'Summarize the repository file list and supporting documents (PRD, estimates). Respond with JSON of shape {"overview":string,"takeaways":string[],"metrics":{"complexity":number,"documentation":number,"tests":number}}. Values are 0-100. No extra text.'
     },
     { role: 'user', content }
   ]

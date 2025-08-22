@@ -4,7 +4,7 @@ import { Card, Badge, Metric } from '../../lib/ui'
 import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
-import { getDocs } from '../../lib/docsState'
+import { getDocs, type DocItem } from '../../lib/docsState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
@@ -15,7 +15,7 @@ export default function ToolsetPage() {
     setCreating(true)
     setError('')
     try {
-      const docs = getDocs()
+      const docs = getDocs().filter(Boolean) as DocItem[]
       const ingest = localStorage.getItem('ingestResult')
       const hasRepo = !!ingest
       const hasVuln = localStorage.getItem('vulnChecked') === 'true'
@@ -23,7 +23,9 @@ export default function ToolsetPage() {
         throw new Error('insufficient data for OINT')
       }
       const form = new FormData()
-      docs.forEach(f => form.append('docs', f))
+      docs.forEach(d =>
+        form.append('docs', new File([d.file], d.name, { type: d.file.type }))
+      )
       form.append('hasRepo', String(hasRepo))
       form.append('hasVuln', String(hasVuln))
       if (ingest) {

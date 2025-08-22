@@ -15,14 +15,30 @@ const ORDER = [
   [1, 2, 0]
 ]
 
-export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: boolean; roast: boolean }) {
+interface DocMeta {
+  name: string
+  type: string
+}
+
+export function OintCreationFlow({
+  docs,
+  repo,
+  roast
+}: {
+  docs: DocMeta[]
+  repo: boolean
+  roast: boolean
+}) {
   const aspects = [
     {
       key: 'docs',
       label: 'DOX',
-      pct: Math.round((docs / 5) * 100),
+      pct: Math.round((docs.length / 5) * 100),
       color: '#22c55e',
-      comment: docs > 0 ? `${docs}/5 docs uploaded` : 'No docs uploaded'
+      comment:
+        docs.length > 0
+          ? docs.map(d => `${d.type.toUpperCase()}: ${d.name}`).join(', ')
+          : 'No docs uploaded'
     },
     {
       key: 'repo',

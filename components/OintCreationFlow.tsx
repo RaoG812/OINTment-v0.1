@@ -42,6 +42,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
 
   const [idx, setIdx] = useState(0)
   const [pointerScale, setPointerScale] = useState(1)
+  const [settled, setSettled] = useState(false)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const resumeRef = useRef<NodeJS.Timeout | null>(null)
 
@@ -57,13 +58,17 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       if (resumeRef.current) clearTimeout(resumeRef.current)
     }
   }, [aspects.length])
-  // pointer pulse when active ring reaches apex
+  // pointer pulse and ring scale after reaching apex
   useEffect(() => {
+    setSettled(false)
     setPointerScale(0.8)
-    const up = setTimeout(() => setPointerScale(1.1), 600)
+    const grow = setTimeout(() => {
+      setPointerScale(1.1)
+      setSettled(true)
+    }, 600)
     const settle = setTimeout(() => setPointerScale(1), 1200)
     return () => {
-      clearTimeout(up)
+      clearTimeout(grow)
       clearTimeout(settle)
     }
   }, [idx])
@@ -99,7 +104,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         return (
           <div
             key={a.key}
-            className="absolute text-center cursor-pointer"
+            className={`absolute text-center cursor-pointer ${active ? 'z-20' : 'z-10'}`}
             style={{
               left: pos.x,
               top: pos.y,
@@ -110,7 +115,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           >
             <div
               className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 ${
-                active ? 'scale-150' : ''
+                active && settled ? 'scale-150' : 'scale-100'
               }`}
             >
               <svg viewBox="0 0 100 100" className="absolute inset-0">
@@ -152,7 +157,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         )
       })}
       <div
-        className="absolute"
+        className="absolute z-20"
         style={{
           left: POINTER_POS.x,
           top: POINTER_POS.y,

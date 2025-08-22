@@ -78,9 +78,10 @@ export default function VibeKillerPage() {
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
+    let parsed: any
     if (stored) {
       try {
-        const parsed = JSON.parse(stored)
+        parsed = JSON.parse(stored)
         setFiles(parsed.code || [])
       } catch {}
     }
@@ -90,8 +91,8 @@ export default function VibeKillerPage() {
         setResult(JSON.parse(vr))
       } catch {}
     }
-    const r = localStorage.getItem('repo') || ''
-    const b = localStorage.getItem('branch') || 'main'
+    const r = (parsed && parsed.repo) || localStorage.getItem('repo') || ''
+    const b = (parsed && parsed.branch) || localStorage.getItem('branch') || 'main'
     setRepo(r)
     setBranch(b)
   }, [])

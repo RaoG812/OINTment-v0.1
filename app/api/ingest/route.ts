@@ -27,16 +27,20 @@ export async function POST(req: NextRequest) {
   const zip = new AdmZip(buffer)
   const allEntries = zip.getEntries()
   const fileEntries = allEntries.filter(e => !e.isDirectory)
-  const files = fileEntries.map(e => e.entryName)
+  const prefix =
+    typeof repo === 'string' && repo
+      ? `${repo.split('/')[1]}-${branch}/`
+      : ''
+  const files = fileEntries.map(e => e.entryName.replace(prefix, ''))
   const code = fileEntries.map(e => ({
-    path: e.entryName,
+    path: e.entryName.replace(prefix, ''),
     language: (e.entryName.split('.').pop() || '').toLowerCase(),
     content: e.getData().toString('utf8').slice(0, 10000)
   }))
 
   try {
     const analysis = await summarizeRepo(files)
-    return NextResponse.json({ files, code, analysis })
+    return NextResponse.json({ repo, branch, files, code, analysis })
   } catch (err) {
     const message = err instanceof Error ? err.message : 'analysis failed'
     console.error('analysis failed', err)

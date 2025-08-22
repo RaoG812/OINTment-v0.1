@@ -6,7 +6,13 @@ import HexBackground from '../../components/HexBackground'
 import { OintCreationFlow } from '../../components/OintCreationFlow'
 import { getDocs as getDocsState, setDocs as setDocsState } from '../../lib/docsState'
 
-type Result = { files: string[]; analysis: RepoAnalysis; code?: any[] }
+type Result = {
+  repo?: string
+  branch?: string
+  files: string[]
+  analysis: RepoAnalysis
+  code?: any[]
+}
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
@@ -61,6 +67,7 @@ export default function IngestPage() {
   const [error, setError] = useState('')
   const [docs, setDocs] = useState<File[]>(getDocsState())
   const [hasVuln, setHasVuln] = useState(false)
+  const [mode, setMode] = useState<'manual' | 'github'>('manual')
 
   useEffect(() => {
     setHasVuln(localStorage.getItem('vulnChecked') === 'true')
@@ -202,78 +209,96 @@ export default function IngestPage() {
         <h1 className="text-2xl font-semibold tracking-tight">Ingest</h1>
         <div className="flex flex-col md:flex-row md:gap-8">
           <div className="space-y-8 max-w-md">
-            <section className="space-y-4">
-              <h2 className="text-lg font-medium">Manual Ingest</h2>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Supporting Documents</h3>
-                  <input
-                    type="file"
-                    multiple
-                    accept=".pdf,.docx,.xlsx,.csv"
-                    onChange={onDocsChange}
-                    className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
-                  />
-                  <p className="text-xs text-zinc-400">{docs.length}/5 files selected</p>
-                </div>
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium">Manual ZIP Upload</h3>
-                  <form onSubmit={onSubmit} className="space-y-4">
+            <div className="flex gap-2 mb-4">
+              <button
+                className={`px-3 py-1 text-sm rounded-lg ${mode === 'manual' ? 'bg-zinc-700' : 'bg-zinc-800'}`}
+                onClick={() => setMode('manual')}
+              >
+                Manual
+              </button>
+              <button
+                className={`px-3 py-1 text-sm rounded-lg ${mode === 'github' ? 'bg-zinc-700' : 'bg-zinc-800'}`}
+                onClick={() => setMode('github')}
+              >
+                GitHub
+              </button>
+            </div>
+            {mode === 'manual' && (
+              <section className="space-y-4">
+                <h2 className="text-lg font-medium">Manual Ingest</h2>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Supporting Documents</h3>
                     <input
                       type="file"
-                      name="file"
-                      accept=".zip"
+                      multiple
+                      accept=".pdf,.docx,.xlsx,.csv"
+                      onChange={onDocsChange}
                       className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
                     />
-                    <button
-                      type="submit"
-                      className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-                    >
-                      Upload and Analyze
-                    </button>
-                  </form>
+                    <p className="text-xs text-zinc-400">{docs.length}/5 files selected</p>
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium">Manual ZIP Upload</h3>
+                    <form onSubmit={onSubmit} className="space-y-4">
+                      <input
+                        type="file"
+                        name="file"
+                        accept=".zip"
+                        className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
+                      />
+                      <button
+                        type="submit"
+                        className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                      >
+                        Upload and Analyze
+                      </button>
+                    </form>
+                  </div>
                 </div>
-              </div>
-            </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-medium">GitHub Ingest</h2>
-              <div className="flex gap-2">
-                <input
-                  value={repo}
-                  onChange={e => setRepo(e.target.value)}
-                  placeholder="owner/repo"
-                  className="flex-1 px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-                />
+              </section>
+            )}
+            {mode === 'github' && (
+              <section className="space-y-4">
+                <h2 className="text-lg font-medium">GitHub Ingest</h2>
+                <div className="flex gap-2">
+                  <input
+                    value={repo}
+                    onChange={e => setRepo(e.target.value)}
+                    placeholder="owner/repo"
+                    className="flex-1 px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+                  />
+                  <button
+                    type="button"
+                    onClick={loadBranches}
+                    className="px-3 py-2 bg-zinc-800 rounded text-xs"
+                  >
+                    Load
+                  </button>
+                </div>
+                {branches.length > 0 && (
+                  <select
+                    value={branch}
+                    onChange={e => setBranch(e.target.value)}
+                    className="w-full px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+                  >
+                    <option value="">select branch</option>
+                    {branches.map(b => (
+                      <option key={b} value={b}>
+                        {b}
+                      </option>
+                    ))}
+                  </select>
+                )}
                 <button
                   type="button"
-                  onClick={loadBranches}
-                  className="px-3 py-2 bg-zinc-800 rounded text-xs"
+                  onClick={analyzeRepo}
+                  className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
                 >
-                  Load
+                  Analyze Repo
                 </button>
-              </div>
-              {branches.length > 0 && (
-                <select
-                  value={branch}
-                  onChange={e => setBranch(e.target.value)}
-                  className="w-full px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
-                >
-                  <option value="">select branch</option>
-                  {branches.map(b => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <button
-                type="button"
-                onClick={analyzeRepo}
-                className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-              >
-                Analyze Repo
-              </button>
-            </section>
+              </section>
+            )}
           </div>
           <div className="flex-none w-[560px] ml-auto mr-4">
             <OintCreationFlow docs={docs.length} repo={!!result} roast={hasVuln} />

@@ -70,6 +70,7 @@ export default function IngestPage() {
   const [showConsole, setShowConsole] = useState(false)
   const [repo, setRepo] = useState('')
   const [repos, setRepos] = useState<string[]>([])
+  const [reposError, setReposError] = useState('')
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
@@ -222,13 +223,21 @@ export default function IngestPage() {
     }
     async function loadRepos() {
       const res = await fetch('/api/github/repos')
+      if (res.status === 401) {
+        setRepos([])
+        setReposError('unauthorized')
+        localStorage.removeItem('repos')
+        return
+      }
       const data = await (res.ok ? res.json() : [])
       if (Array.isArray(data)) {
         const names = data.map((r: any) => r.name)
         setRepos(names)
+        setReposError('')
         localStorage.setItem('repos', JSON.stringify(names))
       } else {
         setRepos([])
+        setReposError('failed')
         localStorage.removeItem('repos')
       }
     }
@@ -327,7 +336,9 @@ export default function IngestPage() {
                   </div>
                 ) : (
                   <p className="text-xs text-zinc-400">
-                    Login with GitHub to list repos.
+                    {reposError === 'unauthorized'
+                      ? 'Login with GitHub to list repos.'
+                      : 'No repositories found.'}
                   </p>
                 )}
                 <button

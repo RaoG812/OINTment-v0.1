@@ -412,14 +412,14 @@ export default function RoasterPage() {
           <div className="flex flex-col gap-2">
             <div className="text-sm font-medium">Roast Temperature: {Math.round(level * 100)}%</div>
             <div className="text-xs text-zinc-400">Higher heat yields harsher criticism.</div>
-            <div className="flex gap-2">
-              <button
-                onClick={runRoaster}
-                className="px-4 py-2 bg-red-600 text-sm font-medium rounded-lg hover:bg-red-500 transition"
-              >
-                Roast!
-              </button>
-              <div className="flex flex-col items-start">
+            <div className="flex flex-col items-start gap-1">
+              <div className="flex gap-2">
+                <button
+                  onClick={runRoaster}
+                  className="px-4 py-2 bg-red-600 text-sm font-medium rounded-lg hover:bg-red-500 transition"
+                >
+                  Roast!
+                </button>
                 <button
                   onClick={applyOint}
                   disabled={!ointCreated || !roast}
@@ -429,10 +429,10 @@ export default function RoasterPage() {
                 >
                   Apply OINT
                 </button>
-                <Link href="/toolset" className="text-xs text-zinc-400 underline mt-1">
-                  Create OINT
-                </Link>
               </div>
+              <Link href="/toolset" className="text-xs text-zinc-400 underline">
+                Create OINT
+              </Link>
             </div>
           </div>
           <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 flex items-center gap-4">

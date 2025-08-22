@@ -269,8 +269,8 @@ export async function detectAiArtifacts(
   commits: any[]
 ): Promise<any> {
   const limited = {
-    files: files.slice(0, 50),
-    commits: commits.slice(0, 50)
+    files: files.slice(0, 200),
+    commits: commits.slice(0, 200)
   }
   const messages: any = [
     {
@@ -285,13 +285,30 @@ export async function detectAiArtifacts(
 
   const txt = await chat(messages, { type: 'json_object' })
   try {
-    return JSON.parse(txt)
+    const parsed = JSON.parse(txt)
+    const fs = Array.isArray(parsed.files) ? parsed.files : []
+    const summary = parsed.repo_summary || {}
+    if (!summary.files_scanned) summary.files_scanned = fs.length
+    if (summary.ai_files == null)
+      summary.ai_files = fs.filter((f: any) => (f.ai_likelihood || 0) > 0).length
+    if (summary.percent_ai_repo == null)
+      summary.percent_ai_repo = summary.files_scanned
+        ? summary.ai_files / summary.files_scanned
+        : 0
+    const pct = Math.round((summary.percent_ai_repo || 0) * 100)
+    summary.overview = summary.files_scanned
+      ? `Detected ${summary.ai_files} AI-flagged files out of ${summary.files_scanned} scanned (${pct}%).`
+      : 'No files analyzed.'
+    if (!Array.isArray(summary.notes)) summary.notes = summary.notes ? [summary.notes] : []
+    parsed.repo_summary = summary
+    return parsed
   } catch {
     return {
       repo_summary: {
         percent_ai_repo: 0,
         files_scanned: 0,
         ai_files: 0,
+        overview: 'No files analyzed.',
         notes: ['parse_error']
       },
       files: [],

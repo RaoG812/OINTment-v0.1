@@ -108,15 +108,7 @@ export default function VibeKillerPage() {
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'scan failed')
-      const fs = Array.isArray(data.files) ? data.files : []
-      const summary = data.repo_summary || {}
-      if (!summary.files_scanned) summary.files_scanned = fs.length
-      if (!summary.ai_files) summary.ai_files = fs.filter((f: any) => (f.ai_likelihood || 0) > 0).length
-      if (!summary.percent_ai_repo)
-        summary.percent_ai_repo = summary.files_scanned
-          ? summary.ai_files / summary.files_scanned
-          : 0
-      setResult({ ...data, repo_summary: summary })
+      setResult(data)
       setError('')
     } catch (err) {
       setResult(null)
@@ -159,6 +151,19 @@ export default function VibeKillerPage() {
                 </div>
               </Card>
             </div>
+
+            {result.repo_summary?.overview && (
+              <Card>
+                <div className="text-sm">{result.repo_summary.overview}</div>
+                {result.repo_summary.notes?.length > 0 && (
+                  <ul className="mt-2 list-disc list-inside text-xs text-zinc-400">
+                    {result.repo_summary.notes.map((n: string) => (
+                      <li key={n}>{n}</li>
+                    ))}
+                  </ul>
+                )}
+              </Card>
+            )}
 
             {result.files?.length > 0 && (
               <div>

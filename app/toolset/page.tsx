@@ -2,18 +2,21 @@
 import { useState } from 'react'
 import { Card, Badge, Metric } from '../../lib/ui'
 import type { DashboardData } from '../../lib/types.oint'
+import HexBackground from '../../components/HexBackground'
+import { getOintData, setOintData } from '../../lib/toolsetState'
 
 export default function ToolsetPage() {
-  const [data, setData] = useState<DashboardData | null>(null)
+  const [data, setData] = useState<DashboardData | null>(getOintData())
   const [loading, setLoading] = useState(false)
 
-  async function create() {
+  async function apply() {
     setLoading(true)
     try {
       await fetch('/api/oint/apply', { method: 'POST' })
       const res = await fetch('/api/oint/summary')
       const json = (await res.json()) as DashboardData
       setData(json)
+      setOintData(json)
     } finally {
       setLoading(false)
     }
@@ -37,7 +40,8 @@ export default function ToolsetPage() {
   }
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="relative p-6 space-y-6">
+      <HexBackground />
       <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
       {!data && (
         <Card className="max-w-md">
@@ -48,10 +52,10 @@ export default function ToolsetPage() {
             </div>
           ) : (
             <button
-              onClick={create}
+              onClick={apply}
               className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
             >
-              Create OINT
+              Apply OINT
             </button>
           )}
         </Card>

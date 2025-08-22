@@ -17,10 +17,19 @@ export default function ToolsetPage() {
     setCreating(true)
     setError('')
     try {
+      const form = new FormData()
+      form.append('docs', new Blob(['placeholder'], { type: 'text/plain' }), 'docs.txt')
+      form.append('hasRepo', 'true')
+      form.append('hasVuln', 'true')
+      const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })
+      const createJson = await createRes.json()
+      if (!createRes.ok) throw new Error(createJson.error || 'create failed')
+
       const recRes = await fetch('/api/oint/apply', { method: 'POST' })
       const recJson = await recRes.json()
-      if (!recRes.ok) throw new Error(recJson.error || 'apply OINT failed')
+      if (!recRes.ok) throw new Error(recJson.error || 'apply failed')
       setRecommendations((recJson as { recommendations: Recommendation[] }).recommendations)
+
       const res = await fetch('/api/oint/summary')
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'summary failed')

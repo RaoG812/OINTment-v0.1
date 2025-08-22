@@ -18,8 +18,8 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <body className="min-h-screen bg-black text-zinc-200">
-        <header className="border-b border-zinc-800 bg-zinc-900/60 backdrop-blur sticky top-0 z-10">
-          <nav className="mx-auto max-w-7xl flex items-center gap-6 px-6 py-4 text-sm">
+        <header className="border-b border-zinc-800 bg-zinc-900/60 backdrop-blur sticky top-0 z-20">
+          <nav className="mx-auto max-w-7xl flex items-center gap-6 px-6 py-4 text-sm overflow-x-auto whitespace-nowrap">
             <Link href="/" className="font-semibold tracking-tight">
               OINTment
             </Link>
@@ -32,11 +32,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             <Link href="/roaster" className="hover:text-emerald-400">
               Roaster
             </Link>
-            <Link href="/toolset" className="hover:text-emerald-400">
-              Toolset
-            </Link>
             <Link href="/vibe-killer" className="hover:text-emerald-400">
               Vibe Killer
+            </Link>
+            <Link href="/toolset" className="hover:text-emerald-400">
+              Toolset
             </Link>
             <Link href="/3d-map" className="hover:text-emerald-400">
               3D Map

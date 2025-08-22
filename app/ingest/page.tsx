@@ -199,22 +199,44 @@ export default function IngestPage() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
       <div className="relative z-10 p-10 space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Ingest</h1>
         <div className="flex flex-col md:flex-row md:gap-8">
           <div className="space-y-8 max-w-md">
             <section className="space-y-4">
-              <h2 className="text-lg font-medium">Supporting Documents</h2>
-              <input
-                type="file"
-                multiple
-                accept=".pdf,.docx,.xlsx,.csv"
-                onChange={onDocsChange}
-                className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
-              />
-              <p className="text-xs text-zinc-400">{docs.length}/5 files selected</p>
+              <h2 className="text-lg font-medium">Manual Ingest</h2>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Supporting Documents</h3>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.docx,.xlsx,.csv"
+                    onChange={onDocsChange}
+                    className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
+                  />
+                  <p className="text-xs text-zinc-400">{docs.length}/5 files selected</p>
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-sm font-medium">Manual ZIP Upload</h3>
+                  <form onSubmit={onSubmit} className="space-y-4">
+                    <input
+                      type="file"
+                      name="file"
+                      accept=".zip"
+                      className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
+                    />
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                    >
+                      Upload and Analyze
+                    </button>
+                  </form>
+                </div>
+              </div>
             </section>
             <section className="space-y-4">
-              <h2 className="text-lg font-medium">GitHub Repository</h2>
+              <h2 className="text-lg font-medium">GitHub Ingest</h2>
               <div className="flex gap-2">
                 <input
                   value={repo}
@@ -238,7 +260,9 @@ export default function IngestPage() {
                 >
                   <option value="">select branch</option>
                   {branches.map(b => (
-                    <option key={b} value={b}>{b}</option>
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
                   ))}
                 </select>
               )}
@@ -249,23 +273,6 @@ export default function IngestPage() {
               >
                 Analyze Repo
               </button>
-            </section>
-            <section className="space-y-4">
-              <h2 className="text-lg font-medium">Manual ZIP Upload</h2>
-              <form onSubmit={onSubmit} className="space-y-4">
-                <input
-                  type="file"
-                  name="file"
-                  accept=".zip"
-                  className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
-                />
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-                >
-                  Upload and Analyze
-                </button>
-              </form>
             </section>
           </div>
           <div className="flex-none w-[560px] ml-auto mr-4">

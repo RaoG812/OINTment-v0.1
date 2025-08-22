@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
 import { categorizeCommits, jitterOffsets } from '../../../../lib/openai'
+import { githubHeaders } from '../../../../lib/github'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const commitsRes = await fetch(
     `https://api.github.com/repos/${repo}/commits?sha=${branch}`,
-    { headers: { Accept: 'application/vnd.github+json' } }
+    { headers: githubHeaders(req) }
   )
   if (!commitsRes.ok) {
     return NextResponse.json({ error: 'github fetch failed' }, { status: commitsRes.status })
@@ -27,10 +28,10 @@ export async function GET(req: NextRequest) {
       try {
         const [statusRes, detailRes] = await Promise.all([
           fetch(`https://api.github.com/repos/${repo}/commits/${c.sha}/status`, {
-            headers: { Accept: 'application/vnd.github+json' }
+            headers: githubHeaders(req)
           }).catch(() => null),
           fetch(`https://api.github.com/repos/${repo}/commits/${c.sha}`, {
-            headers: { Accept: 'application/vnd.github+json' }
+            headers: githubHeaders(req)
           })
         ])
         if (statusRes && statusRes.ok) {

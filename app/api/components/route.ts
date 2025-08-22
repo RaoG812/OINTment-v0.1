@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import pkg from '../../../package.json';
 import AdmZip from 'adm-zip';
+import { githubHeaders } from '../../../lib/github'
 
 type Row = {
   name: string;
@@ -38,7 +39,7 @@ function scores(name: string) {
   return { impact, security, ops, health, coupling, upgrade };
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const repo = searchParams.get('repo')
   const branch = searchParams.get('branch') || 'main'
@@ -47,7 +48,7 @@ export async function GET(req: Request) {
   if (repo) {
     try {
       const url = `https://codeload.github.com/${repo}/zip/${branch}`
-      const res = await fetch(url)
+      const res = await fetch(url, { headers: githubHeaders(req) })
       if (res.ok) {
         const buffer = Buffer.from(await res.arrayBuffer())
         const zip = new AdmZip(buffer)

@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server'
 import { jitterOffsets } from '../../../../lib/openai'
+import { githubHeaders } from '../../../../lib/github'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -9,7 +10,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'repo required' }, { status: 400 });
   }
   const res = await fetch(`https://api.github.com/repos/${repo}/branches`, {
-    headers: { Accept: 'application/vnd.github+json' }
+    headers: githubHeaders(req)
   })
   if (!res.ok) {
     // Return an empty array with 200 status so the client can handle missing repos gracefully

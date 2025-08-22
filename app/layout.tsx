@@ -1,7 +1,7 @@
 // @ts-nocheck
 import './globals.css';
 import { ReactNode } from 'react';
-import TopNav from '../components/TopNav';
+import Link from 'next/link';
 
 
 export const metadata = {
@@ -28,6 +28,9 @@ export default function RootLayout({ children }: { children: ReactNode }) {
             </Link>
             <Link href="/roaster" className="hover:text-emerald-400">
               Roaster
+            </Link>
+            <Link href="/toolset" className="hover:text-emerald-400">
+              Toolset
             </Link>
             <Link href="/vibe-killer" className="hover:text-emerald-400">
               Vibe Killer

@@ -6,7 +6,7 @@ import HexBackground from '../../components/HexBackground'
 import { getRoasterState, setRoasterState } from '../../lib/roasterState'
 import { getOintData } from '../../lib/toolsetState'
 
-type Result = { files: string[] }
+type Result = { files: string[]; docs: { name: string; type: string; content: string }[] }
 type Comment = { department: string; comment: string; temperature: number }
 
 const departments = ['frontend', 'backend', 'ops'] as const
@@ -301,7 +301,7 @@ export default function RoasterPage() {
       const res = await fetch('/api/roaster', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: result.files, level })
+        body: JSON.stringify({ files: result.files, docs: result.docs, level })
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'roaster failed')
@@ -392,7 +392,7 @@ export default function RoasterPage() {
         <div className="flex items-start justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">Roaster</h1>
           <div className="text-right leading-tight">
-            <div className="text-5xl font-bold">Roaster v0.1.6</div>
+            <div className="text-5xl font-bold">Roaster v0.1.8</div>
             <div className="text-sm text-zinc-400">AI-powered code critique, assisting in project management</div>
           </div>
         </div>

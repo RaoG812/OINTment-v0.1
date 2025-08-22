@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
       branch,
       files,
       code,
-      docs: docs.map(d => ({ name: d.name, type: d.type })),
+      docs,
       analysis
     })
   } catch (err) {

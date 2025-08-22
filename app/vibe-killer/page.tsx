@@ -2,6 +2,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import HexBackground from '../../components/HexBackground'
+import EvilEyes from '../../components/EvilEyes'
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
@@ -130,6 +131,7 @@ export default function VibeKillerPage() {
   return (
     <div className="relative overflow-hidden min-h-screen">
       <HexBackground />
+      <EvilEyes />
       <div className="relative z-10 p-10 space-y-6">
         <h1 className="text-2xl font-semibold">Vibe Killer</h1>
         <button

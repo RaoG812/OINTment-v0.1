@@ -42,14 +42,16 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
 
   const [idx, setIdx] = useState(0)
   const [pointerScale, setPointerScale] = useState(1)
+  // auto-rotate rings every 16s (slowed by 75%)
   useEffect(() => {
-    const id = setInterval(() => setIdx(i => (i + 1) % aspects.length), 4000)
+    const id = setInterval(() => setIdx(i => (i + 1) % aspects.length), 16000)
     return () => clearInterval(id)
   }, [aspects.length])
+  // pointer pulse when active ring reaches apex
   useEffect(() => {
     setPointerScale(0.8)
-    const up = setTimeout(() => setPointerScale(1.1), 600)
-    const settle = setTimeout(() => setPointerScale(1), 1200)
+    const up = setTimeout(() => setPointerScale(1.1), 2400)
+    const settle = setTimeout(() => setPointerScale(1), 4800)
     return () => {
       clearTimeout(up)
       clearTimeout(settle)
@@ -62,11 +64,13 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
     <div className="relative w-[450px] h-[450px]">
       <svg className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
         <polygon
+          key={idx}
           points={TRI_POINTS}
           fill="none"
           stroke="rgba(255,255,255,0.2)"
           strokeWidth={2}
           strokeDasharray="4 8"
+          className="triangle-path"
         />
       </svg>
       {aspects.map((a, i) => {
@@ -80,12 +84,12 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               left: pos.x,
               top: pos.y,
               transform: 'translate(-50%, -50%)',
-              transition: 'left 0.7s ease, top 0.7s ease'
+              transition: 'left 2.8s ease, top 2.8s ease'
             }}
             onClick={() => setIdx(i)}
           >
             <div
-              className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 ${
+              className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-[2000ms] ${
                 active ? 'scale-125' : ''
               }`}
             >
@@ -108,7 +112,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               {active && (
                 <svg
                   viewBox="0 0 140 140"
-                  className="absolute -inset-4 animate-spin"
+                  className="absolute -inset-4 animate-slow-spin"
                   style={{ filter: `drop-shadow(0 0 6px ${a.color})` }}
                 >
                   <circle
@@ -133,22 +137,26 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           left: POINTER_POS.x,
           top: POINTER_POS.y,
           transform: `translate(-50%, -50%) scale(${pointerScale})`,
-          transition: 'transform 0.6s ease'
+          transition: 'transform 2.4s ease'
         }}
       >
         <svg viewBox="0 0 24 24">
-          <polygon points="0,12 12,0 12,24" fill="rgba(255,255,255,0.7)" />
+          <polygon points="24,12 0,0 0,24" fill="rgba(255,255,255,0.7)" />
         </svg>
       </div>
-      <div className="absolute bottom-0 left-0 w-72 text-left text-zinc-300">
+      <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">
         <div key={idx} className="animate-fade-large">
-          <div className="text-2xl font-semibold mb-1">{aspects[idx].label}</div>
-          <div className="text-lg">{aspects[idx].comment}</div>
+          <div className="text-3xl font-semibold mb-2">{aspects[idx].label}</div>
+          <div className="text-xl">{aspects[idx].comment}</div>
         </div>
       </div>
       <style jsx>{`
         @keyframes fadeLarge { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-large { animation: fadeLarge 0.7s ease; }
+        .animate-fade-large { animation: fadeLarge 2.8s ease; }
+        @keyframes dash { to { stroke-dashoffset: -48; } }
+        .triangle-path { animation: dash 32s linear infinite; }
+        @keyframes slow-spin { to { transform: rotate(360deg); } }
+        .animate-slow-spin { animation: slow-spin 4s linear infinite; }
       `}</style>
     </div>
   )

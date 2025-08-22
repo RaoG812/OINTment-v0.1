@@ -288,7 +288,7 @@ export default function IngestPage() {
               </form>
             </section>
           </div>
-          <div className="flex-none w-[560px]">
+          <div className="flex-none w-[560px] ml-auto mr-4">
             <OintCreationFlow docs={docs.length} repo={!!result} roast={hasVuln} />
           </div>
         </div>

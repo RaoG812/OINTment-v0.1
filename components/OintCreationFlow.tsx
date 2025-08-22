@@ -6,6 +6,7 @@ const POSITIONS = [
   { x: 390, y: 120 }, // top right
   { x: 390, y: 330 } // bottom right
 ]
+const PATH_D = `M${POSITIONS[0].x},${POSITIONS[0].y} L${POSITIONS[1].x},${POSITIONS[1].y} L${POSITIONS[2].x},${POSITIONS[2].y} Z`
 const POINTER_POS = { x: POSITIONS[0].x - 40, y: POSITIONS[0].y }
 const ORDER = [
   [0, 1, 2],
@@ -72,6 +73,17 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
 
   return (
     <div className="relative w-[560px] h-[450px]">
+      <svg className="absolute inset-0 z-0 pointer-events-none" viewBox="0 0 560 450">
+        <path
+          d={PATH_D}
+          stroke="rgba(255,255,255,0.3)"
+          strokeWidth={2}
+          fill="none"
+          strokeDasharray="6 10"
+        >
+          <animate attributeName="stroke-dashoffset" from="0" to="-32" dur="4s" repeatCount="indefinite" />
+        </path>
+      </svg>
       {aspects.map((a, i) => {
         const pos = POSITIONS[order[i]]
         const active = order[i] === 0
@@ -139,7 +151,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               )}
             </div>
               {!active && (
-                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
+                <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
                   {a.label}
                 </div>
               )}
@@ -155,9 +167,13 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           transition: 'transform 0.6s ease'
         }}
       >
-        <svg viewBox="0 0 20 20" className="pointer-events-none" style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}>
-          <polygon points="20,10 0,0 0,20" fill="rgba(255,255,255,0.5)" />
-          <polygon points="14,10 0,3 0,17" fill="rgba(255,255,255,0.9)" />
+        <svg
+          viewBox="0 0 30 30"
+          className="pointer-events-none"
+          style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}
+        >
+          <polygon points="0,15 30,5 30,25" fill="rgba(255,255,255,0.6)" />
+          <polygon points="8,15 30,9 30,21" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">

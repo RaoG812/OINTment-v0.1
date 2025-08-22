@@ -311,6 +311,7 @@ export default function RoasterPage() {
       })
       setWidgets(updated)
       setRoast(comments)
+      localStorage.setItem('vulnChecked', 'true')
       setError('')
     } catch (err) {
       setRoast(null)

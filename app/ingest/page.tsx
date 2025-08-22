@@ -1,8 +1,10 @@
 // @ts-nocheck
 'use client'
 import { useEffect, useState } from 'react'
+import Link from 'next/link'
 import type { RepoAnalysis } from '../../lib/openai'
 import HexBackground from '../../components/HexBackground'
+import { OintLogo } from '../../components/OintLogo'
 
 type Result = { files: string[]; analysis: RepoAnalysis }
 
@@ -57,6 +59,16 @@ export default function IngestPage() {
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
+  const [docs, setDocs] = useState<File[]>([])
+  const [hasVuln, setHasVuln] = useState(false)
+  const [creating, setCreating] = useState(false)
+  const [created, setCreated] = useState(false)
+
+  useEffect(() => {
+    setHasVuln(localStorage.getItem('vulnChecked') === 'true')
+  }, [])
+
+  const effectiveness = Math.round(((docs.length) + (result ? 1 : 0) + (hasVuln ? 1 : 0)) / 7 * 100)
 
   async function prefetchTracking(repo: string) {
     try {
@@ -167,6 +179,30 @@ export default function IngestPage() {
     }
   }
 
+  function onDocsChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = Array.from(e.target.files || []).slice(0, 5)
+    setDocs(files)
+  }
+
+  async function createOint() {
+    if (!result || docs.length === 0 || !hasVuln) return
+    const form = new FormData()
+    docs.forEach(f => form.append('docs', f))
+    form.append('hasRepo', String(!!result))
+    form.append('hasVuln', String(hasVuln))
+    setCreating(true)
+    try {
+      const res = await fetch('/api/oint/create', { method: 'POST', body: form })
+      if (!res.ok) throw new Error('creation failed')
+      setCreated(true)
+      setError('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setCreating(false)
+    }
+  }
+
 
   return (
     <div className="relative min-h-screen text-zinc-200">
@@ -182,6 +218,21 @@ export default function IngestPage() {
       <div className="relative z-10 p-10 space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">Manual Ingest</h1>
         <div className="space-y-8 max-w-md">
+        <section className="space-y-4">
+          <h2 className="text-lg font-medium">Supporting Documents</h2>
+          <input
+            type="file"
+            multiple
+            accept=".pdf,.docx,.xlsx,.csv"
+            onChange={onDocsChange}
+            className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
+          />
+          <p className="text-xs text-zinc-400">{docs.length}/5 files selected</p>
+          <div className="flex items-center gap-4">
+            <OintLogo progress={effectiveness} />
+            <span className="text-sm">Estimated OINT effectiveness: {effectiveness}%</span>
+          </div>
+        </section>
         <section className="space-y-4">
           <h2 className="text-lg font-medium">GitHub Repository</h2>
           <div className="flex gap-2">
@@ -277,6 +328,19 @@ export default function IngestPage() {
             ))}
           </div>
         )}
+        <div className="pt-4">
+          {created ? (
+            <Link href="/toolset" className="text-sm text-emerald-400 underline">Go to OINT Mission Control</Link>
+          ) : (
+            <button
+              onClick={createOint}
+              disabled={creating || docs.length === 0 || !result || !hasVuln}
+              className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg hover:bg-blue-500 disabled:opacity-50"
+            >
+              Create OINT
+            </button>
+          )}
+        </div>
       </div>
       <style jsx>{`
         @keyframes bgMove {

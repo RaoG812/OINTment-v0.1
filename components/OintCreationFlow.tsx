@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Fragment } from 'react'
 
 const POSITIONS = [
   { x: 60, y: 225 }, // apex (selected)
@@ -99,25 +99,25 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           resumeRef.current = setTimeout(() => startAuto(), 10000)
         }
         return (
-          <div
-            key={a.key}
-            className={`absolute w-32 h-32 text-center cursor-pointer ${active ? 'z-20' : 'z-10'}`}
-            style={{
-              left: pos.x,
-              top: pos.y,
-              transform: 'translate(-50%, -50%)',
-              transition: 'left 0.7s ease, top 0.7s ease'
-            }}
-            onClick={handleSelect}
-            onTransitionEnd={e => {
-              if (active && e.propertyName === 'top') handleArrive()
-            }}
-          >
+          <Fragment key={a.key}>
             <div
-              className="relative w-full h-full rounded-full flex items-center justify-center transition-transform duration-700 overflow-visible"
-              style={{ transform: `scale(${active && settled ? 1.25 : 1})` }}
+              className={`absolute w-32 h-32 text-center cursor-pointer ${active ? 'z-20' : 'z-10'}`}
+              style={{
+                left: pos.x,
+                top: pos.y,
+                transform: 'translate(-50%, -50%)',
+                transition: 'left 0.7s ease, top 0.7s ease'
+              }}
+              onClick={handleSelect}
+              onTransitionEnd={e => {
+                if (active && e.propertyName === 'top') handleArrive()
+              }}
             >
-              <svg viewBox="0 0 100 100" className="absolute inset-0 overflow-visible">
+              <div
+                className="relative w-full h-full rounded-full flex items-center justify-center transition-transform duration-700 overflow-visible"
+                style={{ transform: `scale(${active && settled ? 1.25 : 1})` }}
+              >
+                <svg viewBox="0 0 100 100" className="absolute inset-0 overflow-visible">
                 <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={8} fill="none" />
                 <circle
                   cx="50"
@@ -150,13 +150,17 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
                   />
                 </svg>
               )}
+              </div>
             </div>
             {!active && (
-              <div className="absolute left-full ml-16 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap z-30">
+              <div
+                className="absolute text-sm text-zinc-300 whitespace-nowrap z-30"
+                style={{ left: pos.x + 96, top: pos.y, transform: 'translateY(-50%)' }}
+              >
                 {a.label}
               </div>
             )}
-          </div>
+          </Fragment>
         )
       })}
       <div

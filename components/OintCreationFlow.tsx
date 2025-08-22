@@ -100,7 +100,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         return (
           <div
             key={a.key}
-            className={`absolute text-center cursor-pointer ${active ? 'z-20' : 'z-10'}`}
+            className={`absolute w-32 h-32 text-center cursor-pointer ${active ? 'z-20' : 'z-10'}`}
             style={{
               left: pos.x,
               top: pos.y,
@@ -113,10 +113,10 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
             }}
           >
             <div
-              className="relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-700"
+              className="relative w-full h-full rounded-full flex items-center justify-center transition-transform duration-700 overflow-visible"
               style={{ transform: `scale(${active && settled ? 1.25 : 1})` }}
             >
-              <svg viewBox="0 0 100 100" className="absolute inset-0">
+              <svg viewBox="0 0 100 100" className="absolute inset-0 overflow-visible">
                 <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={8} fill="none" />
                 <circle
                   cx="50"
@@ -135,7 +135,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               {active && (
                 <svg
                   viewBox="0 0 140 140"
-                  className="absolute -inset-4 animate-slow-spin"
+                  className="absolute -inset-4 animate-slow-spin overflow-visible"
                   style={{ filter: `drop-shadow(0 0 6px ${a.color})` }}
                 >
                   <circle
@@ -150,11 +150,11 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
                 </svg>
               )}
             </div>
-              {!active && (
-                <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
-                  {a.label}
-                </div>
-              )}
+            {!active && (
+              <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
+                {a.label}
+              </div>
+            )}
           </div>
         )
       })}
@@ -168,12 +168,19 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         }}
       >
         <svg
-          viewBox="0 0 30 30"
+          viewBox="0 0 40 40"
           className="pointer-events-none"
           style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}
         >
-          <polygon points="0,15 30,5 30,25" fill="rgba(255,255,255,0.6)" />
-          <polygon points="8,15 30,9 30,21" fill="rgba(255,255,255,0.9)" />
+          <polygon
+            points="0,20 40,0 40,40"
+            fill="none"
+            stroke="rgba(255,255,255,0.9)"
+            strokeWidth={3}
+            strokeDasharray="6 6"
+          >
+            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.5s" repeatCount="indefinite" />
+          </polygon>
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">

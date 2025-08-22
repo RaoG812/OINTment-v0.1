@@ -209,9 +209,9 @@ export default function IngestPage() {
 
   return (
     <div className="relative min-h-screen text-zinc-200">
-      <HexBackground />
+      <HexBackground className="-z-20" />
       <div
-        className="fixed inset-0 -z-10"
+        className="fixed inset-0 -z-30"
         style={{
           background: 'radial-gradient(circle at 50% 50%, rgba(30,58,138,0.4), rgba(0,0,0,0.9))',
           backgroundSize: '200% 200%',

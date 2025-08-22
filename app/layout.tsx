@@ -1,7 +1,7 @@
 // @ts-nocheck
 import './globals.css';
 import { ReactNode } from 'react';
-import Link from 'next/link';
+import TopNav from '../components/TopNav';
 
 
 export const metadata = {

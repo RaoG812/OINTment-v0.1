@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { NextRequest, NextResponse } from 'next/server';
+import { githubHeaders } from '../../../../lib/github'
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
 
   const res = await fetch(
     `https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}`,
-    { headers: { Accept: 'application/vnd.github+json' } }
+    { headers: githubHeaders(req) }
   );
   if (!res.ok) {
     return NextResponse.json({ error: 'github fetch failed' }, { status: res.status });

@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { spawn } from 'child_process'
 import AdmZip from 'adm-zip'
+import { githubHeaders } from '../../../../lib/github'
 
 export async function GET(
   req: NextRequest,
@@ -21,7 +22,7 @@ export async function GET(
   if (repo) {
     try {
       const url = `https://codeload.github.com/${repo}/zip/${branch}`
-      const res = await fetch(url)
+      const res = await fetch(url, { headers: githubHeaders(req) })
       if (res.ok) {
         const buffer = Buffer.from(await res.arrayBuffer())
         const zip = new AdmZip(buffer)

@@ -19,6 +19,27 @@ The home page now links to key interfaces:
 
 *Binary assets such as `.ico` files are intentionally excluded.*
 
+## GitHub App Integration
+
+To analyze private repositories, authorize the app with GitHub.
+
+1. Create a new GitHub App at <https://github.com/settings/apps/new> with the following settings:
+   - **Homepage URL:** `http://localhost:3000`
+   - **Callback URL:** `http://localhost:3000/api/github/callback`
+   - **Webhook URL:** `http://localhost:3000/api/github/webhook`
+   - **Repository permissions:** Contents – Read‑only, Metadata – Read‑only
+   - **Event subscriptions:** Push (optional)
+2. Install the app on the repositories you want to analyze.
+3. Add environment variables to `.env.local`:
+
+   ```bash
+   GITHUB_CLIENT_ID=your_client_id
+   GITHUB_CLIENT_SECRET=your_client_secret
+   GITHUB_WEBHOOK_SECRET=your_webhook_secret
+   ```
+
+4. Start the dev server and visit `http://localhost:3000/api/github/auth` to connect your GitHub account. An OAuth token with `repo` scope will be stored in a cookie and used for subsequent API calls, enabling access to private repositories.
+
 ## Integration Matrix
 
 The `/matrix` page inspects this project's `package.json` to list real dependencies.

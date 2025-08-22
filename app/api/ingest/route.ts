@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import AdmZip from 'adm-zip'
 import { summarizeRepo } from '../../../lib/openai'
+import { githubHeaders } from '../../../lib/github'
 
 export async function POST(req: NextRequest) {
   const form = await req.formData()
@@ -11,7 +12,7 @@ export async function POST(req: NextRequest) {
 
   if (typeof repo === 'string' && repo) {
     const url = `https://codeload.github.com/${repo}/zip/${branch}`
-    const res = await fetch(url)
+    const res = await fetch(url, { headers: githubHeaders(req) })
     if (!res.ok) {
       return NextResponse.json({ error: 'failed to fetch repo' }, { status: 500 })
     }

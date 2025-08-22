@@ -10,35 +10,21 @@ interface Recommendation { department: 'frontend'|'backend'|'ops'; insight: stri
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
   const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null)
-  const [creating, setCreating] = useState(false)
   const [applying, setApplying] = useState(false)
 
-  async function create() {
-    setCreating(true)
+  async function apply() {
+    setApplying(true)
     try {
-      await fetch('/api/oint/create', { method: 'POST' })
+      const recRes = await fetch('/api/oint/apply', { method: 'POST' })
+      const recJson = (await recRes.json()) as { recommendations: Recommendation[] }
+      setRecommendations(recJson.recommendations)
       const res = await fetch('/api/oint/summary')
       const json = (await res.json()) as DashboardData
       setData(json)
       setOintData(json)
     } finally {
-      setCreating(false)
-    }
-  }
-
-  async function apply() {
-    setApplying(true)
-    try {
-      const res = await fetch('/api/oint/apply', { method: 'POST' })
-      const json = (await res.json()) as { recommendations: Recommendation[] }
-      setRecommendations(json.recommendations)
-    } finally {
       setApplying(false)
     }
-  }
-
-  function scoreColor(v: number) {
-    return v >= 80 ? 'text-emerald-400' : v >= 60 ? 'text-amber-400' : 'text-rose-400'
   }
 
   function severityColor(s: DashboardData['actions'][number]['severity']) {
@@ -61,17 +47,17 @@ export default function ToolsetPage() {
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
           <Card className="max-w-md">
-            {creating ? (
+            {applying ? (
               <div className="flex items-center gap-2">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-                <span className="text-sm">Mixing OINT ingredients…</span>
+                <span className="text-sm">Running OINT analysis…</span>
               </div>
             ) : (
               <button
-                onClick={create}
+                onClick={apply}
                 className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
               >
-                Create OINT
+                Apply OINT
               </button>
             )}
           </Card>
@@ -84,38 +70,16 @@ export default function ToolsetPage() {
               <div>Critical alerts: {data.pulse.criticalAlerts}</div>
             </Card>
             <Card>
-              <h2 className="text-lg font-semibold mb-4">Top Integrations</h2>
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left">
-                    <th className="py-1">Name</th>
-                    <th className="py-1">Impact</th>
-                    <th className="py-1">Security</th>
-                    <th className="py-1">Ops</th>
-                    <th className="py-1">Health</th>
-                    <th className="py-1">Coupling</th>
-                    <th className="py-1">Upgrade</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.integrationsTop10.slice(0, 4).map(row => (
-                    <tr key={row.name} className="border-t border-zinc-800">
-                      <td className="py-1 flex items-center gap-2">
-                        {row.logoUrl && (
-                          <img src={row.logoUrl} alt="" className="h-4 w-4" />
-                        )}
-                        {row.name}
-                      </td>
-                      <td className={`py-1 ${scoreColor(row.impact)}`}>{row.impact}</td>
-                      <td className={`py-1 ${scoreColor(row.security)}`}>{row.security}</td>
-                      <td className={`py-1 ${scoreColor(row.ops)}`}>{row.ops}</td>
-                      <td className={`py-1 ${scoreColor(row.health)}`}>{row.health}</td>
-                      <td className={`py-1 ${scoreColor(row.coupling)}`}>{row.coupling}</td>
-                      <td className={`py-1 ${scoreColor(row.upgrade)}`}>{row.upgrade}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+              <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>
+              <p className="text-sm mb-4 text-zinc-300">{data.stack.description}</p>
+              <div className="flex flex-wrap gap-4">
+                {data.stack.integrations.map(i => (
+                  <div key={i.name} className="flex items-center gap-2 text-sm">
+                    {i.logoUrl && <img src={i.logoUrl} alt="" className="h-5 w-5" />}
+                    {i.name}
+                  </div>
+                ))}
+              </div>
             </Card>
             <Card>
               <h2 className="text-lg font-semibold mb-4">Actions</h2>
@@ -128,6 +92,22 @@ export default function ToolsetPage() {
                 ))}
               </ul>
             </Card>
+            {data.finance && (
+              <Card>
+                <h2 className="text-lg font-semibold mb-2">Finance</h2>
+                <p className="text-sm">Budget effectiveness: {data.finance.effectivenessPct}%</p>
+              </Card>
+            )}
+            <Card>
+              <h2 className="text-lg font-semibold mb-4">30-Day Onboarding Plan</h2>
+              <ol className="list-decimal pl-5 space-y-1 text-sm">
+                {data.onboardingPlan.map(item => (
+                  <li key={item.day}>
+                    <span className="font-medium">{item.day}:</span> {item.step}
+                  </li>
+                ))}
+              </ol>
+            </Card>
             <Card>
               <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
               <div className="space-y-4">
@@ -136,30 +116,18 @@ export default function ToolsetPage() {
                 <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
               </div>
             </Card>
-            <Card className="max-w-md">
-              {applying ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-                  <span className="text-sm">Dispensing OINT insights…</span>
-                </div>
-              ) : (
-                <button
-                  onClick={apply}
-                  className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg hover:bg-blue-500 transition"
-                >
-                  Apply OINT
-                </button>
-              )}
-            </Card>
             {recommendations && (
-              <div className="grid sm:grid-cols-3 gap-4">
-                {recommendations.map(r => (
-                  <Card key={r.department} className="space-y-2">
-                    <div className="text-sm font-semibold capitalize">{r.department}</div>
-                    <div className="text-xs text-zinc-400">{r.insight}</div>
-                  </Card>
-                ))}
-              </div>
+              <Card>
+                <h2 className="text-lg font-semibold mb-4">Departmental Recommendations</h2>
+                <div className="grid sm:grid-cols-3 gap-4">
+                  {recommendations.map(r => (
+                    <Card key={r.department} className="space-y-2">
+                      <div className="text-sm font-semibold capitalize">{r.department}</div>
+                      <div className="text-xs text-zinc-400">{r.insight}</div>
+                    </Card>
+                  ))}
+                </div>
+              </Card>
             )}
           </div>
         )}

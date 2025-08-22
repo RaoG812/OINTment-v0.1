@@ -1,3 +1,12 @@
 let created = false
-export function markCreated() { created = true }
-export function isCreated() { return created }
+let finance = false
+export function markCreated(hasFinance = false) {
+  created = true
+  finance = hasFinance
+}
+export function isCreated() {
+  return created
+}
+export function hasFinanceData() {
+  return finance
+}

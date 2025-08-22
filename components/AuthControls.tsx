@@ -1,4 +1,4 @@
-'use client'
+'use client';
 import { useCallback } from 'react'
 
 export default function AuthControls({ isLoggedIn }: { isLoggedIn: boolean }) {

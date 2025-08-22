@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
   const allEntries = zip.getEntries()
   const fileEntries = allEntries.filter(e => !e.isDirectory)
   const files = fileEntries.map(e => e.entryName)
-  const code = fileEntries.slice(0, 50).map(e => ({
+  const code = fileEntries.map(e => ({
     path: e.entryName,
     language: (e.entryName.split('.').pop() || '').toLowerCase(),
     content: e.getData().toString('utf8').slice(0, 10000)

@@ -264,7 +264,7 @@ Keep summary fields ≤ 140 chars.
 If nothing detected, return zeros and empty arrays with notes: ["no_ai_artifacts_detected"].
 Return only the JSON object.`
 
-export async function detectAiArtifacts(
+async function detectAiArtifactsBatch(
   files: any[],
   commits: any[]
 ): Promise<any> {
@@ -315,6 +315,47 @@ export async function detectAiArtifacts(
       commits: []
     }
   }
+}
+
+export async function detectAiArtifacts(
+  files: any[],
+  commits: any[]
+): Promise<any> {
+  const allFiles = Array.isArray(files) ? files : []
+  const commitList = Array.isArray(commits) ? commits : []
+  const scanned: any[] = []
+  const notes: string[] = []
+  let aiFiles = 0
+  let count = 0
+  let commitResult: any[] = []
+
+  while (count < allFiles.length) {
+    const batch = allFiles.slice(count, count + 200)
+    const res = await detectAiArtifactsBatch(batch, commitList)
+    scanned.push(...(res.files || []))
+    if (commitResult.length === 0 && Array.isArray(res.commits)) {
+      commitResult = res.commits
+    }
+    aiFiles += res.repo_summary?.ai_files || 0
+    count += res.repo_summary?.files_scanned || batch.length
+    if (Array.isArray(res.repo_summary?.notes)) {
+      notes.push(...res.repo_summary.notes)
+    }
+    if (aiFiles > 0) break
+  }
+
+  const percent = count ? aiFiles / count : 0
+  const summary = {
+    percent_ai_repo: percent,
+    files_scanned: count,
+    ai_files: aiFiles,
+    notes: Array.from(new Set(notes)),
+    overview: count
+      ? `Detected ${aiFiles} AI-flagged files out of ${count} scanned (${Math.round(percent * 100)}%).`
+      : 'No files analyzed.'
+  }
+
+  return { repo_summary: summary, files: scanned, commits: commitResult }
 }
 
 

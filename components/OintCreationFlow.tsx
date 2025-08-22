@@ -42,16 +42,16 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
 
   const [idx, setIdx] = useState(0)
   const [pointerScale, setPointerScale] = useState(1)
-  // auto-rotate rings every 16s (slowed by 75%)
+  // auto-rotate rings every 4s
   useEffect(() => {
-    const id = setInterval(() => setIdx(i => (i + 1) % aspects.length), 16000)
+    const id = setInterval(() => setIdx(i => (i + 1) % aspects.length), 4000)
     return () => clearInterval(id)
   }, [aspects.length])
   // pointer pulse when active ring reaches apex
   useEffect(() => {
     setPointerScale(0.8)
-    const up = setTimeout(() => setPointerScale(1.1), 2400)
-    const settle = setTimeout(() => setPointerScale(1), 4800)
+    const up = setTimeout(() => setPointerScale(1.1), 600)
+    const settle = setTimeout(() => setPointerScale(1), 1200)
     return () => {
       clearTimeout(up)
       clearTimeout(settle)
@@ -80,19 +80,19 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           <div
             key={a.key}
             className="absolute text-center cursor-pointer"
-            style={{
-              left: pos.x,
-              top: pos.y,
-              transform: 'translate(-50%, -50%)',
-              transition: 'left 2.8s ease, top 2.8s ease'
-            }}
-            onClick={() => setIdx(i)}
-          >
-            <div
-              className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-[2000ms] ${
-                active ? 'scale-125' : ''
-              }`}
+              style={{
+                left: pos.x,
+                top: pos.y,
+                transform: 'translate(-50%, -50%)',
+                transition: 'left 0.7s ease, top 0.7s ease'
+              }}
+              onClick={() => setIdx(i)}
             >
+              <div
+                className={`relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500 ${
+                  active ? 'scale-125' : ''
+                }`}
+              >
               <svg viewBox="0 0 100 100" className="absolute inset-0">
                 <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={6} fill="none" />
                 <circle
@@ -137,11 +137,12 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           left: POINTER_POS.x,
           top: POINTER_POS.y,
           transform: `translate(-50%, -50%) scale(${pointerScale})`,
-          transition: 'transform 2.4s ease'
+          transition: 'transform 0.6s ease'
         }}
       >
-        <svg viewBox="0 0 24 24">
-          <polygon points="24,12 0,0 0,24" fill="rgba(255,255,255,0.7)" />
+        <svg viewBox="0 0 24 24" className="pointer-events-none">
+          <polygon points="24,12 0,0 0,24" fill="rgba(255,255,255,0.6)" />
+          <polygon points="18,12 0,3 0,21" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">
@@ -152,9 +153,9 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       </div>
       <style jsx>{`
         @keyframes fadeLarge { from { opacity: 0; } to { opacity: 1; } }
-        .animate-fade-large { animation: fadeLarge 2.8s ease; }
+        .animate-fade-large { animation: fadeLarge 0.7s ease; }
         @keyframes dash { to { stroke-dashoffset: -48; } }
-        .triangle-path { animation: dash 32s linear infinite; }
+        .triangle-path { animation: dash 8s linear infinite; }
         @keyframes slow-spin { to { transform: rotate(360deg); } }
         .animate-slow-spin { animation: slow-spin 4s linear infinite; }
       `}</style>

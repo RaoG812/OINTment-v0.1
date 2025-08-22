@@ -10,10 +10,10 @@ interface Recommendation { department: 'frontend'|'backend'|'ops'; insight: stri
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
   const [recommendations, setRecommendations] = useState<Recommendation[] | null>(null)
-  const [applying, setApplying] = useState(false)
+  const [creating, setCreating] = useState(false)
 
-  async function apply() {
-    setApplying(true)
+  async function create() {
+    setCreating(true)
     try {
       const recRes = await fetch('/api/oint/apply', { method: 'POST' })
       const recJson = (await recRes.json()) as { recommendations: Recommendation[] }
@@ -23,7 +23,7 @@ export default function ToolsetPage() {
       setData(json)
       setOintData(json)
     } finally {
-      setApplying(false)
+      setCreating(false)
     }
   }
 
@@ -47,17 +47,17 @@ export default function ToolsetPage() {
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
           <Card className="max-w-md">
-            {applying ? (
+            {creating ? (
               <div className="flex items-center gap-2">
                 <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
                 <span className="text-sm">Running OINT analysis…</span>
               </div>
             ) : (
               <button
-                onClick={apply}
+                onClick={create}
                 className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
               >
-                Apply OINT
+                Create OINT
               </button>
             )}
           </Card>

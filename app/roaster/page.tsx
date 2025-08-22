@@ -4,6 +4,7 @@ import { useEffect, useState, CSSProperties, useRef } from 'react'
 import Link from 'next/link'
 import HexBackground from '../../components/HexBackground'
 import { getRoasterState, setRoasterState } from '../../lib/roasterState'
+import { getOintData } from '../../lib/toolsetState'
 
 type Result = { files: string[] }
 type Comment = { department: string; comment: string; temperature: number }
@@ -276,11 +277,12 @@ export default function RoasterPage() {
   const [level, setLevel] = useState(init.level)
   const [roast, setRoast] = useState<Comment[] | null>(null)
   const [widgets, setWidgets] = useState<Record<Department, Comment>>(init.widgets)
-  const [roasting, setRoasting] = useState(false)
-  const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
-  const [fixing, setFixing] = useState(false)
-  const [error, setError] = useState('')
-  const [healed, setHealed] = useState(init.healed)
+    const [roasting, setRoasting] = useState(false)
+    const [ointWidgets, setOintWidgets] = useState<Record<Department, Comment> | null>(init.ointWidgets)
+    const [fixing, setFixing] = useState(false)
+    const [error, setError] = useState('')
+    const [healed, setHealed] = useState(init.healed)
+    const ointCreated = !!getOintData()
 
   useEffect(() => {
     const stored = localStorage.getItem('ingestResult')
@@ -399,7 +401,10 @@ export default function RoasterPage() {
               </button>
               <button
                 onClick={applyOint}
-                className="px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg hover:bg-blue-500 transition"
+                disabled={!ointCreated}
+                className={`px-4 py-2 bg-blue-600 text-sm font-medium rounded-lg transition ${
+                  ointCreated ? 'hover:bg-blue-500' : 'opacity-50 cursor-not-allowed'
+                }`}
               >
                 Apply OINT
               </button>

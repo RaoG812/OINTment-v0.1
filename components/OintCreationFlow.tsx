@@ -151,7 +151,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               )}
             </div>
             {!active && (
-              <div className="absolute left-full ml-4 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
+              <div className="absolute left-full ml-8 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
                 {a.label}
               </div>
             )}
@@ -159,7 +159,7 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
         )
       })}
       <div
-        className="absolute z-30"
+        className="absolute z-50"
         style={{
           left: POINTER_POS.x,
           top: POINTER_POS.y,
@@ -172,15 +172,8 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
           className="pointer-events-none"
           style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.8))' }}
         >
-          <polygon
-            points="0,20 40,0 40,40"
-            fill="none"
-            stroke="rgba(255,255,255,0.9)"
-            strokeWidth={3}
-            strokeDasharray="6 6"
-          >
-            <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="1.5s" repeatCount="indefinite" />
-          </polygon>
+          <polygon points="0,0 20,20 0,40" fill="rgba(255,255,255,0.9)" />
+          <polygon points="20,20 40,0 40,40" fill="rgba(255,255,255,0.9)" />
         </svg>
       </div>
       <div className="absolute bottom-4 left-0 w-80 text-left text-zinc-300">

@@ -14,14 +14,14 @@ export async function POST(req: Request) {
   const comments = roast.map((c: any) => ({
     department: c.department,
     comment: docText.includes(c.department.toLowerCase())
-      ? `OINT recommends: ${c.comment}`
-      : `No direct docs context. ${c.comment}`,
+      ? `Cross-check ${c.department} docs and adjust accordingly.`
+      : `Investigate ${c.department} area with limited documentation.`,
     temperature: Math.max(0, c.temperature - 0.1)
   }))
 
-  const steps = comments.slice(0, 5).map(
-    (c: any, i: number) => `Step ${i + 1}: Address ${c.department} - ${c.comment}`
-  )
+  const docSteps = docs.map(d => `Review ${d.name}`)
+  const roastSteps = roast.map((c: any) => `Resolve ${c.department} feedback`)
+  const steps = [...docSteps, ...roastSteps].slice(0, 5)
 
   return NextResponse.json({ comments, steps })
 }

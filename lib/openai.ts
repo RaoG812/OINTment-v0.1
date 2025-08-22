@@ -41,12 +41,13 @@ async function chat(
     ? models
     : models
     ? [models]
-    : [process.env.LLM_MODEL || 'gpt-5-nano']
+    : [process.env.LLM_MODEL || 'gpt-5-chat']
   const modelList = [...base, 'gpt-4o'].filter(
     (v, i, a) => a.indexOf(v) === i
   )
   let lastErr: any
-  for (const m of modelList) {
+  for (let i = 0; i < modelList.length; i++) {
+    const m = modelList[i]
     try {
       const res = await client.chat.completions.create({
         model: m,
@@ -56,8 +57,12 @@ async function chat(
           : undefined,
         response_format
       } as any)
+      if (i > 0) {
+        console.warn(`LLM model fallback: using ${m} after ${modelList[i - 1]} failed`)
+      }
       return res.choices[0]?.message?.content ?? '{}'
     } catch (err) {
+      console.error(`LLM model ${m} failed`, err)
       lastErr = err
     }
   }
@@ -89,7 +94,7 @@ export async function summarizeRepo(
     { role: 'user', content }
   ]
 
-  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-chat')
   return JSON.parse(txt)
 }
 
@@ -111,7 +116,7 @@ export async function roastRepo(
     },
     { role: 'user', content }
   ]
-  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-chat')
   try {
     const parsed = JSON.parse(txt)
     return Array.isArray(parsed.reviews) ? parsed.reviews : []
@@ -131,7 +136,7 @@ export async function suggestFixes(fileList: string[]): Promise<string[]> {
     { role: 'user', content }
   ]
 
-  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-chat')
   try {
     const parsed = JSON.parse(txt)
     return Array.isArray(parsed.suggestions) ? parsed.suggestions : []
@@ -156,7 +161,7 @@ export async function categorizeCommits(
       { role: 'user', content: prompt }
     ],
     { type: 'json_object' },
-    'gpt-5-nano'
+    'gpt-5-chat'
   )
   try {
     const parsed = JSON.parse(txt)
@@ -188,7 +193,7 @@ export async function jitterOffsets(
       { role: 'user', content: prompt }
     ],
     { type: 'json_object' },
-    'gpt-5-nano'
+    'gpt-5-chat'
   )
   try {
     const parsed = JSON.parse(txt)
@@ -402,7 +407,7 @@ async function detectAiArtifactsBatch(
     }
   ]
 
-  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-nano')
+  const txt = await chat(messages, { type: 'json_object' }, 'gpt-5-chat')
   try {
     const parsed = JSON.parse(txt)
     const fs = Array.isArray(parsed.files) ? parsed.files : []
@@ -477,7 +482,6 @@ export async function detectAiArtifacts(
 
   const scanned: any[] = [...preFlagged]
   const notes: string[] = []
-  let aiFiles = preFlagged.length
   let count = preFlagged.length
   let commitResult: any[] = [...preCommit]
   let idx = 0
@@ -491,15 +495,16 @@ export async function detectAiArtifacts(
     if (Array.isArray(res.commits)) {
       commitResult.push(...res.commits)
     }
-    aiFiles += res.repo_summary?.ai_files || 0
     idx += res.repo_summary?.files_scanned || batch.length
     count += res.repo_summary?.files_scanned || batch.length
     if (Array.isArray(res.repo_summary?.notes)) {
       notes.push(...res.repo_summary.notes)
     }
-    if (aiFiles > 0) break
   }
 
+  let filtered = scanned.filter(f => (f.ai_likelihood || 0) >= 0.6)
+  let aiFiles = filtered.length
+  commitResult = commitResult.filter(c => (c.ai_likelihood || 0) >= 0.6)
   const percent = count ? aiFiles / count : 0
   const summary = {
     percent_ai_repo: percent,
@@ -507,11 +512,13 @@ export async function detectAiArtifacts(
     ai_files: aiFiles,
     notes: Array.from(new Set(notes)),
     overview: count
-      ? `Detected ${aiFiles} AI-flagged files out of ${count} scanned (${Math.round(percent * 100)}%).`
+      ? aiFiles > 0
+        ? `Detected ${aiFiles} AI-flagged files out of ${count} scanned (${Math.round(percent * 100)}%).`
+        : 'No AI-generated code indicators found.'
       : 'No files analyzed.'
   }
 
-  return { repo_summary: summary, files: scanned, commits: commitResult }
+  return { repo_summary: summary, files: filtered, commits: commitResult }
 }
 
 

@@ -5,11 +5,16 @@ import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
+import { getRoasterState } from '../../lib/roasterState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
   const [creating, setCreating] = useState(false)
   const [error, setError] = useState('')
+  const roastState = getRoasterState()
+  const hasRoast = Object.values(roastState.widgets).some(
+    w => w.comment !== 'Awaiting review'
+  )
 
   async function create() {
     setCreating(true)
@@ -18,8 +23,7 @@ export default function ToolsetPage() {
       const docs = getDocs().filter(Boolean) as DocItem[]
       const ingest = localStorage.getItem('ingestResult')
       const hasRepo = !!ingest
-      const hasVuln = localStorage.getItem('vulnChecked') === 'true'
-      if (docs.length === 0 || !hasRepo || !hasVuln) {
+      if (docs.length === 0 || !hasRepo) {
         throw new Error('insufficient data for OINT')
       }
       const form = new FormData()
@@ -27,7 +31,7 @@ export default function ToolsetPage() {
         form.append('docs', new File([d.file], d.name, { type: d.file.type }))
       )
       form.append('hasRepo', String(hasRepo))
-      form.append('hasVuln', String(hasVuln))
+      form.append('hasVuln', String(hasRoast))
       if (ingest) {
         try {
           const parsed = JSON.parse(ingest)
@@ -84,19 +88,24 @@ export default function ToolsetPage() {
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
           <>
-            <Card className="max-w-md">
+            <Card className="max-w-md space-y-2">
               {creating ? (
                 <div className="flex items-center gap-2">
                   <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
                   <span className="text-sm">Running OINT analysis…</span>
                 </div>
               ) : (
-                <button
-                  onClick={create}
-                  className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-                >
-                  Create OINT
-                </button>
+                <>
+                  <button
+                    onClick={create}
+                    className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                  >
+                    Create OINT
+                  </button>
+                  <p className="text-xs text-zinc-400">
+                    Requires at least one supporting document. More insight available after a roast.
+                  </p>
+                </>
               )}
             </Card>
             {error && <div className="text-xs text-rose-400">{error}</div>}
@@ -113,60 +122,67 @@ export default function ToolsetPage() {
                 {creating ? 'Recreating…' : 'Recreate OINT'}
               </button>
             </div>
-            <Card className="flex flex-wrap gap-6 text-sm">
-              <div>Envs: {data.pulse.envs.join(', ')}</div>
-              <div>Deploys today: {data.pulse.deploysToday}</div>
-              <div>Critical alerts: {data.pulse.criticalAlerts}</div>
-              <div>Files analyzed: {data.pulse.filesAnalyzed}</div>
-              <div>Docs reviewed: {data.pulse.docsReviewed}</div>
-            </Card>
-            <Card>
-              <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>
-              <p className="text-sm mb-4 text-zinc-300">{data.stack.description}</p>
-              <div className="flex flex-wrap gap-4">
-                {data.stack.integrations.map(i => (
-                  <div key={i.name} className="flex items-center gap-2 text-sm">
-                    {i.logoUrl && <img src={i.logoUrl} alt="" className="h-5 w-5" />}
-                    {i.name}
-                  </div>
-                ))}
+            {!hasRoast && (
+              <div className="text-xs text-zinc-400">
+                Run a roast to enrich these insights.
               </div>
-            </Card>
-            <Card>
-              <h2 className="text-lg font-semibold mb-4">Actions</h2>
-              <ul className="space-y-2">
-                {data.actions.map(a => (
-                  <li key={a.id} className="flex items-center gap-2 text-sm">
-                    <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
-                    <span className="font-medium">{a.title}</span>
-                  </li>
-                ))}
-              </ul>
-            </Card>
-            {data.finance && (
-              <Card>
-                <h2 className="text-lg font-semibold mb-2">Finance</h2>
-                <p className="text-sm">Budget effectiveness: {data.finance.effectivenessPct}%</p>
-              </Card>
             )}
-            <Card>
-              <h2 className="text-lg font-semibold mb-4">30-Day Onboarding Plan</h2>
-              <ol className="list-decimal pl-5 space-y-1 text-sm">
-                {data.onboardingPlan.map(item => (
-                  <li key={item.day}>
-                    <span className="font-medium">{item.day}:</span> {item.step}
-                  </li>
-                ))}
-              </ol>
-            </Card>
-            <Card>
-              <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
-              <div className="space-y-4">
-                <Metric label="Coverage" value={data.reliability.coveragePct} />
-                <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
-                <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
-              </div>
-            </Card>
+            <div className="grid md:grid-cols-2 gap-6">
+              <Card className="flex flex-wrap gap-6 text-sm">
+                <div>Envs: {data.pulse.envs.join(', ')}</div>
+                <div>Deploys today: {data.pulse.deploysToday}</div>
+                <div>Critical alerts: {data.pulse.criticalAlerts}</div>
+                <div>Files analyzed: {data.pulse.filesAnalyzed}</div>
+                <div>Docs reviewed: {data.pulse.docsReviewed}</div>
+              </Card>
+              <Card>
+                <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>
+                <p className="text-sm mb-4 text-zinc-300">{data.stack.description}</p>
+                <div className="flex flex-wrap gap-4">
+                  {data.stack.integrations.map(i => (
+                    <div key={i.name} className="flex items-center gap-2 text-sm">
+                      {i.logoUrl && <img src={i.logoUrl} alt="" className="h-5 w-5" />}
+                      {i.name}
+                    </div>
+                  ))}
+                </div>
+              </Card>
+              <Card>
+                <h2 className="text-lg font-semibold mb-4">Actions</h2>
+                <ul className="space-y-2">
+                  {data.actions.map(a => (
+                    <li key={a.id} className="flex items-center gap-2 text-sm">
+                      <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
+                      <span className="font-medium">{a.title}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+              {data.finance && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-2">Finance</h2>
+                  <p className="text-sm">Budget effectiveness: {data.finance.effectivenessPct}%</p>
+                </Card>
+              )}
+              <Card>
+                <h2 className="text-lg font-semibold mb-4">30-Day Onboarding Plan</h2>
+                <ol className="list-decimal pl-5 space-y-1 text-sm">
+                  {data.onboardingPlan.map(item => (
+                    <li key={item.day}>
+                      <span className="font-medium">{item.day}:</span> {item.step}
+                    </li>
+                  ))}
+                </ol>
+              </Card>
+              <Card>
+                <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
+                <div className="space-y-4">
+                  <Metric label="Coverage" value={data.reliability.coveragePct} />
+                  <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
+                  <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
+                </div>
+              </Card>
+            </div>
           </div>
         )}
       </div>

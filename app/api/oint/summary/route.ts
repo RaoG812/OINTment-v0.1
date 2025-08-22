@@ -19,20 +19,36 @@ export async function GET() {
   const coverage = Math.round((testFiles / Math.max(files.length, 1)) * 100)
 
   const actions = [] as DashboardData['actions']
-  if (docs.some(d => /todo/i.test(d.text))) {
+  const todoDocs = docs.filter(d => /todo/i.test(d.text))
+  if (todoDocs.length) {
     actions.push({
       id: 'act-todo',
-      title: 'Resolve TODOs in documentation',
+      title: `Clear TODOs in ${todoDocs.map(d => d.name).join(', ')}`,
       severity: 'medium',
-      rationale: 'Detected TODO markers in uploaded docs'
+      rationale: `Found TODO markers in ${todoDocs.length} doc${
+        todoDocs.length > 1 ? 's' : ''
+      }`
     })
   }
-  if (files.length && testFiles === 0) {
+  const codeFiles = files.filter(f => /\.(js|ts|jsx|tsx)$/i.test(f))
+  const untested = codeFiles.filter(f => !/test|spec/i.test(f))
+  if (untested.length) {
+    const sample = untested.slice(0, 3).join(', ')
     actions.push({
       id: 'act-tests',
-      title: 'Add automated tests',
+      title: `Introduce tests for ${sample}${
+        untested.length > 3 ? '…' : ''
+      }`,
       severity: 'high',
-      rationale: 'No test files found in repository snapshot'
+      rationale: 'No companion tests detected for key source files'
+    })
+  }
+  if (actions.length === 0) {
+    actions.push({
+      id: 'act-review',
+      title: 'Review documentation and code for improvement',
+      severity: 'low',
+      rationale: 'Baseline scan found no critical issues'
     })
   }
 

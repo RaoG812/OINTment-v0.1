@@ -54,14 +54,15 @@ of integration categories.
 Upload a repository ZIP or point to a GitHub repo/branch at `/ingest` to trigger
 an analysis run. Provide an API key for language model analysis via
 `AIML_API_KEY` (uses [aimlapi.com](https://aimlapi.com) by default); analyses
-prefer the `gpt-5-nano` model with automatic fallback to `gpt-4o` for
-stability. Upload & Analyse, Roaster, and Vibe Killer all run on `gpt-5-nano`,
-while OINT defaults to `gpt-5-nano` with a `gpt-4o` fallback. The last
+prefer the `gpt-5-chat` model with automatic fallback to `gpt-4o` for
+stability. Upload & Analyse, Roaster, and Vibe Killer all run on `gpt-5-chat`,
+while OINT defaults to `gpt-5-chat` with a `gpt-4o` fallback. The last
 ingest result along with your selected repo and branch are cached in the browser
 so you can navigate away and return without losing context. Below the console,
 AI‑extracted takeaways and metrics render in animated widgets. The OINT toolset
 can be recreated after updating docs or running a new ingest, and the Matrix
-view now reflects dependencies from manually uploaded ZIPs.
+view now reflects dependencies from manually uploaded ZIPs. Creating a toolset
+requires at least one supporting document.
 
 Click a row on the Matrix page to drill into indicator explanations, improvement
 tips and code references gathered from the repo.

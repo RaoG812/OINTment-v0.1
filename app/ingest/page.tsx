@@ -70,12 +70,14 @@ export default function IngestPage() {
   const [showConsole, setShowConsole] = useState(false)
   const [repo, setRepo] = useState('')
   const [repos, setRepos] = useState<string[]>([])
+  const [reposError, setReposError] = useState('')
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('')
   const [error, setError] = useState('')
   const [docs, setDocs] = useState<(DocItem | null)[]>(getDocsState())
   const [hasVuln, setHasVuln] = useState(false)
   const [mode, setMode] = useState<'manual' | 'github'>('manual')
+  const [localRepo, setLocalRepo] = useState('')
 
   useEffect(() => {
     setHasVuln(localStorage.getItem('vulnChecked') === 'true')
@@ -115,6 +117,8 @@ export default function IngestPage() {
     const storedBranch = localStorage.getItem('branch')
     if (storedRepo) setRepo(storedRepo)
     if (storedBranch) setBranch(storedBranch)
+    const storedLocal = localStorage.getItem('localRepo')
+    if (storedLocal) setLocalRepo(storedLocal)
   }, [])
 
   useEffect(() => {
@@ -143,7 +147,9 @@ export default function IngestPage() {
       if (!res.ok) throw new Error(data.error || 'analysis failed')
       setResult(data)
       setOintData(null)
+      setLocalRepo(file.name)
       localStorage.setItem('ingestResult', JSON.stringify(data))
+      localStorage.setItem('localRepo', file.name)
       if (repo) localStorage.setItem('repo', repo)
       if (branch) localStorage.setItem('branch', branch)
       if (repo) prefetchTracking(repo)
@@ -157,6 +163,14 @@ export default function IngestPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  function discardRepo() {
+    setResult(null)
+    setLocalRepo('')
+    localStorage.removeItem('ingestResult')
+    localStorage.removeItem('localRepo')
+    setOintData(null)
   }
 
   async function loadBranches(selectedRepo: string) {
@@ -222,13 +236,21 @@ export default function IngestPage() {
     }
     async function loadRepos() {
       const res = await fetch('/api/github/repos')
+      if (res.status === 401) {
+        setRepos([])
+        setReposError('unauthorized')
+        localStorage.removeItem('repos')
+        return
+      }
       const data = await (res.ok ? res.json() : [])
       if (Array.isArray(data)) {
         const names = data.map((r: any) => r.name)
         setRepos(names)
+        setReposError('')
         localStorage.setItem('repos', JSON.stringify(names))
       } else {
         setRepos([])
+        setReposError('failed')
         localStorage.removeItem('repos')
       }
     }
@@ -290,6 +312,14 @@ export default function IngestPage() {
                       Upload and Analyze
                     </button>
                   </form>
+                  {localRepo && (
+                    <div className="text-xs text-zinc-400">
+                      Loaded {localRepo}{' '}
+                      <button onClick={discardRepo} className="underline">
+                        Discard
+                      </button>
+                    </div>
+                  )}
                 </div>
               </section>
             )}
@@ -327,7 +357,9 @@ export default function IngestPage() {
                   </div>
                 ) : (
                   <p className="text-xs text-zinc-400">
-                    Login with GitHub to list repos.
+                    {reposError === 'unauthorized'
+                      ? 'Login with GitHub to list repos.'
+                      : 'No repositories found.'}
                   </p>
                 )}
                 <button

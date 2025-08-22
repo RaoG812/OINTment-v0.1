@@ -1,13 +1,11 @@
 'use client'
 import { useEffect, useRef, useState } from 'react'
 
-const SIZE = 450
 const POSITIONS = [
   { x: 60, y: 225 }, // apex (selected)
   { x: 390, y: 120 }, // top right
   { x: 390, y: 330 } // bottom right
 ]
-const TRI_POINTS = POSITIONS.map(p => `${p.x},${p.y}`).join(' ')
 const POINTER_POS = { x: POSITIONS[0].x - 40, y: POSITIONS[0].y }
 const ORDER = [
   [0, 1, 2],
@@ -58,37 +56,22 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       if (resumeRef.current) clearTimeout(resumeRef.current)
     }
   }, [aspects.length])
-  // pointer pulse and ring scale after reaching apex
+  // reset pointer and scale when index changes
   useEffect(() => {
-    setSettled(false)
     setPointerScale(0.8)
-    const grow = setTimeout(() => {
-      setPointerScale(1.1)
-      setSettled(true)
-    }, 700)
-    const settle = setTimeout(() => setPointerScale(1), 1400)
-    return () => {
-      clearTimeout(grow)
-      clearTimeout(settle)
-    }
+    setSettled(false)
   }, [idx])
+
+  function handleArrive() {
+    setPointerScale(1.1)
+    setSettled(true)
+    setTimeout(() => setPointerScale(1), 600)
+  }
 
   const order = ORDER[idx]
 
   return (
-    <div className="relative w-[450px] h-[450px]">
-      <svg className="absolute inset-0" viewBox={`0 0 ${SIZE} ${SIZE}`}>
-        <polygon
-          key={idx}
-          points={TRI_POINTS}
-          fill="none"
-          stroke="rgba(255,255,255,0.3)"
-          strokeWidth={3}
-          strokeDasharray="4 8"
-          className="triangle-path"
-          style={{ filter: 'drop-shadow(0 0 4px rgba(255,255,255,0.2))' }}
-        />
-      </svg>
+    <div className="relative w-[560px] h-[450px]">
       {aspects.map((a, i) => {
         const pos = POSITIONS[order[i]]
         const active = order[i] === 0
@@ -113,10 +96,13 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
               transition: 'left 0.7s ease, top 0.7s ease'
             }}
             onClick={handleSelect}
+            onTransitionEnd={e => {
+              if (active && e.propertyName === 'top') handleArrive()
+            }}
           >
             <div
-              className="relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-500"
-              style={{ transform: `scale(${active && settled ? 1.5 : 1})` }}
+              className="relative w-32 h-32 rounded-full flex items-center justify-center transition-transform duration-700"
+              style={{ transform: `scale(${active && settled ? 1.25 : 1})` }}
             >
               <svg viewBox="0 0 100 100" className="absolute inset-0">
                 <circle cx="50" cy="50" r="45" stroke={a.color} strokeOpacity={0.2} strokeWidth={8} fill="none" />
@@ -152,7 +138,11 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
                 </svg>
               )}
             </div>
-            <div className="mt-1 text-sm text-zinc-300">{a.label}</div>
+              {!active && (
+                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 text-sm text-zinc-300 whitespace-nowrap">
+                  {a.label}
+                </div>
+              )}
           </div>
         )
       })}
@@ -179,8 +169,6 @@ export function OintCreationFlow({ docs, repo, roast }: { docs: number; repo: bo
       <style jsx>{`
         @keyframes fadeLarge { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-large { animation: fadeLarge 0.7s ease; }
-        @keyframes dash { to { stroke-dashoffset: -48; } }
-        .triangle-path { animation: dash 8s linear infinite; }
         @keyframes slow-spin { to { transform: rotate(360deg); } }
         .animate-slow-spin { animation: slow-spin 4s linear infinite; }
       `}</style>

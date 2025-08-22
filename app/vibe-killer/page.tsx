@@ -133,7 +133,7 @@ export default function VibeKillerPage() {
         {error && <div className="text-xs text-rose-400">{error}</div>}
         {result && (
           <div className="space-y-6">
-            <div className="grid gap-4 md:grid-cols-3">
+            <div className="grid gap-4 md:grid-cols-4">
               <Card>
                 <div className="text-sm font-semibold mb-2">AI Presence</div>
                 <Gauge value={(result.repo_summary?.percent_ai_repo || 0) * 100} />
@@ -149,6 +149,19 @@ export default function VibeKillerPage() {
                 <div className="text-2xl font-bold">
                   {result.repo_summary?.ai_files || 0}
                 </div>
+              </Card>
+              <Card>
+                <div className="text-sm font-semibold mb-2">Avg Confidence</div>
+                <Gauge
+                  value={
+                    ((result.files?.reduce(
+                      (s: number, f: any) => s + (f.confidence || 0),
+                      0
+                    ) || 0) /
+                      Math.max(result.files?.length || 1, 1)) *
+                    100
+                  }
+                />
               </Card>
             </div>
 
@@ -177,6 +190,7 @@ export default function VibeKillerPage() {
                         <th className="p-2 w-32">AI Lines</th>
                         <th className="p-2 w-24">Impact</th>
                         <th className="p-2 w-32">Confidence</th>
+                        <th className="p-2 w-40">Signals</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -198,6 +212,9 @@ export default function VibeKillerPage() {
                             <td className="p-2">
                               <Bar value={(f.confidence || 0) * 100} />
                             </td>
+                            <td className="p-2 truncate max-w-[160px]">
+                              {(f.top_signals || []).join(', ')}
+                            </td>
                           </tr>
                         ))}
                     </tbody>
@@ -217,6 +234,7 @@ export default function VibeKillerPage() {
                         <th className="p-2 w-32">Likelihood</th>
                         <th className="p-2 w-32">AI Lines</th>
                         <th className="p-2 w-32">Confidence</th>
+                        <th className="p-2 w-40">Signals</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -234,6 +252,9 @@ export default function VibeKillerPage() {
                             </td>
                             <td className="p-2">
                               <Bar value={(c.confidence || 0) * 100} />
+                            </td>
+                            <td className="p-2 truncate max-w-[160px]">
+                              {(c.top_signals || []).join(', ')}
                             </td>
                           </tr>
                         ))}

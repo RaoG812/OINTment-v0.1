@@ -282,6 +282,72 @@ function scanMarkers(content: string) {
   return null
 }
 
+function scanFileHeuristics(path: string, content: string) {
+  const lines = (content || '').split(/\r?\n/)
+  let commentLines = 0
+  const evidence: any[] = []
+  for (let i = 0; i < lines.length; i++) {
+    const trimmed = lines[i].trim()
+    if (/^(\/\/|#)/.test(trimmed) || trimmed.startsWith('/*')) {
+      commentLines++
+      if (/\bthis function\b|\badds\b|\breturns\b|\bcalculates\b/i.test(trimmed)) {
+        evidence.push({
+          type: 'comment',
+          summary: 'tutorial-style comment',
+          loc: { start_line: i + 1, end_line: i + 1 },
+          commit: ''
+        })
+      }
+    }
+    if (/\b(temp|result|data|value|foo|bar)\d*\b/i.test(trimmed)) {
+      evidence.push({
+        type: 'naming',
+        summary: 'generic identifier',
+        loc: { start_line: i + 1, end_line: i + 1 },
+        commit: ''
+      })
+    }
+  }
+  const density = lines.length ? commentLines / lines.length : 0
+  if (evidence.length > 0 || density > 0.4) {
+    const signals = Array.from(new Set(evidence.map(e => (e.type === 'comment' ? 'comment_smells' : 'naming_stylometry'))))
+    return {
+      path,
+      ai_likelihood: 0.6 + (density > 0.4 ? 0.1 : 0),
+      percent_ai_lines: Math.min(1, (evidence.length || 1) / lines.length),
+      impact: 'low',
+      confidence: 0.5 + (signals.length > 1 ? 0.1 : 0),
+      top_signals: signals,
+      evidence
+    }
+  }
+  return null
+}
+
+function scanCommitLinguistics(commit: any) {
+  const msg = commit?.message || ''
+  const lower = msg.toLowerCase()
+  const evidences: any[] = []
+  if (lower.startsWith('this commit') || msg.length > 120 || /\n[-*]/.test(msg)) {
+    evidences.push({
+      type: 'message',
+      summary: 'template-like commit message',
+      snippet: msg.slice(0, 160)
+    })
+  }
+  if (evidences.length > 0) {
+    return {
+      hash: commit.hash,
+      ai_likelihood: 0.6,
+      percent_ai_lines: 0,
+      confidence: 0.5,
+      top_signals: ['commit_linguistics'],
+      evidence: evidences
+    }
+  }
+  return null
+}
+
 async function detectAiArtifactsBatch(
   files: any[],
   commits: any[]
@@ -349,8 +415,8 @@ export async function detectAiArtifacts(
   const preFlagged: any[] = []
   const remaining: any[] = []
   for (const f of allFiles) {
-    const ev = scanMarkers(f.content || '')
-    if (ev) {
+    const marker = scanMarkers(f.content || '')
+    if (marker) {
       preFlagged.push({
         path: f.path,
         ai_likelihood: 1,
@@ -358,26 +424,41 @@ export async function detectAiArtifacts(
         impact: 'low',
         confidence: 0.6,
         top_signals: ['marker'],
-        evidence: [ev]
+        evidence: [marker]
       })
+      continue
+    }
+    const heur = scanFileHeuristics(f.path, f.content || '')
+    if (heur) {
+      preFlagged.push(heur)
     } else {
       remaining.push(f)
     }
+  }
+
+  const preCommit: any[] = []
+  const commitRemaining: any[] = []
+  for (const c of commitList) {
+    const heur = scanCommitLinguistics(c)
+    if (heur) preCommit.push(heur)
+    else commitRemaining.push(c)
   }
 
   const scanned: any[] = [...preFlagged]
   const notes: string[] = []
   let aiFiles = preFlagged.length
   let count = preFlagged.length
-  let commitResult: any[] = []
+  let commitResult: any[] = [...preCommit]
   let idx = 0
+  let commitScanned = false
 
   while (idx < remaining.length) {
     const batch = remaining.slice(idx, idx + 200)
-    const res = await detectAiArtifactsBatch(batch, commitList)
+    const res = await detectAiArtifactsBatch(batch, commitScanned ? [] : commitRemaining)
+    commitScanned = true
     scanned.push(...(res.files || []))
-    if (commitResult.length === 0 && Array.isArray(res.commits)) {
-      commitResult = res.commits
+    if (Array.isArray(res.commits)) {
+      commitResult.push(...res.commits)
     }
     aiFiles += res.repo_summary?.ai_files || 0
     idx += res.repo_summary?.files_scanned || batch.length

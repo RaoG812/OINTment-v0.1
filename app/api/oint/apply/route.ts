@@ -62,8 +62,12 @@ export async function POST(req: Request) {
       ...docHits.map(d => `doc "${d}"`),
       ...codeHits.map(f => `file "${f.path}"`)
     ]
-    const refText = refs.length ? ` See ${refs.join(' and ')}.` : ''
-    const comment = `${c.comment.trim().replace(/\.$/, '')}.${refText}`
+    const focus =
+      issues.length > 0
+        ? `Focus on ${issues.join(' and ')} in the ${c.department} department`
+        : `Review feedback for the ${c.department} department`
+    const refText = refs.length ? `. See ${refs.join(' and ')}` : ''
+    const comment = `${focus}${refText}.`
     return {
       department: c.department,
       comment,
@@ -86,18 +90,28 @@ export async function POST(req: Request) {
       .slice(0, 2)
     const res: string[] = []
     docHits.forEach(d =>
-      res.push(`Update ${d} to address ${issues.join(', ')}`)
+      res.push(`Update ${d} to cover ${issues.join(', ')}`)
     )
     codeHits.forEach(f =>
-      res.push(`Improve ${f.path} around ${issues.join(', ')}`)
+      res.push(`Refactor ${f.path} for ${issues.join(', ')}`)
     )
     if (!docHits.length && !codeHits.length && issues.length) {
-      res.push(`Document ${issues[0]} for the ${c.department} team`)
+      res.push(`Add guidance on ${issues[0]} for the ${c.department} team`)
     }
-    if (res.length === 0) res.push(`Resolve ${c.department} feedback: ${c.comment}`)
+    if (res.length === 0 && issues.length) {
+      res.push(`Review ${c.department} feedback on ${issues.join(', ')}`)
+    } else if (res.length === 0) {
+      res.push(`Review ${c.department} feedback`)
+    }
     return res
   })
-  const steps = Array.from(new Set(allSteps.flat())).slice(0, 8)
+  const steps = Array.from(
+    new Set(
+      allSteps
+        .flat()
+        .map((s: string) => (s.endsWith('.') ? s : `${s}.`))
+    )
+  ).slice(0, 8)
 
   return NextResponse.json({ comments: recommendations, steps })
 }

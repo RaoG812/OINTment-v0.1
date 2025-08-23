@@ -84,6 +84,12 @@ export default function ToolsetPage() {
     }
   }
 
+  function shorten(text: string) {
+    const words = (text || '').split(/\s+/)
+    const count = Math.max(1, Math.round(words.length * 0.25))
+    return words.slice(0, count).join(' ') + (words.length > count ? '…' : '')
+  }
+
   return (
     <main className="relative min-h-screen overflow-hidden">
       <HexBackground />
@@ -151,7 +157,7 @@ export default function ToolsetPage() {
                     {roastComments.map(c => (
                       <li key={c.department} className="text-sm">
                         <span className="font-medium capitalize">{c.department}:</span>{' '}
-                        {c.comment}
+                        {shorten(c.comment)}
                       </li>
                     ))}
                   </ul>

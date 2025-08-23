@@ -141,21 +141,60 @@ export default function ToolsetPage() {
               </div>
             )}
             <div className="grid md:grid-cols-2 gap-6">
-              <Card className="flex flex-wrap gap-6 text-sm">
-                <div>Envs: {data.pulse.envs.join(', ')}</div>
-                <div>Deploys today: {data.pulse.deploysToday}</div>
-                <div>Critical alerts: {data.pulse.criticalAlerts}</div>
-                <div>Files analyzed: {data.pulse.filesAnalyzed}</div>
-                <div>Docs reviewed: {data.pulse.docsReviewed}</div>
+              <Card className="p-6 bg-gradient-to-br from-zinc-900/80 to-zinc-800/40 backdrop-blur-sm">
+                <h2 className="text-lg font-semibold mb-4">Pulse</h2>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
+                    <div
+                      className="text-emerald-400 text-xl font-bold"
+                      title={data.pulse.envs.join(', ')}
+                    >
+                      {data.pulse.envs.length}
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-1">Environments</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
+                    <div className="text-emerald-400 text-xl font-bold">
+                      {data.pulse.deploysToday}
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-1">Deploys today</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
+                    <div className="text-emerald-400 text-xl font-bold">
+                      {data.pulse.criticalAlerts}
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-1">Critical alerts</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
+                    <div className="text-emerald-400 text-xl font-bold">
+                      {data.pulse.filesAnalyzed}
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-1">Files analyzed</div>
+                  </div>
+                  <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
+                    <div className="text-emerald-400 text-xl font-bold">
+                      {data.pulse.docsReviewed}
+                    </div>
+                    <div className="text-xs text-zinc-400 mt-1">Docs reviewed</div>
+                  </div>
+                </div>
               </Card>
-              <Card>
-                <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>
-                <p className="text-sm mb-4 text-zinc-300">{data.stack.description}</p>
-                <div className="flex flex-wrap gap-4">
+              <Card className="p-6 bg-gradient-to-br from-zinc-900/80 to-zinc-800/40 backdrop-blur-sm relative overflow-hidden">
+                <div className="absolute inset-0 rounded-xl border border-zinc-700/50 pointer-events-none" />
+                <h2 className="text-xl font-semibold mb-1 relative z-10">{data.stack.appName}</h2>
+                <p className="text-sm mb-6 text-zinc-300 relative z-10">
+                  {data.stack.description}
+                </p>
+                <div className="flex flex-wrap gap-4 relative z-10">
                   {data.stack.integrations.map(i => (
-                    <div key={i.name} className="flex items-center gap-2 text-sm">
-                      {i.logoUrl && <img src={i.logoUrl} alt="" className="h-5 w-5" />}
-                      {i.name}
+                    <div
+                      key={i.name}
+                      className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-2 py-1 text-sm"
+                    >
+                      {i.logoUrl && (
+                        <img src={i.logoUrl} alt="" className="h-5 w-5 rounded" />
+                      )}
+                      <span>{i.name}</span>
                     </div>
                   ))}
                 </div>
@@ -224,45 +263,53 @@ export default function ToolsetPage() {
               </Card>
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
-                <div className="space-y-4">
-                  <Metric label="Coverage" value={data.reliability.coveragePct} />
-                  <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
-                  <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
-                </div>
-                <div className="mt-4 w-60 h-60 mx-auto">
-                  <Radar
-                    data={{
-                      labels: ['Coverage', 'Evidence', 'LLM Agreement'],
-                      datasets: [
-                        {
-                          label: 'Reliability',
-                          data: [
-                            data.reliability.coveragePct,
-                            data.reliability.evidenceCompletenessPct,
-                            data.reliability.llmStaticAgreementPct
-                          ],
-                          backgroundColor: 'rgba(16,185,129,0.3)',
-                          borderColor: '#10b981',
-                          pointBackgroundColor: '#10b981',
-                          pointBorderColor: '#10b981',
-                          fill: true
-                        }
-                      ]
-                    }}
-                    options={{
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        r: {
-                          beginAtZero: true,
-                          angleLines: { color: '#27272a' },
-                          grid: { color: '#27272a' },
-                          max: 100,
-                          ticks: { display: false }
-                        }
-                      },
-                      maintainAspectRatio: false
-                    }}
-                  />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
+                  <div className="w-48 h-48 sm:w-60 sm:h-60 mx-auto">
+                    <Radar
+                      data={{
+                        labels: ['Coverage', 'Evidence', 'LLM Agreement'],
+                        datasets: [
+                          {
+                            label: 'Reliability',
+                            data: [
+                              data.reliability.coveragePct,
+                              data.reliability.evidenceCompletenessPct,
+                              data.reliability.llmStaticAgreementPct
+                            ],
+                            backgroundColor: 'rgba(16,185,129,0.3)',
+                            borderColor: '#10b981',
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#10b981',
+                            fill: true
+                          }
+                        ]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        scales: {
+                          r: {
+                            beginAtZero: true,
+                            angleLines: { color: '#27272a' },
+                            grid: { color: '#27272a' },
+                            max: 100,
+                            ticks: { display: false }
+                          }
+                        },
+                        maintainAspectRatio: false
+                      }}
+                    />
+                  </div>
+                  <div className="flex-1 mt-6 sm:mt-0 space-y-4">
+                    <Metric label="Coverage" value={data.reliability.coveragePct} />
+                    <Metric
+                      label="Evidence"
+                      value={data.reliability.evidenceCompletenessPct}
+                    />
+                    <Metric
+                      label="LLM Agreement"
+                      value={data.reliability.llmStaticAgreementPct}
+                    />
+                  </div>
                 </div>
               </Card>
             </div>

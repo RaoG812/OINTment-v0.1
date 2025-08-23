@@ -12,6 +12,7 @@ import {
   Legend
 } from 'chart.js'
 import { Upload, Network, Flame, Smile } from 'lucide-react'
+import Link from 'next/link'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 const Radar = dynamic(() => import('react-chartjs-2').then(m => m.Radar), { ssr: false })
@@ -170,30 +171,42 @@ export default function ToolsetPage() {
                   <line x1="28" y1="120" x2="160" y2="120" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
                 </svg>
                 <div className="absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-emerald-500 bg-emerald-500/10 flex items-center justify-center text-sm font-medium">OINT</div>
-                <div className="absolute left-1/2 top-0 -translate-x-1/2 flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                <Link
+                  href="/ingest"
+                  className="absolute left-1/2 top-0 -translate-x-1/2 flex flex-col items-center group"
+                >
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400 transition-colors group-hover:border-emerald-500 group-hover:text-emerald-300">
                     <Upload className="w-5 h-5" />
                   </div>
                   <span className="mt-1 text-xs">Ingest</span>
-                </div>
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                </Link>
+                <Link
+                  href="/matrix"
+                  className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col items-center group"
+                >
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400 transition-colors group-hover:border-emerald-500 group-hover:text-emerald-300">
                     <Network className="w-5 h-5" />
                   </div>
                   <span className="mt-1 text-xs">Matrix</span>
-                </div>
-                <div className="absolute left-1/2 bottom-0 -translate-x-1/2 flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                </Link>
+                <Link
+                  href="/roaster"
+                  className="absolute left-1/2 bottom-0 -translate-x-1/2 flex flex-col items-center group"
+                >
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400 transition-colors group-hover:border-emerald-500 group-hover:text-emerald-300">
                     <Flame className="w-5 h-5" />
                   </div>
                   <span className="mt-1 text-xs">Roaster</span>
-                </div>
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center">
-                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                </Link>
+                <Link
+                  href="/vibe-killer"
+                  className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center group"
+                >
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400 transition-colors group-hover:border-emerald-500 group-hover:text-emerald-300">
                     <Smile className="w-5 h-5" />
                   </div>
                   <span className="mt-1 text-xs">Vibe</span>
-                </div>
+                </Link>
               </div>
             )}
           </div>

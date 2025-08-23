@@ -131,7 +131,7 @@ export default function VibeKillerPage() {
 
   return (
     <div className="relative overflow-hidden min-h-screen">
-      <HexBackground reveal={false} />
+      <HexBackground className="hex-fade" reveal={false} />
       <EvilEyes />
       <div className="relative z-10 p-10 space-y-6 fade-in-fast">
         <div className="flex items-start justify-between">

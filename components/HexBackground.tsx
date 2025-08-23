@@ -11,18 +11,22 @@ export default function HexBackground({ className = "", reveal = true }: { class
   useEffect(() => {
     if (!reveal || !ref.current) return
     const el = ref.current as HTMLDivElement
+    let raf = 0
     function move(e: PointerEvent) {
       const t = e.target as HTMLElement
-      if (t.closest('.no-hex')) {
-        el.style.setProperty('--mx', '-999px')
-        el.style.setProperty('--my', '-999px')
-        return
-      }
-      el.style.setProperty('--mx', `${e.clientX}px`)
-      el.style.setProperty('--my', `${e.clientY}px`)
+      const mx = t.closest('.no-hex') ? -999 : e.clientX
+      const my = t.closest('.no-hex') ? -999 : e.clientY
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        el.style.setProperty('--mx', `${mx}px`)
+        el.style.setProperty('--my', `${my}px`)
+      })
     }
     window.addEventListener('pointermove', move)
-    return () => window.removeEventListener('pointermove', move)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('pointermove', move)
+    }
   }, [reveal])
 
   // spawn red hexes independently of cursor

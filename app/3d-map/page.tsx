@@ -346,6 +346,27 @@ export default function MapPage() {
 
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
+  const [resetKey, setResetKey] = useState(0)
+
+  useEffect(() => {
+    const controls = controlsRef.current
+    if (!controls) return
+    let t: any
+    const schedule = () => {
+      clearTimeout(t)
+      t = setTimeout(() => setResetKey(k => k + 1), 10000)
+    }
+    controls.addEventListener('start', schedule)
+    controls.addEventListener('change', schedule)
+    controls.addEventListener('end', schedule)
+    schedule()
+    return () => {
+      controls.removeEventListener('start', schedule)
+      controls.removeEventListener('change', schedule)
+      controls.removeEventListener('end', schedule)
+      clearTimeout(t)
+    }
+  }, [])
 
   function CameraRig({
     target,
@@ -353,7 +374,8 @@ export default function MapPage() {
     offset,
     depth,
     range,
-    branch
+    branch,
+    resetKey
   }: {
     target: number
     view: '3d' | 'top' | 'front'
@@ -361,6 +383,7 @@ export default function MapPage() {
     depth: number
     range?: { start: number; end: number }
     branch: string
+    resetKey: number
   }) {
     const { camera } = useThree()
     useEffect(() => {
@@ -413,7 +436,7 @@ export default function MapPage() {
         if (t < 1) requestAnimationFrame(anim)
       }
       anim()
-    }, [view, target, offset, range, branch, camera])
+    }, [view, target, offset, range, branch, camera, resetKey])
     return null
   }
 
@@ -635,6 +658,7 @@ export default function MapPage() {
               depth={selectedPos.z}
               range={showLayers ? undefined : branch === 'all' ? undefined : branchRanges.get(branch)}
               branch={branch}
+              resetKey={resetKey}
             />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
@@ -729,6 +753,7 @@ export default function MapPage() {
         </div>
         <p className="mt-2 text-xs text-zinc-400">
           Drag to rotate, scroll to zoom, and click a commit sphere for details.
+          Matrix layers reveal domain and type matrices when enabled.
         </p>
       </div>
       <style jsx>{`

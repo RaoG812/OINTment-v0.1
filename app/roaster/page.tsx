@@ -387,7 +387,7 @@ export default function RoasterPage() {
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10">
       <HexBackground />
-      <div className="fixed inset-0 -z-10">
+      <div className="fixed inset-0 -z-30">
         <div className="absolute inset-0" style={gradientStyle} />
         <div className="absolute inset-0 bg-black/60" />
       </div>

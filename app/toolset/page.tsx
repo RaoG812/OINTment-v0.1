@@ -143,7 +143,6 @@ export default function ToolsetPage() {
             )}
             {error && <div className="text-xs text-rose-400">{error}</div>}
           </div>
-          {data && (
           <div className="text-right leading-tight">
             <div className="text-5xl font-bold iridescent-text">Mission Control</div>
             <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
@@ -182,7 +181,6 @@ export default function ToolsetPage() {
               </svg>
             )}
           </div>
-          )}
         </div>
         {data && (
           <div className="space-y-6">

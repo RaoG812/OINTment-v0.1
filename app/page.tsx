@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import HexBackground from '../components/HexBackground'
 
 export default function Home() {
@@ -46,8 +47,13 @@ export default function Home() {
           >
             Roast the Team
           </Link>
-          <Link href="/toolset" className="text-sm text-zinc-400 underline">
-            OINT Mission Control
+          <Link
+            href="/toolset"
+            className="group relative overflow-hidden rounded-lg px-5 py-2 text-sm font-medium text-white"
+          >
+            <span className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-500 transition-opacity group-hover:opacity-90" />
+            <span className="absolute inset-0 rounded-lg ring-1 ring-white/10 group-hover:ring-emerald-400/50" />
+            <span className="relative">OINT Mission Control</span>
           </Link>
         </div>
         <div className="pt-8 text-sm text-zinc-400 max-w-prose">
@@ -57,21 +63,21 @@ export default function Home() {
             risks and recommended next steps.
           </p>
         </div>
-        <div className="pt-4 flex flex-wrap items-center gap-4 text-xs text-zinc-400 fade-in-fast">
+        <div className="pt-4 grid grid-cols-2 gap-6 text-xs text-zinc-400 fade-in-fast">
           <div className="flex items-center gap-2">
-            <img src="/logos/openai.svg" alt="OpenAI" className="h-6 w-6 rounded" />
+            <Image src="https://logo.clearbit.com/openai.com" alt="OpenAI" width={24} height={24} className="rounded" />
             <span>LLM insights by OpenAI</span>
           </div>
           <div className="flex items-center gap-2">
-            <img src="/logos/aimlapi.svg" alt="AI/ML API" className="h-6 w-6 rounded" />
+            <Image src="https://logo.clearbit.com/aimlapi.com" alt="AI/ML API" width={24} height={24} className="rounded" />
             <span>Data APIs via aimlapi.com</span>
           </div>
           <div className="flex items-center gap-2">
-            <img src="/logos/vercel.svg" alt="Vercel" className="h-6 w-6 rounded" />
+            <Image src="https://logo.clearbit.com/vercel.com" alt="Vercel" width={24} height={24} className="rounded" />
             <span>Edge deploys on Vercel</span>
           </div>
           <div className="flex items-center gap-2">
-            <img src="/logos/github.svg" alt="GitHub" className="h-6 w-6 rounded" />
+            <Image src="https://logo.clearbit.com/github.com" alt="GitHub" width={24} height={24} className="rounded" />
             <span>Repo intel by GitHub</span>
           </div>
         </div>

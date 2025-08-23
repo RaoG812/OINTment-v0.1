@@ -133,7 +133,7 @@ export default function VibeKillerPage() {
     <div className="relative overflow-hidden min-h-screen">
       <HexBackground className="hex-fade" reveal={false} />
       <EvilEyes />
-      <div className="relative z-10 p-10 space-y-6">
+      <div className="relative z-10 p-10 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold">Vibe Killer</h1>
         <button
           onClick={runScan}

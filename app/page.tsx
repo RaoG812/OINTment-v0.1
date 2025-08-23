@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import HexBackground from '../components/HexBackground'
 
 export default function Home() {
@@ -20,8 +21,12 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
       {/* Stretched background logo with iridescence */}
-      <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-30 w-full">
-        <div className="h-full w-full scale-150 translate-x-[35%] iridescent-logo" />
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-30 w-full">
+        <div className="h-full w-full scale-150 iridescent-logo" />
+      </div>
+      {/* Small white logo anchored top-left */}
+      <div className="pointer-events-none fixed top-6 left-6 z-10 w-20">
+        <Image src="/OINTment_logo_vert.svg" alt="OINTment logo" width={80} height={80} />
       </div>
       <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6 fade-in-fast">
         <div>

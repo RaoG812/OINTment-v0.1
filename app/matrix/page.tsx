@@ -224,7 +224,7 @@ export default function MatrixPage(){
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
-      <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 space-y-6">
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 space-y-6 fade-in-fast">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Integration Matrix</h1>

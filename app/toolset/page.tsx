@@ -16,6 +16,7 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 const Radar = dynamic(() => import('react-chartjs-2').then(m => m.Radar), { ssr: false })
 import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
+import AnimatedLogo from '../../components/AnimatedLogo'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
 import { getRoasterState } from '../../lib/roasterState'
@@ -97,16 +98,8 @@ export default function ToolsetPage() {
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
-      <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-20">
-        <svg
-          className="h-full w-auto object-contain scale-150 translate-x-[35%]"
-          viewBox="0 0 2048 2048"
-        >
-          <use
-            href="/OINTment_logo_vert.svg#outline"
-            className="animate-logo-draw text-white"
-          />
-        </svg>
+      <div className="pointer-events-none fixed inset-0 z-0 opacity-20">
+        <AnimatedLogo className="h-full w-auto object-contain scale-150 text-white" />
       </div>
       <div className="relative z-10 p-6 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>

@@ -27,7 +27,7 @@ export async function POST(req: Request) {
   }
 
   const STOP = new Set(
-    'the and for with this that from into your about there their will have has are were was its our out other such too can '.split(
+    'the and for with this that from into your about there their will have has are were was its our out other such too can in on at by to of if focus consider ensure review add update refactor files file docs documentation'.split(
       /\s+/
     )
   )
@@ -62,12 +62,10 @@ export async function POST(req: Request) {
       ...docHits.map(d => `doc "${d}"`),
       ...codeHits.map(f => `file "${f.path}"`)
     ]
-    const focus =
-      issues.length > 0
-        ? `Focus on ${issues.join(' and ')} in the ${c.department} department`
-        : `Review feedback for the ${c.department} department`
-    const refText = refs.length ? `. See ${refs.join(' and ')}` : ''
-    const comment = `${focus}${refText}.`
+    const base = (c.comment || '').replace(/\s+/g, ' ').trim()
+    const truncated = base.length > 160 ? base.slice(0, 157) + '…' : base
+    const refText = refs.length ? ` See ${refs.join(' and ')}.` : ''
+    const comment = truncated + (truncated.endsWith('.') ? '' : '.') + refText
     return {
       department: c.department,
       comment,
@@ -88,20 +86,16 @@ export async function POST(req: Request) {
         )
       )
       .slice(0, 2)
+    const base = (c.comment || '').replace(/\s+/g, ' ').trim().replace(/\.$/, '')
     const res: string[] = []
-    docHits.forEach(d =>
-      res.push(`Update ${d} to cover ${issues.join(', ')}`)
-    )
-    codeHits.forEach(f =>
-      res.push(`Refactor ${f.path} for ${issues.join(', ')}`)
-    )
-    if (!docHits.length && !codeHits.length && issues.length) {
-      res.push(`Add guidance on ${issues[0]} for the ${c.department} team`)
-    }
-    if (res.length === 0 && issues.length) {
-      res.push(`Review ${c.department} feedback on ${issues.join(', ')}`)
-    } else if (res.length === 0) {
-      res.push(`Review ${c.department} feedback`)
+    docHits.forEach(d => {
+      res.push(`Update ${d} to address: ${base}`)
+    })
+    codeHits.forEach(f => {
+      res.push(`Refactor ${f.path} to address: ${base}`)
+    })
+    if (!docHits.length && !codeHits.length) {
+      res.push(`Document and resolve: ${base}`)
     }
     return res
   })

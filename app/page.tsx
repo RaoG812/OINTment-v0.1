@@ -1,11 +1,13 @@
 'use client'
 import Link from 'next/link'
 import HexBackground from '../components/HexBackground'
+import AnimatedLogo from '../components/AnimatedLogo'
 
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <HexBackground />
+      <AnimatedLogo className="fixed top-6 left-6 z-10 w-20 h-auto text-white opacity-80 pointer-events-none" />
       <div className="fixed inset-0 -z-10">
         <div
           className="absolute inset-0"
@@ -19,11 +21,11 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
-      {/* Stretched background logo with iridescence positioned at left third */}
+      {/* Stretched background logo with iridescence positioned at right third */}
       <div className="pointer-events-none fixed inset-0 z-0 opacity-30">
         <div
           className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] h-full w-full iridescent-logo"
-          style={{ left: '16.7%' }}
+          style={{ left: '83.3%' }}
         />
       </div>
       <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6 fade-in-fast">

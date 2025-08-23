@@ -107,7 +107,29 @@ export default function ToolsetPage() {
         </div>
       </div>
       <div className="relative z-10 p-6 space-y-6 fade-in-fast">
-        <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
+        <div className="flex items-start justify-between">
+          <h1 className="text-2xl font-semibold">Toolset</h1>
+          <div className="text-right leading-tight">
+            <div className="text-5xl font-bold iridescent-text">Mission Control</div>
+            <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
+          </div>
+        </div>
+        <svg viewBox="0 0 200 120" className="mx-auto opacity-70 text-zinc-500">
+          <circle cx="100" cy="60" r="12" fill="none" stroke="currentColor" />
+          <text x="100" y="64" textAnchor="middle" fontSize="8" fill="currentColor">OINT</text>
+          <circle cx="40" cy="20" r="10" fill="none" stroke="currentColor" />
+          <text x="40" y="24" textAnchor="middle" fontSize="6" fill="currentColor">Ingest</text>
+          <line x1="40" y1="20" x2="100" y2="60" stroke="currentColor" strokeWidth="1" />
+          <circle cx="160" cy="20" r="10" fill="none" stroke="currentColor" />
+          <text x="160" y="24" textAnchor="middle" fontSize="6" fill="currentColor">Matrix</text>
+          <line x1="160" y1="20" x2="100" y2="60" stroke="currentColor" strokeWidth="1" />
+          <circle cx="40" cy="100" r="10" fill="none" stroke="currentColor" />
+          <text x="40" y="104" textAnchor="middle" fontSize="6" fill="currentColor">Roaster</text>
+          <line x1="40" y1="100" x2="100" y2="60" stroke="currentColor" strokeWidth="1" />
+          <circle cx="160" cy="100" r="10" fill="none" stroke="currentColor" />
+          <text x="160" y="104" textAnchor="middle" fontSize="6" fill="currentColor">Vibe</text>
+          <line x1="160" y1="100" x2="100" y2="60" stroke="currentColor" strokeWidth="1" />
+        </svg>
         {!data && (
           <>
             <Card className="max-w-md space-y-2">

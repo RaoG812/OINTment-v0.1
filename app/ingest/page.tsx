@@ -269,6 +269,7 @@ export default function IngestPage() {
       </div>
       <div className="relative z-10 p-10 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold tracking-tight">Ingest</h1>
+        <p className="text-sm text-zinc-400">Upload code and docs to prep the analyzers</p>
         <div className="flex flex-col md:flex-row md:gap-8">
           <div className="space-y-8 max-w-md">
             <DocsUploader docs={docs} setDocs={updateDocs} />

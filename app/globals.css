@@ -173,3 +173,11 @@
   }
 }
 
+.iridescent-text {
+  background: linear-gradient(90deg, #10b981, #a855f7, #10b981);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: iridescence 8s linear infinite;
+}

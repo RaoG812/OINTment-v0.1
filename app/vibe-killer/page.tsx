@@ -134,7 +134,11 @@ export default function VibeKillerPage() {
       <HexBackground className="hex-fade" reveal={false} />
       <EvilEyes />
       <div className="relative z-10 p-10 space-y-6 fade-in-fast">
-        <h1 className="text-2xl font-semibold">Vibe Killer</h1>
+        <h1 className="sr-only">Vibe Killer</h1>
+        <div className="text-right leading-tight">
+          <div className="text-5xl font-bold iridescent-text">Trace AI-relied coding</div>
+          <div className="text-sm text-zinc-400">Detect suspect code across commits</div>
+        </div>
         <button
           onClick={runScan}
           disabled={loading || files.length === 0}

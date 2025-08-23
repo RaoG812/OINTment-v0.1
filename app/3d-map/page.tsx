@@ -727,6 +727,9 @@ export default function MapPage() {
             </div>
           )}
         </div>
+        <p className="mt-2 text-xs text-zinc-400">
+          Drag to rotate, scroll to zoom, and click a commit sphere for details.
+        </p>
       </div>
       <style jsx>{`
         @keyframes bgMove {

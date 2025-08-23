@@ -66,27 +66,27 @@ export default function HexBackground({ className = "", reveal = true }: { class
         .pattern {
           position: absolute;
           inset: 0;
-          background-image: url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='20' height='17.32' viewBox='0 0 20 17.32'><path fill='none' stroke='white' stroke-opacity='0.1' stroke-width='1' d='M5 0h10l5 8.66-5 8.66H5L0 8.66z'/></svg>`)}");
+          background-image: url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='20' height='17.32' viewBox='0 0 20 17.32'><path fill='none' stroke='white' stroke-opacity='0.15' stroke-width='1' d='M5 0h10l5 8.66-5 8.66H5L0 8.66z'/></svg>`)}");
           background-size: 20px 17.32px;
-          opacity: 0.35;
+          opacity: 0.5;
         }
         .hex-anim {
           position: absolute;
           width: 20px;
           height: 17.32px;
           clip-path: polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
-          background: rgba(220,38,38,0.25);
-          filter: drop-shadow(0 0 3px rgba(220,38,38,0.25));
+          background: rgba(220,38,38,0.35);
+          filter: drop-shadow(0 0 3px rgba(220,38,38,0.35));
           animation: fadeHex 6s forwards;
         }
         .hex-anim::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(16,185,129,0.4);
+          background: rgba(16,185,129,0.5);
           transform: scaleY(0);
           transform-origin: bottom;
-          filter: drop-shadow(0 0 4px rgba(16,185,129,0.6));
+          filter: drop-shadow(0 0 4px rgba(16,185,129,0.8));
           animation: fillHex 6s forwards;
         }
         @keyframes fillHex {

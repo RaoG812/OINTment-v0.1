@@ -152,8 +152,8 @@ export function OintCreationFlow({
               {active && (
                 <svg
                   viewBox="0 0 140 140"
-                  className="absolute -inset-4 animate-slow-spin overflow-visible"
-                  style={{ filter: `drop-shadow(0 0 6px ${a.color})` }}
+                  className="absolute -inset-8 animate-slow-spin overflow-visible"
+                  style={{ filter: `drop-shadow(0 0 8px ${a.color})` }}
                 >
                   <circle
                     cx="70"

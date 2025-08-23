@@ -35,28 +35,19 @@ function Gauge({ value }: { value: number }) {
   const offset = circumference - (value / 100) * circumference
   const color = value >= 80 ? '#10b981' : value >= 60 ? '#f59e0b' : '#ef4444'
   return (
-    <svg viewBox="0 0 52 26" className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
+    <svg viewBox="0 0 52 32" className="w-full h-auto overflow-visible">
+      <path d="M2 30 A 24 24 0 0 1 50 30" stroke="#27272a" strokeWidth={4} fill="none" />
       <path
-        d="M2 24 A 24 24 0 0 1 50 24"
-        stroke="#27272a"
-        strokeWidth={4}
-        fill="none"
-      />
-      <path
-        d="M2 24 A 24 24 0 0 1 50 24"
+        d="M2 30 A 24 24 0 0 1 50 30"
         stroke={color}
         strokeWidth={4}
         strokeDasharray={circumference}
         strokeDashoffset={offset}
         fill="none"
+        strokeLinecap="round"
+        style={{ filter: `drop-shadow(0 0 4px ${color})` }}
       />
-      <text
-        x="26"
-        y="22"
-        textAnchor="middle"
-        fontSize="8"
-        fill="#a1a1aa"
-      >
+      <text x="26" y="26" textAnchor="middle" fontSize="8" fill="#a1a1aa">
         {value}%
       </text>
     </svg>
@@ -421,8 +412,10 @@ export default function IngestPage() {
               </Card>
               {(['complexity', 'documentation', 'tests'] as const).map(key => (
                 <Card key={key}>
-                  <div className="text-sm font-semibold mb-2 capitalize">{key}</div>
-                  <div className="max-w-[100px] mx-auto">
+                  <div className="text-sm font-semibold mb-2 capitalize text-center">
+                    {key}
+                  </div>
+                  <div className="w-full max-w-[150px] mx-auto">
                     <Gauge value={result.analysis.metrics[key]} />
                   </div>
                 </Card>

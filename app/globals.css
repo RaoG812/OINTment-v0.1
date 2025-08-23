@@ -43,8 +43,8 @@
 .evil-eyes .inner-eye {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(120,0,0,0.5) 40%, rgba(120,0,0,0.15) 65%, transparent 80%);
-  filter: drop-shadow(0 0 12px rgba(120,0,0,0.6));
+  background: radial-gradient(circle at 50% 50%, rgba(200,0,0,0.7) 40%, rgba(120,0,0,0.25) 65%, transparent 80%);
+  filter: drop-shadow(0 0 16px rgba(255,0,0,0.8));
   animation: blink 5s infinite;
 }
 

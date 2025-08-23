@@ -11,6 +11,7 @@ import {
   Tooltip,
   Legend
 } from 'chart.js'
+import { Upload, Network, Flame, Smile } from 'lucide-react'
 
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend)
 const Radar = dynamic(() => import('react-chartjs-2').then(m => m.Radar), { ssr: false })
@@ -156,38 +157,44 @@ export default function ToolsetPage() {
             <div className="text-5xl font-bold iridescent-text">Mission Control</div>
             <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
             {!creating && (
-              <svg
-                viewBox="0 0 260 160"
-                className="mt-8 ml-auto w-72 opacity-80 text-zinc-500"
-              >
-                <defs>
-                  <marker
-                    id="arrow"
-                    markerWidth="6"
-                    markerHeight="6"
-                    refX="5"
-                    refY="3"
-                    orient="auto"
-                    markerUnits="strokeWidth"
-                  >
-                    <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
-                  </marker>
-                </defs>
-                <circle cx="130" cy="80" r="25" fill="none" stroke="currentColor" strokeWidth="2" />
-                <text x="130" y="84" textAnchor="middle" fontSize="10" fill="currentColor">OINT</text>
-                <circle cx="40" cy="40" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <text x="40" y="44" textAnchor="middle" fontSize="7" fill="currentColor">Ingest</text>
-                <line x1="56" y1="50" x2="105" y2="72" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-                <circle cx="220" cy="40" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <text x="220" y="44" textAnchor="middle" fontSize="7" fill="currentColor">Matrix</text>
-                <line x1="204" y1="50" x2="155" y2="72" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-                <circle cx="40" cy="140" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <text x="40" y="144" textAnchor="middle" fontSize="7" fill="currentColor">Roaster</text>
-                <line x1="56" y1="130" x2="105" y2="88" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-                <circle cx="220" cy="140" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
-                <text x="220" y="144" textAnchor="middle" fontSize="7" fill="currentColor">Vibe</text>
-                <line x1="204" y1="130" x2="155" y2="88" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-              </svg>
+              <div className="relative mt-8 ml-auto w-72 h-48">
+                <svg viewBox="0 0 288 192" className="absolute inset-0 text-zinc-600" fill="none">
+                  <defs>
+                    <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
+                      <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
+                    </marker>
+                  </defs>
+                  <line x1="144" y1="28" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="260" y1="96" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="144" y1="164" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="28" y1="96" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                </svg>
+                <div className="absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-emerald-500 bg-emerald-500/10 flex items-center justify-center text-sm font-medium">OINT</div>
+                <div className="absolute left-1/2 top-0 -translate-x-1/2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                    <Upload className="w-5 h-5" />
+                  </div>
+                  <span className="mt-1 text-xs">Ingest</span>
+                </div>
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                    <Network className="w-5 h-5" />
+                  </div>
+                  <span className="mt-1 text-xs">Matrix</span>
+                </div>
+                <div className="absolute left-1/2 bottom-0 -translate-x-1/2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                    <Flame className="w-5 h-5" />
+                  </div>
+                  <span className="mt-1 text-xs">Roaster</span>
+                </div>
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 flex flex-col items-center">
+                  <div className="w-14 h-14 rounded-full bg-zinc-800 border border-zinc-700 flex items-center justify-center text-emerald-400">
+                    <Smile className="w-5 h-5" />
+                  </div>
+                  <span className="mt-1 text-xs">Vibe</span>
+                </div>
+              </div>
             )}
           </div>
         </div>

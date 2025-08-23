@@ -63,22 +63,24 @@ export default function Home() {
             risks and recommended next steps.
           </p>
         </div>
-        <div className="pt-4 grid grid-cols-2 gap-6 text-xs text-zinc-400 fade-in-fast">
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/openai.com" alt="OpenAI" width={24} height={24} className="rounded" />
-            <span>LLM insights by OpenAI</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/aimlapi.com" alt="AI/ML API" width={24} height={24} className="rounded" />
-            <span>Data APIs via aimlapi.com</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/vercel.com" alt="Vercel" width={24} height={24} className="rounded" />
-            <span>Edge deploys on Vercel</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/github.com" alt="GitHub" width={24} height={24} className="rounded" />
-            <span>Repo intel by GitHub</span>
+        <div className="pt-4 fade-in-fast">
+          <div className="grid grid-cols-2 gap-6 text-xs text-zinc-400 bg-zinc-900/40 backdrop-blur-sm rounded-lg p-4">
+            <div className="flex items-center gap-2">
+              <Image src="https://logo.clearbit.com/openai.com" alt="OpenAI" width={24} height={24} className="rounded" />
+              <span>LLM insights by OpenAI</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="/aimlapi.svg" alt="AI/ML API" width={24} height={24} className="rounded" />
+              <span>Data APIs via aimlapi.com</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="https://logo.clearbit.com/vercel.com" alt="Vercel" width={24} height={24} className="rounded" />
+              <span>Edge deploys on Vercel</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="https://logo.clearbit.com/github.com" alt="GitHub" width={24} height={24} className="rounded" />
+              <span>Repo intel by GitHub</span>
+            </div>
           </div>
         </div>
       </div>

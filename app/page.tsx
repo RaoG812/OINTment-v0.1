@@ -21,12 +21,12 @@ export default function Home() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
       {/* Stretched background logo with iridescence positioned at right third */}
-      <div className="pointer-events-none fixed inset-0 z-0 opacity-30">
-        <div
-          className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] h-full w-full iridescent-logo"
-          style={{ left: '83.3%' }}
-        />
-      </div>
+        <div className="pointer-events-none fixed inset-0 z-0 opacity-30">
+          <div
+            className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 scale-[1.5] h-full w-[40vw] max-w-md iridescent-logo"
+            style={{ left: '83.3%' }}
+          />
+        </div>
       <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6 fade-in-fast">
         <div>
           <h1 className="text-4xl font-semibold tracking-tight">
@@ -63,22 +63,24 @@ export default function Home() {
             risks and recommended next steps.
           </p>
         </div>
-        <div className="pt-4 grid grid-cols-2 gap-6 text-xs text-zinc-400 fade-in-fast">
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/openai.com" alt="OpenAI" width={24} height={24} className="rounded" />
-            <span>LLM insights by OpenAI</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/aimlapi.com" alt="AI/ML API" width={24} height={24} className="rounded" />
-            <span>Data APIs via aimlapi.com</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/vercel.com" alt="Vercel" width={24} height={24} className="rounded" />
-            <span>Edge deploys on Vercel</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Image src="https://logo.clearbit.com/github.com" alt="GitHub" width={24} height={24} className="rounded" />
-            <span>Repo intel by GitHub</span>
+        <div className="pt-4 fade-in-fast">
+          <div className="grid grid-cols-2 gap-6 text-xs text-zinc-400 bg-zinc-900/40 backdrop-blur-sm rounded-lg p-4 max-w-md">
+            <div className="flex items-center gap-2">
+              <Image src="https://logo.clearbit.com/openai.com" alt="OpenAI" width={24} height={24} className="rounded" />
+              <span>LLM insights by OpenAI</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="/aimlapi.svg" alt="AI/ML API" width={24} height={24} className="rounded" />
+              <span>Data APIs via aimlapi.com</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="https://logo.clearbit.com/vercel.com" alt="Vercel" width={24} height={24} className="rounded" />
+              <span>Edge deploys on Vercel</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Image src="https://logo.clearbit.com/github.com" alt="GitHub" width={24} height={24} className="rounded" />
+              <span>Repo intel by GitHub</span>
+            </div>
           </div>
         </div>
       </div>

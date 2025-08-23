@@ -11,18 +11,22 @@ export default function HexBackground({ className = "", reveal = true }: { class
   useEffect(() => {
     if (!reveal || !ref.current) return
     const el = ref.current as HTMLDivElement
+    let raf = 0
     function move(e: PointerEvent) {
       const t = e.target as HTMLElement
-      if (t.closest('.no-hex')) {
-        el.style.setProperty('--mx', '-999px')
-        el.style.setProperty('--my', '-999px')
-        return
-      }
-      el.style.setProperty('--mx', `${e.clientX}px`)
-      el.style.setProperty('--my', `${e.clientY}px`)
+      const mx = t.closest('.no-hex') ? -999 : e.clientX
+      const my = t.closest('.no-hex') ? -999 : e.clientY
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(() => {
+        el.style.setProperty('--mx', `${mx}px`)
+        el.style.setProperty('--my', `${my}px`)
+      })
     }
     window.addEventListener('pointermove', move)
-    return () => window.removeEventListener('pointermove', move)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('pointermove', move)
+    }
   }, [reveal])
 
   // spawn red hexes independently of cursor
@@ -49,7 +53,7 @@ export default function HexBackground({ className = "", reveal = true }: { class
   }, [])
 
   const mask = reveal
-    ? 'radial-gradient(circle 120px at var(--mx) var(--my), rgba(0,0,0,1) 0 80px, rgba(0,0,0,0) 120px)'
+    ? 'radial-gradient(circle 160px at var(--mx) var(--my), rgba(0,0,0,1) 0 80px, rgba(0,0,0,0.6) 120px, transparent 160px)'
     : undefined
 
   return (
@@ -66,27 +70,27 @@ export default function HexBackground({ className = "", reveal = true }: { class
         .pattern {
           position: absolute;
           inset: 0;
-          background-image: url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='20' height='17.32' viewBox='0 0 20 17.32'><path fill='none' stroke='white' stroke-opacity='0.1' stroke-width='1' d='M5 0h10l5 8.66-5 8.66H5L0 8.66z'/></svg>`)}");
+          background-image: url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='20' height='17.32' viewBox='0 0 20 17.32'><path fill='none' stroke='white' stroke-opacity='0.15' stroke-width='1' d='M5 0h10l5 8.66-5 8.66H5L0 8.66z'/></svg>`)}");
           background-size: 20px 17.32px;
-          opacity: 0.25;
+          opacity: 0.52;
         }
         .hex-anim {
           position: absolute;
           width: 20px;
           height: 17.32px;
           clip-path: polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);
-          background: rgba(220,38,38,0.25);
-          filter: drop-shadow(0 0 3px rgba(220,38,38,0.25));
+          background: rgba(220,38,38,0.35);
+          filter: drop-shadow(0 0 3px rgba(220,38,38,0.35));
           animation: fadeHex 6s forwards;
         }
         .hex-anim::after {
           content: '';
           position: absolute;
           inset: 0;
-          background: rgba(16,185,129,0.4);
+          background: rgba(16,185,129,0.5);
           transform: scaleY(0);
           transform-origin: bottom;
-          filter: drop-shadow(0 0 4px rgba(16,185,129,0.6));
+          filter: drop-shadow(0 0 4px rgba(16,185,129,0.8));
           animation: fillHex 6s forwards;
         }
         @keyframes fillHex {

@@ -41,6 +41,7 @@ export default function MapPage() {
   const [branch, setBranch] = useState('all')
   const [branches, setBranches] = useState<string[]>([])
   const [branchOffsets, setBranchOffsets] = useState<Record<string, { x: number; y: number; z: number }>>({})
+  const [branchDomains, setBranchDomains] = useState<Record<string, string>>({})
   const [data, setData] = useState<Record<string, Commit[]>>({})
   const [view, setView] = useState<'3d' | 'top' | 'front'>('3d')
   const [showLayers, setShowLayers] = useState(false)
@@ -50,6 +51,7 @@ export default function MapPage() {
   const [loading, setLoading] = useState(false)
   const [showLabels, setShowLabels] = useState(true)
   const [time, setTime] = useState(100)
+  const [treeReady, setTreeReady] = useState(false)
   const closeModal = () => {
     setSelectedCommit(null)
     setSelectedFiles([])
@@ -85,6 +87,7 @@ export default function MapPage() {
         const parsed = JSON.parse(storedTracking)
         if (parsed.branches) setBranches(parsed.branches)
         if (parsed.offsets) setBranchOffsets(parsed.offsets)
+        if (parsed.domains) setBranchDomains(parsed.domains)
         if (parsed.data) setData(parsed.data)
       } catch {}
     }
@@ -110,46 +113,68 @@ export default function MapPage() {
           .then(data => {
             if (Array.isArray(data)) {
               setBranches(data.map((d: any) => d.name))
-              const map: Record<string, { x: number; y: number; z: number }> = {}
+              const offMap: Record<string, { x: number; y: number; z: number }> = {}
+              const domMap: Record<string, string> = {}
               data.forEach((d: any) => {
-                map[d.name] = d.offset || { x: 0, y: 0, z: 0 }
+                offMap[d.name] = d.offset || { x: 0, y: 0, z: 0 }
+                if (d.domain) domMap[d.name] = d.domain
               })
-              setBranchOffsets(map)
+              setBranchOffsets(offMap)
+              setBranchDomains(domMap)
             } else {
               setBranches([])
               setBranchOffsets({})
+              setBranchDomains({})
             }
           })
           .catch(() => {
             setBranches([])
             setBranchOffsets({})
+            setBranchDomains({})
           })
       } else {
         setBranches([])
         setBranchOffsets({})
+        setBranchDomains({})
       }
     }, 300)
     return () => clearTimeout(handle)
   }, [repo])
 
-  const load = async () => {
-    if (!repo) return
+  // Analyze commits for all branches when repo or branch list changes
+  useEffect(() => {
+    if (!repo || branches.length === 0) return
     setLoading(true)
+    const run = async () => {
+      const entries = await Promise.all(
+        branches.map(async b => {
+          const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
+          const d = await r.json()
+          return [b, Array.isArray(d) ? d : []] as [string, Commit[]]
+        })
+      )
+      const obj = Object.fromEntries(entries)
+      setData(obj)
+      localStorage.setItem(
+        'trackingData',
+        JSON.stringify({
+          branches,
+          offsets: branchOffsets,
+          domains: branchDomains,
+          data: obj
+        })
+      )
+      setLoading(false)
+    }
+    run()
+  }, [repo, branches, branchOffsets, branchDomains])
 
-    const entries = await Promise.all(
-      branches.map(async b => {
-        const r = await fetch(`/api/github/commits?repo=${repo}&branch=${b}`)
-        const d = await r.json()
-        return [b, Array.isArray(d) ? d : []] as [string, Commit[]]
-      })
-    )
-    const obj = Object.fromEntries(entries)
-    setData(obj)
-    localStorage.setItem(
-      'trackingData',
-      JSON.stringify({ branches, offsets: branchOffsets, data: obj })
-    )
-    setLoading(false)
+  useEffect(() => {
+    setTreeReady(false)
+  }, [repo, branches])
+
+  const load = () => {
+    setTreeReady(true)
   }
 
   const allCommits = useMemo(() => {
@@ -165,20 +190,7 @@ export default function MapPage() {
     [allCommits]
   )
 
-  const branchDomains = useMemo(() => {
-    const map = new Map<string, string>()
-    Object.entries(data).forEach(([b, arr]) => {
-      if (!arr.length) return
-      const counts = new Map<string, number>()
-      arr.forEach(c => {
-        const d = c.domain || 'other'
-        counts.set(d, (counts.get(d) || 0) + 1)
-      })
-      const dom = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0]
-      map.set(b, dom)
-    })
-    return map
-  }, [data])
+  const branchDomainMap = useMemo(() => new Map(Object.entries(branchDomains)), [branchDomains])
 
   const layerY = (d: string) =>
     d === 'frontend' ? 1.5 : d === 'backend' ? 0.5 : d === 'db' ? -0.5 : -1.5
@@ -189,7 +201,7 @@ export default function MapPage() {
     const counters: Record<string, number> = {}
     Object.entries(data).forEach(([b]) => {
       if (b === 'main') return
-      const dom = branchDomains.get(b) || 'other'
+      const dom = branchDomainMap.get(b) || 'other'
       const count = counters[dom] || 0
       const sign = count % 2 === 0 ? 1 : -1
       const depth = (Math.floor(count / 2) + 1) * 2 * sign
@@ -198,7 +210,7 @@ export default function MapPage() {
       map.set(b, { y: layerY(dom) + jit.y * 0.3, z: depth + jit.z * 0.3 })
     })
     return map
-  }, [data, branchDomains, branchOffsets])
+  }, [data, branchDomainMap, branchOffsets])
   const typeOffsets: Record<string, { y: number; z: number }> = {
     feature: { y: 1, z: 0 },
     fix: { y: 1, z: 1 },
@@ -580,17 +592,17 @@ export default function MapPage() {
       <div className="relative z-10 mx-auto max-w-5xl px-6 py-10 space-y-6">
         <h1 className="text-2xl font-semibold tracking-tight">3D Map</h1>
         <p className="text-sm text-zinc-400">Visualize commit history across branches in 3D</p>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 w-full max-w-full">
           <input
             value={repo}
             onChange={e => setRepo(e.target.value)}
             placeholder="owner/repo"
-            className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+            className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm max-w-[200px]"
           />
           <select
             value={branch}
             onChange={e => setBranch(e.target.value)}
-            className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm"
+            className="px-3 py-2 rounded bg-zinc-900 border border-zinc-800 text-sm max-w-[200px]"
           >
             <option value="all">all</option>
             {branches.map(b => (
@@ -655,6 +667,7 @@ export default function MapPage() {
               <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
             </div>
           )}
+          {treeReady && (
           <Canvas>
             {view === '3d' ? (
               <PerspectiveCamera makeDefault position={[-10, selectedPos.y, 20]} fov={50} />
@@ -729,6 +742,7 @@ export default function MapPage() {
               ))}
             </group>
           </Canvas>
+          )}
           {view === 'front' && showLayers && (
             <div
               className={`absolute inset-0 pointer-events-none ${

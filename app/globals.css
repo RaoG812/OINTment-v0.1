@@ -57,7 +57,7 @@
 .evil-eyes {
   opacity: 0;
   animation: eyesFade 2s forwards;
-  filter: brightness(0.25) blur(2px);
+  filter: brightness(0.2625) blur(2px);
   transform: scale(0.7);
 }
 
@@ -111,7 +111,7 @@
 
 @keyframes eyesFade {
   to {
-    opacity: 0.4;
+    opacity: 0.42;
   }
 }
 

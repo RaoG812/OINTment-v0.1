@@ -157,17 +157,17 @@ export default function ToolsetPage() {
             <div className="text-5xl font-bold iridescent-text">Mission Control</div>
             <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
             {!creating && (
-              <div className="relative mt-8 ml-auto w-72 h-48">
-                <svg viewBox="0 0 288 192" className="absolute inset-0 text-zinc-600" fill="none">
+              <div className="relative mt-8 ml-auto w-80 h-60">
+                <svg viewBox="0 0 320 240" className="absolute inset-0 text-zinc-600" fill="none">
                   <defs>
                     <marker id="arrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto" markerUnits="strokeWidth">
                       <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
                     </marker>
                   </defs>
-                  <line x1="144" y1="28" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-                  <line x1="260" y1="96" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-                  <line x1="144" y1="164" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
-                  <line x1="28" y1="96" x2="144" y2="96" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="160" y1="28" x2="160" y2="120" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="292" y1="120" x2="160" y2="120" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="160" y1="212" x2="160" y2="120" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                  <line x1="28" y1="120" x2="160" y2="120" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
                 </svg>
                 <div className="absolute left-1/2 top-1/2 w-16 h-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-emerald-500 bg-emerald-500/10 flex items-center justify-center text-sm font-medium">OINT</div>
                 <div className="absolute left-1/2 top-0 -translate-x-1/2 flex flex-col items-center">

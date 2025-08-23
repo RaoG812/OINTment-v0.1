@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { isCreated, getKnowledge } from '../state'
+import { applyOint } from '../../../../lib/openai'
 
 export async function POST(req: Request) {
   if (!isCreated()) {
@@ -25,87 +26,13 @@ export async function POST(req: Request) {
         .map((f: any) => ({ path: f.path, content: String(f.content || '') }))
     }
   }
-
-  const STOP = new Set(
-    'the and for with this that from into your about there their will have has are were was its our out other such too can in on at by to of if focus consider ensure review add update refactor files file docs documentation'.split(
-      /\s+/
+  try {
+    const { comments, steps } = await applyOint(roast, files, docs, code)
+    return NextResponse.json({ comments, steps })
+  } catch (err: any) {
+    return NextResponse.json(
+      { error: err?.message || 'apply OINT failed' },
+      { status: 500 }
     )
-  )
-
-  function topKeywords(text: string, limit = 3) {
-    const counts = new Map<string, number>()
-    for (const raw of text.toLowerCase().split(/[^a-z0-9]+/)) {
-      const w = raw.trim()
-      if (!w || STOP.has(w)) continue
-      counts.set(w, (counts.get(w) || 0) + 1)
-    }
-    return Array.from(counts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, limit)
-      .map(([w]) => w)
   }
-
-  const recommendations = roast.map((c: any) => {
-    const issues = topKeywords(c.comment)
-    const docHits = docs
-      .filter(d => issues.some(k => d.text.toLowerCase().includes(k)))
-      .map(d => d.name)
-      .slice(0, 2)
-    const codeHits = code
-      .filter(f =>
-        issues.some(k =>
-          f.content.toLowerCase().includes(k) || f.path.toLowerCase().includes(k)
-        )
-      )
-      .slice(0, 2)
-    const refs = [
-      ...docHits.map(d => `doc "${d}"`),
-      ...codeHits.map(f => `file "${f.path}"`)
-    ]
-    const base = (c.comment || '').replace(/\s+/g, ' ').trim()
-    const truncated = base.length > 160 ? base.slice(0, 157) + '…' : base
-    const refText = refs.length ? ` See ${refs.join(' and ')}.` : ''
-    const comment = truncated + (truncated.endsWith('.') ? '' : '.') + refText
-    return {
-      department: c.department,
-      comment,
-      temperature: Math.max(0, c.temperature - 0.1)
-    }
-  })
-
-  const allSteps = roast.map((c: any) => {
-    const issues = topKeywords(c.comment)
-    const docHits = docs
-      .filter(d => issues.some(k => d.text.toLowerCase().includes(k)))
-      .map(d => d.name)
-      .slice(0, 2)
-    const codeHits = code
-      .filter(f =>
-        issues.some(k =>
-          f.content.toLowerCase().includes(k) || f.path.toLowerCase().includes(k)
-        )
-      )
-      .slice(0, 2)
-    const base = (c.comment || '').replace(/\s+/g, ' ').trim().replace(/\.$/, '')
-    const res: string[] = []
-    docHits.forEach(d => {
-      res.push(`Update ${d} to address: ${base}`)
-    })
-    codeHits.forEach(f => {
-      res.push(`Refactor ${f.path} to address: ${base}`)
-    })
-    if (!docHits.length && !codeHits.length) {
-      res.push(`Document and resolve: ${base}`)
-    }
-    return res
-  })
-  const steps = Array.from(
-    new Set(
-      allSteps
-        .flat()
-        .map((s: string) => (s.endsWith('.') ? s : `${s}.`))
-    )
-  ).slice(0, 8)
-
-  return NextResponse.json({ comments: recommendations, steps })
 }

@@ -143,42 +143,46 @@ export default function ToolsetPage() {
             )}
             {error && <div className="text-xs text-rose-400">{error}</div>}
           </div>
+          {data && (
           <div className="text-right leading-tight">
             <div className="text-5xl font-bold iridescent-text">Mission Control</div>
             <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
-            <svg
-              viewBox="0 0 220 140"
-              className="mt-6 ml-auto w-64 opacity-80 text-zinc-500"
-            >
-              <defs>
-                <marker
-                  id="arrow"
-                  markerWidth="6"
-                  markerHeight="6"
-                  refX="5"
-                  refY="3"
-                  orient="auto"
-                  markerUnits="strokeWidth"
-                >
-                  <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
-                </marker>
-              </defs>
-              <circle cx="110" cy="70" r="20" fill="none" stroke="currentColor" strokeWidth="1.5" />
-              <text x="110" y="74" textAnchor="middle" fontSize="8" fill="currentColor">OINT</text>
-              <circle cx="40" cy="20" r="12" fill="none" stroke="currentColor" />
-              <text x="40" y="24" textAnchor="middle" fontSize="6" fill="currentColor">Ingest</text>
-              <line x1="52" y1="26" x2="94" y2="60" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
-              <circle cx="180" cy="20" r="12" fill="none" stroke="currentColor" />
-              <text x="180" y="24" textAnchor="middle" fontSize="6" fill="currentColor">Matrix</text>
-              <line x1="168" y1="26" x2="126" y2="60" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
-              <circle cx="40" cy="120" r="12" fill="none" stroke="currentColor" />
-              <text x="40" y="124" textAnchor="middle" fontSize="6" fill="currentColor">Roaster</text>
-              <line x1="52" y1="114" x2="94" y2="80" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
-              <circle cx="180" cy="120" r="12" fill="none" stroke="currentColor" />
-              <text x="180" y="124" textAnchor="middle" fontSize="6" fill="currentColor">Vibe</text>
-              <line x1="168" y1="114" x2="126" y2="80" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
-            </svg>
+            {!creating && (
+              <svg
+                viewBox="0 0 260 160"
+                className="mt-8 ml-auto w-72 opacity-80 text-zinc-500"
+              >
+                <defs>
+                  <marker
+                    id="arrow"
+                    markerWidth="6"
+                    markerHeight="6"
+                    refX="5"
+                    refY="3"
+                    orient="auto"
+                    markerUnits="strokeWidth"
+                  >
+                    <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
+                  </marker>
+                </defs>
+                <circle cx="130" cy="80" r="25" fill="none" stroke="currentColor" strokeWidth="2" />
+                <text x="130" y="84" textAnchor="middle" fontSize="10" fill="currentColor">OINT</text>
+                <circle cx="40" cy="40" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <text x="40" y="44" textAnchor="middle" fontSize="7" fill="currentColor">Ingest</text>
+                <line x1="56" y1="50" x2="105" y2="72" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                <circle cx="220" cy="40" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <text x="220" y="44" textAnchor="middle" fontSize="7" fill="currentColor">Matrix</text>
+                <line x1="204" y1="50" x2="155" y2="72" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                <circle cx="40" cy="140" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <text x="40" y="144" textAnchor="middle" fontSize="7" fill="currentColor">Roaster</text>
+                <line x1="56" y1="130" x2="105" y2="88" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+                <circle cx="220" cy="140" r="16" fill="none" stroke="currentColor" strokeWidth="1.5" />
+                <text x="220" y="144" textAnchor="middle" fontSize="7" fill="currentColor">Vibe</text>
+                <line x1="204" y1="130" x2="155" y2="88" stroke="currentColor" strokeWidth="1.5" markerEnd="url(#arrow)" />
+              </svg>
+            )}
           </div>
+          )}
         </div>
         {data && (
           <div className="space-y-6">

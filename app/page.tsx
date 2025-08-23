@@ -57,6 +57,24 @@ export default function Home() {
             risks and recommended next steps.
           </p>
         </div>
+        <div className="pt-4 flex flex-wrap items-center gap-4 text-xs text-zinc-400 fade-in-fast">
+          <div className="flex items-center gap-2">
+            <img src="/logos/openai.svg" alt="OpenAI" className="h-6 w-6 rounded" />
+            <span>LLM insights by OpenAI</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <img src="/logos/aimlapi.svg" alt="AI/ML API" className="h-6 w-6 rounded" />
+            <span>Data APIs via aimlapi.com</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <img src="/logos/vercel.svg" alt="Vercel" className="h-6 w-6 rounded" />
+            <span>Edge deploys on Vercel</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <img src="/logos/github.svg" alt="GitHub" className="h-6 w-6 rounded" />
+            <span>Repo intel by GitHub</span>
+          </div>
+        </div>
       </div>
     </main>
   )

@@ -1,7 +1,7 @@
 // @ts-nocheck
 'use client'
 import * as React from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useRef } from 'react'
 import Image from 'next/image'
 import dynamic from 'next/dynamic'
 import { ArrowUpDown, Search, ShieldAlert, Cpu } from 'lucide-react'
@@ -93,6 +93,8 @@ export default function MatrixPage(){
   const [repo, setRepo] = useState('')
   const [branches, setBranches] = useState<string[]>([])
   const [branch, setBranch] = useState('main')
+  const [loading, setLoading] = useState(true)
+  const firstLoad = useRef(true)
 
   useEffect(() => {
     if (branch) localStorage.setItem('branch', branch)
@@ -125,9 +127,10 @@ export default function MatrixPage(){
   useEffect(()=>{
     let active = true
     async function load(){
+      if(firstLoad.current) setLoading(true)
       if(!repo){
         const ingest = localStorage.getItem('ingestResult')
-        if(!ingest){ if(active) setRows([]); return }
+        if(!ingest){ if(active){ setRows([]); if(firstLoad.current){setLoading(false); firstLoad.current=false;} } return }
         let deps: string[] = []
         try{
           const parsed = JSON.parse(ingest)
@@ -137,21 +140,21 @@ export default function MatrixPage(){
             deps = Object.keys(obj.dependencies || {})
           }
         }catch{}
-        if(deps.length===0){ if(active) setRows([]); return }
+        if(deps.length===0){ if(active){ setRows([]); if(firstLoad.current){setLoading(false); firstLoad.current=false;} } return }
         try{
           const url = `/api/components?deps=${encodeURIComponent(deps.join(','))}`
           const data = await fetch(url).then(r=>r.json())
-          if(active) setRows(data)
+          if(active){ setRows(data); if(firstLoad.current){setLoading(false); firstLoad.current=false;} }
         }catch{
-          if(active) setRows([])
+          if(active){ setRows([]); if(firstLoad.current){setLoading(false); firstLoad.current=false;} }
         }
         return
       }
       try{
         const data = await fetch(`/api/components?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(r=>r.json())
-        if(active) setRows(data)
+        if(active){ setRows(data); if(firstLoad.current){setLoading(false); firstLoad.current=false;} }
       }catch{
-        if(active) setRows([])
+        if(active){ setRows([]); if(firstLoad.current){setLoading(false); firstLoad.current=false;} }
       }
     }
     load()
@@ -161,6 +164,8 @@ export default function MatrixPage(){
 
   useEffect(() => {
     setRows([])
+    firstLoad.current = true
+    setLoading(true)
   }, [repo, branch])
   const filtered = useMemo(()=>rows.filter(r=>
     r.name.includes(query) || r.category.toLowerCase().includes(query.toLowerCase())
@@ -243,125 +248,133 @@ export default function MatrixPage(){
           </div>
         </div>
 
-        <Card>
-          <div className="grid grid-cols-[auto_1fr_repeat(6,96px)] items-center gap-3 text-xs font-medium text-zinc-400 pb-2 border-b border-zinc-800">
-            <div className="pl-2">Integration</div>
-            <div>Category</div>
-            {['Impact','Security','Ops','Health','Coupling','Upgrade'].map(k=>
-              <button key={k} onClick={()=>{setSortKey(k.toLowerCase() as keyof Row); setAsc(s=>!s)}} className="flex items-center gap-1 hover:text-zinc-200 transition">
-                <ArrowUpDown className="w-3 h-3"/>{k}
-              </button>
-            )}
+        {loading ? (
+          <div className="flex justify-center py-20">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
           </div>
-          <div className="divide-y divide-zinc-900/60">
-            {sorted.map(r => (
-              <button
-                type="button"
-                key={r.name}
-                onClick={() => showDetails(r)}
-                className="grid w-full grid-cols-[auto_1fr_repeat(6,96px)] items-center gap-3 py-3 hover:bg-zinc-900/40 rounded-xl text-left cursor-pointer"
-              >
-                <div className="pl-2 flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center">
-                    {r.logoUrl ? (
-                      <Image src={r.logoUrl} alt={r.name} width={18} height={18} />
-                    ) : (
-                      <Cpu className="w-4 h-4 text-zinc-500" />
-                    )}
-                  </div>
-                  <div className="text-sm text-zinc-200">{r.name}</div>
-                </div>
-                <div className="text-xs text-zinc-400"><Pill>{r.category}</Pill></div>
-                {[r.impact, r.security, r.ops, r.health, r.coupling, r.upgrade].map((v, i) => (
-                  <div key={i} className={`text-sm font-semibold tabular-nums ${scoreColor(v)} text-center`}>
-                    {v}
-                  </div>
-                ))}
-              </button>
-            ))}
-          </div>
-        </Card>
-
-        <div className="grid md:grid-cols-4 gap-4">
-          <ExpandableCard title="Risk Highlights" summary={<span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>{riskyAll.length} pending actions</span>}>
-            {risky.length>0 ? risky.map(r=>(<div key={r.name}>• {r.name} – security {r.security}</div>)) : <div>No major risks</div>}
-          </ExpandableCard>
-          <ExpandableCard title="Coverage" summary={`${rows.length} integrations • ${Object.keys(categoryCounts).length} categories`}>
-            <div>• {rows.length} integrations loaded</div>
-            <div>• {Object.keys(categoryCounts).length} categories</div>
-          </ExpandableCard>
-          <ExpandableCard title="Timeline" summary={`${weeksRemaining} weeks remaining`}>
-            <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-2">
-              <div
-                className="h-full bg-emerald-500 transition-all duration-700"
-                style={{ width: `${readiness}%` }}
-              />
-              <div
-                className="absolute top-0 -translate-x-1/2"
-                style={{ left: `${readiness}%` }}
-              >
-                <div className="w-px h-2 bg-emerald-400" />
-                <div className="text-[10px] text-emerald-400 mt-1 animate-pulse">WE ARE HERE</div>
+        ) : (
+          <>
+            <Card>
+              <div className="grid grid-cols-[auto_1fr_repeat(6,96px)] items-center gap-3 text-xs font-medium text-zinc-400 pb-2 border-b border-zinc-800">
+                <div className="pl-2">Integration</div>
+                <div>Category</div>
+                {['Impact','Security','Ops','Health','Coupling','Upgrade'].map(k=>
+                  <button key={k} onClick={()=>{setSortKey(k.toLowerCase() as keyof Row); setAsc(s=>!s)}} className="flex items-center gap-1 hover:text-zinc-200 transition">
+                    <ArrowUpDown className="w-3 h-3"/>{k}
+                  </button>
+                )}
               </div>
-            </div>
-            <div className="mt-1 text-[10px] text-right text-zinc-500">
-              Readiness {readiness.toFixed(0)}%
-            </div>
-            <div className="mt-1 text-[10px] text-zinc-400">
-              Estimate based on average integration readiness across the project
-            </div>
-          </ExpandableCard>
-          <Card>
-            <div className="text-sm font-semibold mb-2">Category Radar</div>
-            {Object.keys(categoryCounts).length > 0 ? (
-              <Radar
-                data={radarData}
-                options={{
-                  plugins: { legend: { display: false } },
-                  scales: {
-                    r: {
-                      beginAtZero: true,
-                      angleLines: { color: '#27272a' },
-                      grid: { color: '#27272a' },
-                      ticks: { display: false }
-                    }
-                  }
-                }}
-              />
-            ) : (
-              <div className="text-xs text-zinc-400">No data</div>
-            )}
-          </Card>
-        </div>
-
-        {selected && (
-          <Card>
-            <div className="flex items-start justify-between">
-              <div>
-                <h2 className="text-lg font-semibold mb-2">{selected.row.name}</h2>
-                <div className="grid md:grid-cols-2 gap-4 text-xs text-zinc-400">
-                  {(Object.keys(INDICATORS) as Array<keyof typeof INDICATORS>).map(key => {
-                    const info = INDICATORS[key]
-                    const value = selected.row[key as keyof Row] as number
-                    return (
-                      <div key={key}>
-                        <div className="font-medium text-zinc-200 mb-1">{info.label}: <span className={`ml-1 ${scoreColor(value)} font-semibold`}>{value}</span></div>
-                        <div>{info.desc}</div>
-                        {value < 100 && <div className="text-emerald-400 mt-1">{info.improve}</div>}
+              <div className="divide-y divide-zinc-900/60">
+                {sorted.map(r => (
+                  <button
+                    type="button"
+                    key={r.name}
+                    onClick={() => showDetails(r)}
+                    className="grid w-full grid-cols-[auto_1fr_repeat(6,96px)] items-center gap-3 py-3 hover:bg-zinc-900/40 rounded-xl text-left cursor-pointer"
+                  >
+                    <div className="pl-2 flex items-center gap-3">
+                      <div className="w-7 h-7 rounded-lg bg-zinc-800 border border-zinc-700 overflow-hidden flex items-center justify-center">
+                        {r.logoUrl ? (
+                          <Image src={r.logoUrl} alt={r.name} width={18} height={18} />
+                        ) : (
+                          <Cpu className="w-4 h-4 text-zinc-500" />
+                        )}
                       </div>
-                    )
-                  })}
-                </div>
+                      <div className="text-sm text-zinc-200">{r.name}</div>
+                    </div>
+                    <div className="text-xs text-zinc-400"><Pill>{r.category}</Pill></div>
+                    {[r.impact, r.security, r.ops, r.health, r.coupling, r.upgrade].map((v, i) => (
+                      <div key={i} className={`text-sm font-semibold tabular-nums ${scoreColor(v)} text-center`}>
+                        {v}
+                      </div>
+                    ))}
+                  </button>
+                ))}
               </div>
-              <button className="text-zinc-500 hover:text-zinc-300" onClick={()=>setSelected(null)}>×</button>
+            </Card>
+
+            <div className="grid md:grid-cols-4 gap-4">
+              <ExpandableCard title="Risk Highlights" summary={<span className="flex items-center gap-2"><ShieldAlert className="w-4 h-4"/>{riskyAll.length} pending actions</span>}>
+                {risky.length>0 ? risky.map(r=>(<div key={r.name}>• {r.name} – security {r.security}</div>)) : <div>No major risks</div>}
+              </ExpandableCard>
+              <ExpandableCard title="Coverage" summary={`${rows.length} integrations • ${Object.keys(categoryCounts).length} categories`}>
+                <div>• {rows.length} integrations loaded</div>
+                <div>• {Object.keys(categoryCounts).length} categories</div>
+              </ExpandableCard>
+              <ExpandableCard title="Timeline" summary={`${weeksRemaining} weeks remaining`}>
+                <div className="relative w-full h-2 bg-zinc-800 rounded-full overflow-hidden mt-2">
+                  <div
+                    className="h-full bg-emerald-500 transition-all duration-700"
+                    style={{ width: `${readiness}%` }}
+                  />
+                  <div
+                    className="absolute top-0 -translate-x-1/2"
+                    style={{ left: `${readiness}%` }}
+                  >
+                    <div className="w-px h-2 bg-emerald-400" />
+                    <div className="text-[10px] text-emerald-400 mt-1 animate-pulse">WE ARE HERE</div>
+                  </div>
+                </div>
+                <div className="mt-1 text-[10px] text-right text-zinc-500">
+                  Readiness {readiness.toFixed(0)}%
+                </div>
+                <div className="mt-1 text-[10px] text-zinc-400">
+                  Estimate based on average integration readiness across the project
+                </div>
+              </ExpandableCard>
+              <Card>
+                <div className="text-sm font-semibold mb-2">Category Radar</div>
+                {Object.keys(categoryCounts).length > 0 ? (
+                  <Radar
+                    data={radarData}
+                    options={{
+                      plugins: { legend: { display: false } },
+                      scales: {
+                        r: {
+                          beginAtZero: true,
+                          angleLines: { color: '#27272a' },
+                          grid: { color: '#27272a' },
+                          ticks: { display: false }
+                        }
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="text-xs text-zinc-400">No data</div>
+                )}
+              </Card>
             </div>
-            <div className="mt-4">
-              <div className="text-sm font-semibold mb-2">Code References</div>
-              <pre className="text-xs bg-zinc-900 p-3 rounded-lg max-h-60 overflow-auto">
-                {selected.code.map((c,i)=>`${c.file}:${c.line} ${c.code}`).join('\n') || 'No references found'}
-              </pre>
-            </div>
-          </Card>
+
+            {selected && (
+              <Card>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <h2 className="text-lg font-semibold mb-2">{selected.row.name}</h2>
+                    <div className="grid md:grid-cols-2 gap-4 text-xs text-zinc-400">
+                      {(Object.keys(INDICATORS) as Array<keyof typeof INDICATORS>).map(key => {
+                        const info = INDICATORS[key]
+                        const value = selected.row[key as keyof Row] as number
+                        return (
+                          <div key={key}>
+                            <div className="font-medium text-zinc-200 mb-1">{info.label}: <span className={`ml-1 ${scoreColor(value)} font-semibold`}>{value}</span></div>
+                            <div>{info.desc}</div>
+                            {value < 100 && <div className="text-emerald-400 mt-1">{info.improve}</div>}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  <button className="text-zinc-500 hover:text-zinc-300" onClick={()=>setSelected(null)}>×</button>
+                </div>
+                <div className="mt-4">
+                  <div className="text-sm font-semibold mb-2">Code References</div>
+                  <pre className="text-xs bg-zinc-900 p-3 rounded-lg max-h-60 overflow-auto">
+                    {selected.code.map((c,i)=>`${c.file}:${c.line} ${c.code}`).join('\n') || 'No references found'}
+                  </pre>
+                </div>
+              </Card>
+            )}
+          </>
         )}
       </div>
       <style jsx>{`

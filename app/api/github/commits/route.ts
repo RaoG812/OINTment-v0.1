@@ -3,6 +3,35 @@ import { NextRequest, NextResponse } from 'next/server'
 import { categorizeCommits, jitterOffsets } from '../../../../lib/openai'
 import { githubHeaders } from '../../../../lib/github'
 
+const typeBuckets = ['feature', 'fix', 'infra', 'refactor', 'test', 'docs', 'security', 'data']
+const domainBuckets = ['frontend', 'backend', 'db', 'other']
+
+function guessType(message = '') {
+  const msg = message.toLowerCase()
+  if (/(fix|bug|issue|error)/.test(msg)) return 'fix'
+  if (/(feat|feature|add|implement)/.test(msg)) return 'feature'
+  if (/(refactor|cleanup|rewrite)/.test(msg)) return 'refactor'
+  if (/(test|spec|unit|integration)/.test(msg)) return 'test'
+  if (/(doc|readme|documentation)/.test(msg)) return 'docs'
+  if (/(infra|deploy|ci|build)/.test(msg)) return 'infra'
+  if (/(security|auth|vuln|attack)/.test(msg)) return 'security'
+  if (/(data|dataset|analytics)/.test(msg)) return 'data'
+  return null
+}
+
+function guessDomain(message = '', files: string[] = []) {
+  const msg = message.toLowerCase()
+  if (
+    files.some(f => /\.(tsx|ts|jsx|js|css|scss|html|vue|svelte)/i.test(f)) ||
+    /(ui|frontend|client|css|react|component)/.test(msg)
+  )
+    return 'frontend'
+  if (files.some(f => /(db|sql|schema|migrations?)/i.test(f)) || /(db|database|schema|migration)/.test(msg))
+    return 'db'
+  if (files.some(f => /\.env/i.test(f)) || /(env|config)/.test(msg)) return 'other'
+  return null
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const repo = searchParams.get('repo')
@@ -39,6 +68,7 @@ export async function GET(req: NextRequest) {
       let status = 'unknown'
       let stats: any = undefined
       let parents: { sha: string }[] = []
+      let files: string[] = []
       try {
         const [statusRes, detailRes] = await Promise.all([
           fetch(`https://api.github.com/repos/${repo}/commits/${c.sha}/status`, {
@@ -56,6 +86,7 @@ export async function GET(req: NextRequest) {
           const detail = await detailRes.json()
           stats = detail.stats
           parents = detail.parents?.map((p: any) => ({ sha: p.sha })) || []
+          files = detail.files?.map((f: any) => f.filename) || []
         }
       } catch {
         // ignore
@@ -66,7 +97,8 @@ export async function GET(req: NextRequest) {
         date: c.commit.author?.date,
         stats,
         parents,
-        status
+        status,
+        files
       }
     })
   )
@@ -74,28 +106,32 @@ export async function GET(req: NextRequest) {
   // Ask the LLM to classify commit messages into domain and type buckets
   try {
     const cats = await categorizeCommits(rawList.map(c => c.message))
-    const typeFallbacks = ['feature','fix','infra','refactor','test','docs','security','data']
-    const domainFallbacks = ['frontend','backend','db','other']
     cats.forEach((c, i) => {
-      let t = c.type || 'other'
-      if (t === 'other') {
-        t = typeFallbacks[parseInt(rawList[i].sha.slice(-1), 16) % typeFallbacks.length]
-      }
-      let d = c.domain || 'other'
-      if (d === 'other') {
-        d = domainFallbacks[parseInt(rawList[i].sha.slice(-2), 16) % domainFallbacks.length]
-      }
+      const msg = rawList[i].message
+      const filenames = rawList[i].files || []
+      let t = c.type
+      if (!typeBuckets.includes(t)) t = guessType(msg)
+      if (!t)
+        t = typeBuckets[parseInt(rawList[i].sha.slice(-1), 16) % typeBuckets.length]
+      let d = c.domain
+      if (!domainBuckets.includes(d)) d = guessDomain(msg, filenames)
+      if (!d)
+        d = domainBuckets[parseInt(rawList[i].sha.slice(-2), 16) % domainBuckets.length]
       rawList[i].domain = d
       rawList[i].type = t
     })
   } catch {
     rawList.forEach(r => {
-      const typeFallbacks = ['feature','fix','infra','refactor','test','docs','security','data']
-      const domainFallbacks = ['frontend','backend','db','other']
+      const msg = r.message
+      const filenames = r.files || []
+      let t = guessType(msg)
+      let d = guessDomain(msg, filenames)
       const idx = parseInt(r.sha.slice(-1), 16)
-      r.type = typeFallbacks[idx % typeFallbacks.length]
-      r.domain = domainFallbacks[idx % domainFallbacks.length]
-
+      if (!t) t = typeBuckets[idx % typeBuckets.length]
+      const idx2 = parseInt(r.sha.slice(-2), 16)
+      if (!d) d = domainBuckets[idx2 % domainBuckets.length]
+      r.type = t
+      r.domain = d
     })
   }
 
@@ -110,6 +146,9 @@ export async function GET(req: NextRequest) {
       r.offset = { x: 0, y: 0, z: 0 }
     })
   }
+
+  // remove temporary file lists before sending to client
+  rawList.forEach(r => delete r.files)
 
   rawList.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 

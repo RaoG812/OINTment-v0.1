@@ -48,6 +48,8 @@ export default function MapPage() {
   const [selectedCommit, setSelectedCommit] = useState<Commit | null>(null)
   const [selectedFiles, setSelectedFiles] = useState<{ filename: string; status: string; additions: number; deletions: number; patch?: string }[]>([])
   const [loading, setLoading] = useState(false)
+  const [showLabels, setShowLabels] = useState(true)
+  const [time, setTime] = useState(100)
   const closeModal = () => {
     setSelectedCommit(null)
     setSelectedFiles([])
@@ -272,16 +274,33 @@ export default function MapPage() {
     return m
   }, [positions])
 
+  const totalLength = useMemo(() => {
+    if (branch === 'all') return positions.length * GRID_X
+    const range = branchRanges.get(branch)
+    return range ? range.end : positions.length * GRID_X
+  }, [branch, positions, branchRanges])
+
+  const sliceX = useMemo(() => {
+    return view === 'front' && branch !== 'all' ? (time / 100) * totalLength : totalLength
+  }, [time, totalLength, branch, view])
+
   const displayPositions: DisplayPos[] = useMemo(() => {
     return positions
       .filter(p => branch === 'all' || p.commit.branch === branch)
+      .filter(p => (view === 'front' && branch !== 'all' ? p.x <= sliceX : true))
       .map(p => {
         const offset = p.commit.offset || { x: 0, y: 0, z: 0 }
         const scale = branch === 'all' ? 1 : 0.3
         const seed = parseInt(p.commit.sha.slice(0, 4), 16)
-        const jitterX = (((Math.floor(seed / 10000)) % 100) / 100 - 0.5) * 0.2
-        const jitterY = ((seed % 100) / 100 - 0.5) * 0.2
-        const jitterZ = (((Math.floor(seed / 100)) % 100) / 100 - 0.5) * 0.2
+        const jitterX =
+          branch === 'all'
+            ? (((Math.floor(seed / 10000)) % 100) / 100 - 0.5) * 0.2
+            : 0
+        const jitterY = branch === 'all' ? ((seed % 100) / 100 - 0.5) * 0.2 : 0
+        const jitterZ =
+          branch === 'all'
+            ? (((Math.floor(seed / 100)) % 100) / 100 - 0.5) * 0.2
+            : 0
         const vec = new THREE.Vector3(
           Math.round(p.x / GRID_X) * GRID_X +
             (branch === 'all' ? offset.x * GRID_X * 0.3 : offset.x * GRID_X * 0.3) +
@@ -353,7 +372,8 @@ export default function MapPage() {
     offset,
     depth,
     range,
-    branch
+    branch,
+    slice
   }: {
     target: number
     view: '3d' | 'top' | 'front'
@@ -361,13 +381,18 @@ export default function MapPage() {
     depth: number
     range?: { start: number; end: number }
     branch: string
+    slice?: number
   }) {
     const { camera } = useThree()
     useEffect(() => {
       const from = camera.position.clone()
       let to: THREE.Vector3
       let tgt: THREE.Vector3
-      if (range) {
+      if (slice !== undefined && view === 'front') {
+        to = new THREE.Vector3(slice - 10, offset, depth)
+        tgt = new THREE.Vector3(slice, offset, depth)
+        camera.up.set(0, 1, 0)
+      } else if (range) {
         const center = (range.start + range.end) / 2
         if (view === 'top') {
           to = new THREE.Vector3(center, 40, 0)
@@ -453,6 +478,12 @@ export default function MapPage() {
           <sphereGeometry args={[p.size, 16, 16]} />
           <meshBasicMaterial color={color} transparent opacity={0.2} blending={THREE.AdditiveBlending} />
         </mesh>
+        {p.commit.parents && p.commit.parents.length > 1 && (
+          <mesh rotation={[Math.PI / 2, 0, 0]}>
+            <torusGeometry args={[p.size + 0.05, 0.01, 8, 16]} />
+            <meshBasicMaterial color="#fde047" />
+          </mesh>
+        )}
         {p.current && (
           <>
             <mesh>
@@ -525,9 +556,11 @@ export default function MapPage() {
           onPointerOut={() => setHoveredBranch(null)}
           onClick={() => setBranch(b)}
         />
-        <Html position={[range.start, offset + 0.3, depth]} zIndexRange={[100, 0]}>
-          <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
-        </Html>
+        {showLabels && (
+          <Html position={[range.start, offset + 0.3, depth]} zIndexRange={[100, 0]}>
+            <div className="text-[10px] text-zinc-400 bg-black/60 px-1 rounded">{b}</div>
+          </Html>
+        )}
       </group>
     )
   }
@@ -599,6 +632,22 @@ export default function MapPage() {
           >
             Layers
           </button>
+          <button
+            onClick={() => setShowLabels(s => !s)}
+            className={`px-3 py-2 rounded text-sm ${showLabels ? 'bg-emerald-600' : 'bg-zinc-800'}`}
+          >
+            Labels
+          </button>
+          {view === 'front' && branch !== 'all' && (
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={time}
+              onChange={e => setTime(parseInt(e.target.value))}
+              className="w-32"
+            />
+          )}
         </div>
         <div className="h-[500px] w-full bg-black/40 rounded-xl overflow-hidden relative">
           {loading && (
@@ -635,6 +684,7 @@ export default function MapPage() {
               depth={selectedPos.z}
               range={showLayers ? undefined : branch === 'all' ? undefined : branchRanges.get(branch)}
               branch={branch}
+              slice={view === 'front' && branch !== 'all' ? sliceX : undefined}
             />
             <color attach="background" args={[0, 0, 0]} />
             <ambientLight intensity={0.4} />
@@ -645,7 +695,6 @@ export default function MapPage() {
             <group ref={groupRef}>
               {pipes.map(([b, pos]) => {
                 const range = branchRanges.get(b) || { start: 0, end: displayPositions.length * GRID_X }
-                const len = range.end - range.start
                 const origin = branchOrigins.get(b)
                 const offset = pos.y
                 const z = pos.z
@@ -669,6 +718,12 @@ export default function MapPage() {
                 const curve = new THREE.CatmullRomCurve3(basePoints)
                 return <BranchPipe key={b} b={b} curve={curve} range={range} offset={offset} depth={z} />
               })}
+              {Array.from(branchOrigins.entries()).map(([b, pos]) => (
+                <mesh key={`origin-${b}`} position={[pos.x, pos.y, pos.z]}>
+                  <sphereGeometry args={[0.3, 8, 8]} />
+                  <meshBasicMaterial color="#fde047" />
+                </mesh>
+              ))}
               {displayPositions.map(p => (
                 <CommitSphere key={p.commit.sha} p={p} onSelect={selectCommit} />
               ))}

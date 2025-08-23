@@ -228,7 +228,7 @@ function FireLayer() {
           height: 200px;
           pointer-events: none;
           overflow: hidden;
-          z-index: 5;
+          z-index: 20;
         }
         .fire-layer span {
           position: absolute;

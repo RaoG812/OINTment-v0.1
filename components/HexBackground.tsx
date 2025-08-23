@@ -68,7 +68,7 @@ export default function HexBackground({ className = "", reveal = true }: { class
           inset: 0;
           background-image: url("data:image/svg+xml,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='20' height='17.32' viewBox='0 0 20 17.32'><path fill='none' stroke='white' stroke-opacity='0.15' stroke-width='1' d='M5 0h10l5 8.66-5 8.66H5L0 8.66z'/></svg>`)}");
           background-size: 20px 17.32px;
-          opacity: 0.5;
+          opacity: 0.52;
         }
         .hex-anim {
           position: absolute;

@@ -393,11 +393,14 @@ export default function RoasterPage() {
       </div>
       {level > 0.95 && <FireLayer />}
       <div
-        className="absolute -bottom-40 -right-40 opacity-20 z-10 no-hex"
+        className="absolute -bottom-40 -right-40 z-10 no-hex"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
-        <Face level={level} />
+        <div className="absolute inset-0 bg-black pointer-events-none" />
+        <div className="opacity-20">
+          <Face level={level} />
+        </div>
       </div>
       <div className="relative z-30 space-y-8 fade-in-fast">
         <div className="flex items-start justify-between">

@@ -97,17 +97,6 @@
   animation: mistMove 30s linear infinite;
 }
 
-.hex-fade .pattern {
-  opacity: 0.05;
-}
-
-.hex-fade::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(circle at center, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.85) 40%, rgba(0,0,0,0.6) 60%, transparent 80%);
-}
 
 @keyframes eyesFade {
   to {

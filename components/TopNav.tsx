@@ -6,7 +6,7 @@ const links = [
   {
     href: '/',
     label: 'OINTment',
-    extra: 'font-semibold tracking-tight text-emerald-400 hover:text-emerald-400',
+    extra: 'font-semibold tracking-tight !text-emerald-400 hover:!text-emerald-300',
     brand: true
   },
   { href: '/ingest', label: 'Ingest' },

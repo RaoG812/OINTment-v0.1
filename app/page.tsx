@@ -25,7 +25,7 @@ export default function Home() {
         <Image
           src="/OINTment_logo_vert.svg"
           alt="OINTment logo background"
-          className="h-full w-auto object-contain"
+          className="h-full w-auto object-contain scale-150 translate-x-1/4"
           width={2048}
           height={2048}
         />
@@ -33,7 +33,7 @@ export default function Home() {
       <Image
         src="/OINTment_logo_vert.svg"
         alt="OINTment logo"
-        className="pointer-events-none fixed top-4 right-4 w-20 z-20"
+        className="pointer-events-none fixed top-4 left-4 w-20 z-20"
         width={2048}
         height={2048}
       />

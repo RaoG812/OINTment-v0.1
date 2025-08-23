@@ -31,7 +31,7 @@
 .evil-eyes {
   opacity: 0;
   animation: eyesFade 2s forwards;
-  filter: brightness(0.2);
+  filter: brightness(0.35);
   transform: scale(0.8);
 }
 
@@ -45,9 +45,9 @@
 .evil-eyes .inner-eye {
   position: absolute;
   inset: 0;
-  background: radial-gradient(circle at 50% 50%, rgba(180,0,0,0.5) 35%, rgba(120,0,0,0.15) 60%, transparent 80%);
-  filter: blur(8px) drop-shadow(0 0 15px rgba(200,0,0,0.4))
-    drop-shadow(0 0 40px rgba(200,0,0,0.2)) saturate(0.8);
+  background: radial-gradient(circle at 50% 50%, rgba(220,20,20,0.6) 35%, rgba(150,0,0,0.25) 60%, transparent 80%);
+  filter: blur(8px) drop-shadow(0 0 20px rgba(255,0,0,0.5))
+    drop-shadow(0 0 45px rgba(255,0,0,0.25)) saturate(0.9);
   animation: blink 5s infinite;
 }
 
@@ -118,5 +118,16 @@
 
 .logo-float.delay {
   animation-delay: 15s;
+}
+
+.animate-logo-draw {
+  clip-path: inset(0 0 100% 0);
+  animation: logoDraw 6s ease forwards;
+}
+
+@keyframes logoDraw {
+  to {
+    clip-path: inset(0 0 0 0);
+  }
 }
 

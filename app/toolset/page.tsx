@@ -19,6 +19,7 @@ import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
 import { getRoasterState } from '../../lib/roasterState'
+import Image from 'next/image'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
@@ -96,6 +97,15 @@ export default function ToolsetPage() {
           }}
         />
         <div className="absolute inset-0 bg-black/60" />
+      </div>
+      <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-20">
+        <Image
+          src="/OINTment_logo_vert.svg"
+          alt="OINTment logo background"
+          className="h-full w-auto object-contain scale-150 translate-x-1/4 animate-logo-draw"
+          width={2048}
+          height={2048}
+        />
       </div>
       <div className="relative z-10 p-6 space-y-6">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>

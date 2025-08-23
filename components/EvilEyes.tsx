@@ -16,8 +16,8 @@ export default function EvilEyes() {
 
   const offsetX = pos.x * 20
   const offsetY = pos.y * 10
-  // Pull the eyes slightly closer together to feel more distant
-  const base = 80
+  // Slightly reduce base distance to bring eyes closer
+  const base = 70
 
   return (
     <div className="evil-eyes fixed inset-0 flex items-center justify-center pointer-events-none -z-10">

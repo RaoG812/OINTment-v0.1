@@ -179,6 +179,30 @@ export default function MatrixPage(){
   const [selected, setSelected] = useState<{row: Row; code: any[]}|null>(null)
 
   async function showDetails(r: Row){
+    if(!repo){
+      const ingest = localStorage.getItem('ingestResult')
+      const code: { file: string; line: number; code: string }[] = []
+      if(ingest){
+        try{
+          const parsed = JSON.parse(ingest)
+          const raw = r.name
+          const base = raw.split(/[\\/@]/).pop() || raw
+          const short = base.split('-')[0]
+          const needles = Array.from(new Set([raw, base, short])).filter(Boolean)
+          const pattern = new RegExp(needles.map(n=>n.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|'))
+          parsed.code?.forEach((c: any) => {
+            const lines = c.content.split(/\r?\n/)
+            lines.forEach((line: string, idx: number) => {
+              if(pattern.test(line)){
+                code.push({ file: c.path, line: idx+1, code: line.trim() })
+              }
+            })
+          })
+        }catch{}
+      }
+      setSelected({ row: r, code: code.slice(0,20) })
+      return
+    }
     const code = await fetch(`/api/code/${encodeURIComponent(r.name)}?repo=${encodeURIComponent(repo)}&branch=${branch}`).then(res=>res.json()).catch(()=>[])
     setSelected({ row: r, code })
   }

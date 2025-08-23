@@ -49,6 +49,7 @@ export default function ToolsetPage() {
         try {
           const parsed = JSON.parse(ingest)
           form.append('files', JSON.stringify(parsed.files || []))
+          form.append('code', JSON.stringify(parsed.code || []))
         } catch {}
       }
       const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })
@@ -222,49 +223,51 @@ export default function ToolsetPage() {
                   </ul>
                 </div>
               </Card>
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
-                <div className="space-y-4">
-                  <Metric label="Coverage" value={data.reliability.coveragePct} />
-                  <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
-                  <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
-                </div>
-                <div className="mt-4 w-60 h-60 mx-auto">
-                  <Radar
-                    data={{
-                      labels: ['Coverage', 'Evidence', 'LLM Agreement'],
-                      datasets: [
-                        {
-                          label: 'Reliability',
-                          data: [
-                            data.reliability.coveragePct,
-                            data.reliability.evidenceCompletenessPct,
-                            data.reliability.llmStaticAgreementPct
-                          ],
-                          backgroundColor: 'rgba(16,185,129,0.3)',
-                          borderColor: '#10b981',
-                          pointBackgroundColor: '#10b981',
-                          pointBorderColor: '#10b981',
-                          fill: true
-                        }
-                      ]
-                    }}
-                    options={{
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        r: {
-                          beginAtZero: true,
-                          angleLines: { color: '#27272a' },
-                          grid: { color: '#27272a' },
-                          max: 100,
-                          ticks: { display: false }
-                        }
-                      },
-                      maintainAspectRatio: false
-                    }}
-                  />
-                </div>
-              </Card>
+              {data.reliability && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
+                  <div className="space-y-4">
+                    <Metric label="Coverage" value={data.reliability.coveragePct} />
+                    <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
+                    <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
+                  </div>
+                  <div className="mt-4 w-60 h-60 mx-auto">
+                    <Radar
+                      data={{
+                        labels: ['Coverage', 'Evidence', 'LLM Agreement'],
+                        datasets: [
+                          {
+                            label: 'Reliability',
+                            data: [
+                              data.reliability.coveragePct,
+                              data.reliability.evidenceCompletenessPct,
+                              data.reliability.llmStaticAgreementPct
+                            ],
+                            backgroundColor: 'rgba(16,185,129,0.3)',
+                            borderColor: '#10b981',
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#10b981',
+                            fill: true
+                          }
+                        ]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        scales: {
+                          r: {
+                            beginAtZero: true,
+                            angleLines: { color: '#27272a' },
+                            grid: { color: '#27272a' },
+                            max: 100,
+                            ticks: { display: false }
+                          }
+                        },
+                        maintainAspectRatio: false
+                      }}
+                    />
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
         )}

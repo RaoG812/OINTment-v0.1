@@ -49,7 +49,7 @@ export default function HexBackground({ className = "", reveal = true }: { class
   }, [])
 
   const mask = reveal
-    ? 'radial-gradient(circle 120px at var(--mx) var(--my), rgba(0,0,0,1) 0 80px, rgba(0,0,0,0) 120px)'
+    ? 'radial-gradient(circle 160px at var(--mx) var(--my), rgba(0,0,0,1) 0 80px, rgba(0,0,0,0.6) 120px, transparent 160px)'
     : undefined
 
   return (

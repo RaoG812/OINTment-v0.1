@@ -397,7 +397,7 @@ export default function RoasterPage() {
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
-        <div className="absolute inset-0 bg-black pointer-events-none" />
+        <div className="absolute inset-0 bg-black pointer-events-none rounded-full" />
         <div className="opacity-20">
           <Face level={level} />
         </div>

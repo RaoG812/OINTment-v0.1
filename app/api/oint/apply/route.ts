@@ -9,7 +9,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}))
   const roast = Array.isArray(body.roast) ? body.roast : []
 
-  let { docs, files } = getKnowledge()
+  let { docs, files, code } = getKnowledge()
   if (body.knowledge) {
     const k = body.knowledge
     if (Array.isArray(k.docs) && Array.isArray(k.files)) {
@@ -18,6 +18,11 @@ export async function POST(req: Request) {
         text: (d.text || d.content || '').toString()
       }))
       files = k.files
+    }
+    if (Array.isArray(k.code)) {
+      code = k.code
+        .filter((f: any) => f && typeof f.path === 'string')
+        .map((f: any) => ({ path: f.path, content: String(f.content || '') }))
     }
   }
 
@@ -46,12 +51,18 @@ export async function POST(req: Request) {
       .filter(d => issues.some(k => d.text.toLowerCase().includes(k)))
       .map(d => d.name)
       .slice(0, 2)
-    const fileHits = files
-      .filter(f => issues.some(k => f.toLowerCase().includes(k)))
+    const codeHits = code
+      .filter(f =>
+        issues.some(k =>
+          f.content.toLowerCase().includes(k) || f.path.toLowerCase().includes(k)
+        )
+      )
       .slice(0, 2)
+    const fileHits = codeHits.map(c => c.path)
     let detail = ''
     if (docHits.length) detail += `docs: ${docHits.join(', ')}`
-    if (fileHits.length) detail += `${detail ? ' and ' : ''}files: ${fileHits.join(', ')}`
+    if (fileHits.length)
+      detail += `${detail ? ' and ' : ''}files: ${fileHits.join(', ')}`
     let comment = c.comment
     if (issues.length) {
       const issueText = issues.join(' & ')
@@ -66,26 +77,28 @@ export async function POST(req: Request) {
     }
   })
 
-  const allSteps = roast.flatMap((c: any) => {
+  const allSteps = roast.map((c: any) => {
     const issues = topKeywords(c.comment)
     const docHits = docs
       .filter(d => issues.some(k => d.text.toLowerCase().includes(k)))
       .map(d => d.name)
-    const fileHits = files.filter(f => issues.some(k => f.toLowerCase().includes(k))).slice(0, 2)
-    const res: string[] = []
-    docHits.forEach(d =>
-      issues.forEach(k => res.push(`Update ${d} for ${k}`))
-    )
-    fileHits.forEach(f =>
-      issues.forEach(k => res.push(`Improve ${f} around ${k}`))
-    )
-    if (!docHits.length && !fileHits.length && issues.length) {
-      res.push(`Document ${issues[0]} in ${c.department}`)
+    const codeHits = code
+      .filter(f =>
+        issues.some(k =>
+          f.content.toLowerCase().includes(k) || f.path.toLowerCase().includes(k)
+        )
+      )
+      .slice(0, 2)
+    const res = new Set<string>()
+    docHits.forEach(d => issues.forEach(k => res.add(`Update ${d} for ${k}`)))
+    codeHits.forEach(f => issues.forEach(k => res.add(`Improve ${f.path} around ${k}`)))
+    if (!docHits.length && !codeHits.length && issues.length) {
+      res.add(`Document ${issues[0]} in ${c.department}`)
     }
-    if (res.length === 0) res.push(`Resolve ${c.department} feedback`)
-    return res
+    if (res.size === 0) res.add(`Resolve ${c.department} feedback`)
+    return Array.from(res)
   })
-  const steps = Array.from(new Set(allSteps)).slice(0, 8)
+  const steps = Array.from(new Set(allSteps.flat())).slice(0, 8)
 
   return NextResponse.json({ comments, steps })
 }

@@ -49,6 +49,7 @@ export default function ToolsetPage() {
         try {
           const parsed = JSON.parse(ingest)
           form.append('files', JSON.stringify(parsed.files || []))
+          form.append('code', JSON.stringify(parsed.code || []))
         } catch {}
       }
       const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })

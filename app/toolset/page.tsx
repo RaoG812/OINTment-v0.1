@@ -164,9 +164,12 @@ export default function ToolsetPage() {
                 <h2 className="text-lg font-semibold mb-4">Actions</h2>
                 <ul className="space-y-2">
                   {data.actions.map(a => (
-                    <li key={a.id} className="flex items-center gap-2 text-sm">
-                      <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
-                      <span className="font-medium">{a.title}</span>
+                    <li key={a.id} className="text-sm">
+                      <div className="flex items-center gap-2">
+                        <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
+                        <span className="font-medium">{a.title}</span>
+                      </div>
+                      <div className="text-xs text-zinc-400 ml-6">{a.rationale}</div>
                     </li>
                   ))}
                 </ul>
@@ -174,9 +177,36 @@ export default function ToolsetPage() {
               {data.finance && (
                 <Card>
                   <h2 className="text-lg font-semibold mb-2">Finance</h2>
-                  <p className="text-sm">Budget effectiveness: {data.finance.effectivenessPct}%</p>
+                  <div className="space-y-2">
+                    <div className="h-2 bg-zinc-700 rounded">
+                      <div
+                        className="h-full bg-emerald-500 rounded"
+                        style={{ width: `${data.finance.effectivenessPct}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-zinc-400">
+                      Budget effectiveness: {data.finance.effectivenessPct}%
+                    </p>
+                  </div>
                 </Card>
               )}
+              <Card>
+                <h2 className="text-lg font-semibold mb-4">Timeline Estimate</h2>
+                <ul className="space-y-3">
+                  {data.timeline.map(t => (
+                    <li key={t.phase}>
+                      <div className="text-sm font-medium">{t.phase}</div>
+                      <div className="h-2 bg-zinc-700 rounded">
+                        <div
+                          className="h-full bg-emerald-500 rounded"
+                          style={{ width: `${(t.days / 30) * 100}%` }}
+                        />
+                      </div>
+                      <div className="text-xs text-zinc-400 mt-1">{t.days} days</div>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
               <Card>
                 <h2 className="text-lg font-semibold mb-4">30-Day Onboarding Plan</h2>
                 <div className="relative pl-4">
@@ -199,7 +229,7 @@ export default function ToolsetPage() {
                   <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
                   <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
                 </div>
-                <div className="mt-4">
+                <div className="mt-4 w-60 h-60 mx-auto">
                   <Radar
                     data={{
                       labels: ['Coverage', 'Evidence', 'LLM Agreement'],
@@ -229,7 +259,8 @@ export default function ToolsetPage() {
                           max: 100,
                           ticks: { display: false }
                         }
-                      }
+                      },
+                      maintainAspectRatio: false
                     }}
                   />
                 </div>

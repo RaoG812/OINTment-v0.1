@@ -18,7 +18,7 @@ import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
-import { getRoasterState } from '../../lib/roasterState'
+import { getRoasterState, type Comment } from '../../lib/roasterState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
@@ -28,6 +28,8 @@ export default function ToolsetPage() {
   const hasRoast = Object.values(roastState.widgets).some(
     w => w.comment !== 'Awaiting review'
   )
+  const roastComments: Comment[] =
+    roastState.roast || Object.values(roastState.widgets)
 
   async function create() {
     setCreating(true)
@@ -49,6 +51,7 @@ export default function ToolsetPage() {
         try {
           const parsed = JSON.parse(ingest)
           form.append('files', JSON.stringify(parsed.files || []))
+          form.append('code', JSON.stringify(parsed.code || []))
         } catch {}
       }
       const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })
@@ -141,18 +144,31 @@ export default function ToolsetPage() {
               </div>
             )}
             <div className="grid md:grid-cols-2 gap-6">
+              {hasRoast && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Roast Findings</h2>
+                  <ul className="space-y-2">
+                    {roastComments.map(c => (
+                      <li key={c.department} className="text-sm">
+                        <span className="font-medium capitalize">{c.department}:</span>{' '}
+                        {c.comment}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
               <Card className="flex flex-wrap gap-6 text-sm">
-                <div>Envs: {data.pulse.envs.join(', ')}</div>
-                <div>Deploys today: {data.pulse.deploysToday}</div>
-                <div>Critical alerts: {data.pulse.criticalAlerts}</div>
-                <div>Files analyzed: {data.pulse.filesAnalyzed}</div>
-                <div>Docs reviewed: {data.pulse.docsReviewed}</div>
+                <div>Envs: {(data.pulse?.envs ?? []).join(', ')}</div>
+                <div>Deploys today: {data.pulse?.deploysToday}</div>
+                <div>Critical alerts: {data.pulse?.criticalAlerts}</div>
+                <div>Files analyzed: {data.pulse?.filesAnalyzed}</div>
+                <div>Docs reviewed: {data.pulse?.docsReviewed}</div>
               </Card>
               <Card>
-                <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>
-                <p className="text-sm mb-4 text-zinc-300">{data.stack.description}</p>
+                <h2 className="text-xl font-semibold mb-2">{data.stack?.appName}</h2>
+                <p className="text-sm mb-4 text-zinc-300">{data.stack?.description}</p>
                 <div className="flex flex-wrap gap-4">
-                  {data.stack.integrations.map(i => (
+                  {data.stack?.integrations?.map(i => (
                     <div key={i.name} className="flex items-center gap-2 text-sm">
                       {i.logoUrl && <img src={i.logoUrl} alt="" className="h-5 w-5" />}
                       {i.name}
@@ -163,7 +179,7 @@ export default function ToolsetPage() {
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Actions</h2>
                 <ul className="space-y-2">
-                  {data.actions.map(a => (
+                  {data.actions?.map(a => (
                     <li key={a.id} className="text-sm">
                       <div className="flex items-center gap-2">
                         <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
@@ -193,7 +209,7 @@ export default function ToolsetPage() {
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Timeline Estimate</h2>
                 <ul className="space-y-3">
-                  {data.timeline.map(t => (
+                  {data.timeline?.map(t => (
                     <li key={t.phase}>
                       <div className="text-sm font-medium">{t.phase}</div>
                       <div className="h-2 bg-zinc-700 rounded">
@@ -212,7 +228,7 @@ export default function ToolsetPage() {
                 <div className="relative pl-4">
                   <div className="absolute left-1 top-0 bottom-0 w-px bg-emerald-700/50" />
                   <ul className="space-y-4">
-                    {data.onboardingPlan.map(item => (
+                    {data.onboardingPlan?.map(item => (
                       <li key={item.day} className="relative pl-6">
                         <span className="absolute left-1 top-1 w-2 h-2 rounded-full bg-emerald-500" />
                         <div className="text-xs text-emerald-400 font-medium">{item.day}</div>
@@ -222,49 +238,51 @@ export default function ToolsetPage() {
                   </ul>
                 </div>
               </Card>
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
-                <div className="space-y-4">
-                  <Metric label="Coverage" value={data.reliability.coveragePct} />
-                  <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
-                  <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
-                </div>
-                <div className="mt-4 w-60 h-60 mx-auto">
-                  <Radar
-                    data={{
-                      labels: ['Coverage', 'Evidence', 'LLM Agreement'],
-                      datasets: [
-                        {
-                          label: 'Reliability',
-                          data: [
-                            data.reliability.coveragePct,
-                            data.reliability.evidenceCompletenessPct,
-                            data.reliability.llmStaticAgreementPct
-                          ],
-                          backgroundColor: 'rgba(16,185,129,0.3)',
-                          borderColor: '#10b981',
-                          pointBackgroundColor: '#10b981',
-                          pointBorderColor: '#10b981',
-                          fill: true
-                        }
-                      ]
-                    }}
-                    options={{
-                      plugins: { legend: { display: false } },
-                      scales: {
-                        r: {
-                          beginAtZero: true,
-                          angleLines: { color: '#27272a' },
-                          grid: { color: '#27272a' },
-                          max: 100,
-                          ticks: { display: false }
-                        }
-                      },
-                      maintainAspectRatio: false
-                    }}
-                  />
-                </div>
-              </Card>
+              {data.reliability && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
+                  <div className="space-y-4">
+                    <Metric label="Coverage" value={data.reliability.coveragePct} />
+                    <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
+                    <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
+                  </div>
+                  <div className="mt-4 w-60 h-60 mx-auto">
+                    <Radar
+                      data={{
+                        labels: ['Coverage', 'Evidence', 'LLM Agreement'],
+                        datasets: [
+                          {
+                            label: 'Reliability',
+                            data: [
+                              data.reliability.coveragePct,
+                              data.reliability.evidenceCompletenessPct,
+                              data.reliability.llmStaticAgreementPct
+                            ],
+                            backgroundColor: 'rgba(16,185,129,0.3)',
+                            borderColor: '#10b981',
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#10b981',
+                            fill: true
+                          }
+                        ]
+                      }}
+                      options={{
+                        plugins: { legend: { display: false } },
+                        scales: {
+                          r: {
+                            beginAtZero: true,
+                            angleLines: { color: '#27272a' },
+                            grid: { color: '#27272a' },
+                            max: 100,
+                            ticks: { display: false }
+                          }
+                        },
+                        maintainAspectRatio: false
+                      }}
+                    />
+                  </div>
+                </Card>
+              )}
             </div>
           </div>
         )}

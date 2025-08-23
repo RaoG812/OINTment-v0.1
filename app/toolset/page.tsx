@@ -18,7 +18,7 @@ import type { DashboardData } from '../../lib/types.oint'
 import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
-import { getRoasterState } from '../../lib/roasterState'
+import { getRoasterState, type Comment } from '../../lib/roasterState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
@@ -28,6 +28,8 @@ export default function ToolsetPage() {
   const hasRoast = Object.values(roastState.widgets).some(
     w => w.comment !== 'Awaiting review'
   )
+  const roastComments: Comment[] =
+    roastState.roast || Object.values(roastState.widgets)
 
   async function create() {
     setCreating(true)
@@ -80,6 +82,12 @@ export default function ToolsetPage() {
       default:
         return 'bg-emerald-600'
     }
+  }
+
+  function shorten(text: string) {
+    const words = (text || '').split(/\s+/)
+    const count = Math.max(1, Math.round(words.length * 0.25))
+    return words.slice(0, count).join(' ') + (words.length > count ? '…' : '')
   }
 
   return (
@@ -142,6 +150,19 @@ export default function ToolsetPage() {
               </div>
             )}
             <div className="grid md:grid-cols-2 gap-6">
+              {hasRoast && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Roast Findings</h2>
+                  <ul className="space-y-2">
+                    {roastComments.map(c => (
+                      <li key={c.department} className="text-sm">
+                        <span className="font-medium capitalize">{c.department}:</span>{' '}
+                        {shorten(c.comment)}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
               <Card className="flex flex-wrap gap-6 text-sm">
                 <div>Envs: {(data.pulse?.envs ?? []).join(', ')}</div>
                 <div>Deploys today: {data.pulse?.deploysToday}</div>

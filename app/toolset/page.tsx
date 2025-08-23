@@ -142,17 +142,17 @@ export default function ToolsetPage() {
             )}
             <div className="grid md:grid-cols-2 gap-6">
               <Card className="flex flex-wrap gap-6 text-sm">
-                <div>Envs: {data.pulse.envs.join(', ')}</div>
-                <div>Deploys today: {data.pulse.deploysToday}</div>
-                <div>Critical alerts: {data.pulse.criticalAlerts}</div>
-                <div>Files analyzed: {data.pulse.filesAnalyzed}</div>
-                <div>Docs reviewed: {data.pulse.docsReviewed}</div>
+                <div>Envs: {(data.pulse?.envs ?? []).join(', ')}</div>
+                <div>Deploys today: {data.pulse?.deploysToday}</div>
+                <div>Critical alerts: {data.pulse?.criticalAlerts}</div>
+                <div>Files analyzed: {data.pulse?.filesAnalyzed}</div>
+                <div>Docs reviewed: {data.pulse?.docsReviewed}</div>
               </Card>
               <Card>
-                <h2 className="text-xl font-semibold mb-2">{data.stack.appName}</h2>
-                <p className="text-sm mb-4 text-zinc-300">{data.stack.description}</p>
+                <h2 className="text-xl font-semibold mb-2">{data.stack?.appName}</h2>
+                <p className="text-sm mb-4 text-zinc-300">{data.stack?.description}</p>
                 <div className="flex flex-wrap gap-4">
-                  {data.stack.integrations.map(i => (
+                  {data.stack?.integrations?.map(i => (
                     <div key={i.name} className="flex items-center gap-2 text-sm">
                       {i.logoUrl && <img src={i.logoUrl} alt="" className="h-5 w-5" />}
                       {i.name}
@@ -163,7 +163,7 @@ export default function ToolsetPage() {
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Actions</h2>
                 <ul className="space-y-2">
-                  {data.actions.map(a => (
+                  {data.actions?.map(a => (
                     <li key={a.id} className="text-sm">
                       <div className="flex items-center gap-2">
                         <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
@@ -193,7 +193,7 @@ export default function ToolsetPage() {
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Timeline Estimate</h2>
                 <ul className="space-y-3">
-                  {data.timeline.map(t => (
+                  {data.timeline?.map(t => (
                     <li key={t.phase}>
                       <div className="text-sm font-medium">{t.phase}</div>
                       <div className="h-2 bg-zinc-700 rounded">
@@ -212,7 +212,7 @@ export default function ToolsetPage() {
                 <div className="relative pl-4">
                   <div className="absolute left-1 top-0 bottom-0 w-px bg-emerald-700/50" />
                   <ul className="space-y-4">
-                    {data.onboardingPlan.map(item => (
+                    {data.onboardingPlan?.map(item => (
                       <li key={item.day} className="relative pl-6">
                         <span className="absolute left-1 top-1 w-2 h-2 rounded-full bg-emerald-500" />
                         <div className="text-xs text-emerald-400 font-medium">{item.day}</div>

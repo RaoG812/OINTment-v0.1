@@ -19,7 +19,7 @@ import HexBackground from '../../components/HexBackground'
 import AnimatedLogo from '../../components/AnimatedLogo'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
-import { getRoasterState } from '../../lib/roasterState'
+import { getRoasterState, type Comment } from '../../lib/roasterState'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
@@ -29,6 +29,8 @@ export default function ToolsetPage() {
   const hasRoast = Object.values(roastState.widgets).some(
     w => w.comment !== 'Awaiting review'
   )
+  const roastComments: Comment[] =
+    roastState.roast || (Object.values(roastState.widgets) as Comment[])
 
   async function create() {
     setCreating(true)
@@ -50,6 +52,7 @@ export default function ToolsetPage() {
         try {
           const parsed = JSON.parse(ingest)
           form.append('files', JSON.stringify(parsed.files || []))
+          form.append('code', JSON.stringify(parsed.code || []))
         } catch {}
       }
       const createRes = await fetch('/api/oint/create', { method: 'POST', body: form })
@@ -80,6 +83,12 @@ export default function ToolsetPage() {
       default:
         return 'bg-emerald-600'
     }
+  }
+
+  function shorten(text: string) {
+    const words = (text || '').split(/\s+/)
+    const count = Math.max(1, Math.round(words.length * 0.25))
+    return words.slice(0, count).join(' ') + (words.length > count ? '…' : '')
   }
 
   return (
@@ -182,6 +191,7 @@ export default function ToolsetPage() {
             )}
           </div>
         </div>
+
         {data && (
           <div className="space-y-6">
             {!hasRoast && (
@@ -189,53 +199,72 @@ export default function ToolsetPage() {
                 Run a roast to enrich these insights.
               </div>
             )}
+
             <div className="grid md:grid-cols-2 gap-6">
+              {/* Roast Findings (kept) */}
+              {hasRoast && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Roast Findings</h2>
+                  <ul className="space-y-2">
+                    {roastComments.map(c => (
+                      <li key={c.department} className="text-sm">
+                        <span className="font-medium capitalize">{c.department}:</span>{' '}
+                        {shorten(c.comment)}
+                      </li>
+                    ))}
+                  </ul>
+                </Card>
+              )}
+
+              {/* Pulse (enhanced) */}
               <Card className="p-6 bg-gradient-to-br from-zinc-900/80 to-zinc-800/40 backdrop-blur-sm">
                 <h2 className="text-lg font-semibold mb-4">Pulse</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
                     <div
                       className="text-emerald-400 text-xl font-bold"
-                      title={data.pulse.envs.join(', ')}
+                      title={(data?.pulse?.envs ?? []).join(', ')}
                     >
-                      {data.pulse.envs.length}
+                      {(data?.pulse?.envs ?? []).length}
                     </div>
                     <div className="text-xs text-zinc-400 mt-1">Environments</div>
                   </div>
                   <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
                     <div className="text-emerald-400 text-xl font-bold">
-                      {data.pulse.deploysToday}
+                      {data?.pulse?.deploysToday ?? 0}
                     </div>
                     <div className="text-xs text-zinc-400 mt-1">Deploys today</div>
                   </div>
                   <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
                     <div className="text-emerald-400 text-xl font-bold">
-                      {data.pulse.criticalAlerts}
+                      {data?.pulse?.criticalAlerts ?? 0}
                     </div>
                     <div className="text-xs text-zinc-400 mt-1">Critical alerts</div>
                   </div>
                   <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
                     <div className="text-emerald-400 text-xl font-bold">
-                      {data.pulse.filesAnalyzed}
+                      {data?.pulse?.filesAnalyzed ?? 0}
                     </div>
                     <div className="text-xs text-zinc-400 mt-1">Files analyzed</div>
                   </div>
                   <div className="p-3 rounded-lg bg-zinc-800/50 text-center">
                     <div className="text-emerald-400 text-xl font-bold">
-                      {data.pulse.docsReviewed}
+                      {data?.pulse?.docsReviewed ?? 0}
                     </div>
                     <div className="text-xs text-zinc-400 mt-1">Docs reviewed</div>
                   </div>
                 </div>
               </Card>
+
+              {/* Stack (enhanced) */}
               <Card className="p-6 bg-gradient-to-br from-zinc-900/80 to-zinc-800/40 backdrop-blur-sm relative overflow-hidden">
                 <div className="absolute inset-0 rounded-xl border border-zinc-700/50 pointer-events-none" />
-                <h2 className="text-xl font-semibold mb-1 relative z-10">{data.stack.appName}</h2>
+                <h2 className="text-xl font-semibold mb-1 relative z-10">{data?.stack?.appName}</h2>
                 <p className="text-sm mb-6 text-zinc-300 relative z-10">
-                  {data.stack.description}
+                  {data?.stack?.description}
                 </p>
                 <div className="flex flex-wrap gap-4 relative z-10">
-                  {data.stack.integrations.map(i => (
+                  {(data?.stack?.integrations ?? []).map(i => (
                     <div
                       key={i.name}
                       className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-2 py-1 text-sm"
@@ -248,10 +277,12 @@ export default function ToolsetPage() {
                   ))}
                 </div>
               </Card>
+
+              {/* Actions */}
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Actions</h2>
                 <ul className="space-y-2">
-                  {data.actions.map(a => (
+                  {data.actions?.map(a => (
                     <li key={a.id} className="text-sm">
                       <div className="flex items-center gap-2">
                         <Badge className={`${severityColor(a.severity)} text-white`}>{a.severity}</Badge>
@@ -262,6 +293,8 @@ export default function ToolsetPage() {
                   ))}
                 </ul>
               </Card>
+
+              {/* Finance */}
               {data.finance && (
                 <Card>
                   <h2 className="text-lg font-semibold mb-2">Finance</h2>
@@ -278,10 +311,12 @@ export default function ToolsetPage() {
                   </div>
                 </Card>
               )}
+
+              {/* Timeline Estimate */}
               <Card>
                 <h2 className="text-lg font-semibold mb-4">Timeline Estimate</h2>
                 <ul className="space-y-3">
-                  {data.timeline.map(t => (
+                  {data.timeline?.map(t => (
                     <li key={t.phase}>
                       <div className="text-sm font-medium">{t.phase}</div>
                       <div className="h-2 bg-zinc-700 rounded">
@@ -295,12 +330,14 @@ export default function ToolsetPage() {
                   ))}
                 </ul>
               </Card>
+
+              {/* 30-Day Onboarding Plan */}
               <Card>
                 <h2 className="text-lg font-semibold mb-4">30-Day Onboarding Plan</h2>
                 <div className="relative pl-4">
                   <div className="absolute left-1 top-0 bottom-0 w-px bg-emerald-700/50" />
                   <ul className="space-y-4">
-                    {data.onboardingPlan.map(item => (
+                    {data.onboardingPlan?.map(item => (
                       <li key={item.day} className="relative pl-6">
                         <span className="absolute left-1 top-1 w-2 h-2 rounded-full bg-emerald-500" />
                         <div className="text-xs text-emerald-400 font-medium">{item.day}</div>
@@ -310,57 +347,55 @@ export default function ToolsetPage() {
                   </ul>
                 </div>
               </Card>
-              <Card>
-                <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
-                <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
-                  <div className="w-48 h-48 sm:w-60 sm:h-60 mx-auto">
-                    <Radar
-                      data={{
-                        labels: ['Coverage', 'Evidence', 'LLM Agreement'],
-                        datasets: [
-                          {
-                            label: 'Reliability',
-                            data: [
-                              data.reliability.coveragePct,
-                              data.reliability.evidenceCompletenessPct,
-                              data.reliability.llmStaticAgreementPct
-                            ],
-                            backgroundColor: 'rgba(16,185,129,0.3)',
-                            borderColor: '#10b981',
-                            pointBackgroundColor: '#10b981',
-                            pointBorderColor: '#10b981',
-                            fill: true
-                          }
-                        ]
-                      }}
-                      options={{
-                        plugins: { legend: { display: false } },
-                        scales: {
-                          r: {
-                            beginAtZero: true,
-                            angleLines: { color: '#27272a' },
-                            grid: { color: '#27272a' },
-                            max: 100,
-                            ticks: { display: false }
-                          }
-                        },
-                        maintainAspectRatio: false
-                      }}
-                    />
+
+              {/* Reliability Gate (merged: Radar + Metrics, conditional) */}
+              {data.reliability && (
+                <Card>
+                  <h2 className="text-lg font-semibold mb-4">Reliability Gate</h2>
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6">
+                    <div className="w-48 h-48 sm:w-60 sm:h-60 mx-auto">
+                      <Radar
+                        data={{
+                          labels: ['Coverage', 'Evidence', 'LLM Agreement'],
+                          datasets: [
+                            {
+                              label: 'Reliability',
+                              data: [
+                                data.reliability.coveragePct,
+                                data.reliability.evidenceCompletenessPct,
+                                data.reliability.llmStaticAgreementPct
+                              ],
+                              backgroundColor: 'rgba(16,185,129,0.3)',
+                              borderColor: '#10b981',
+                              pointBackgroundColor: '#10b981',
+                              pointBorderColor: '#10b981',
+                              fill: true
+                            }
+                          ]
+                        }}
+                        options={{
+                          plugins: { legend: { display: false } },
+                          scales: {
+                            r: {
+                              beginAtZero: true,
+                              angleLines: { color: '#27272a' },
+                              grid: { color: '#27272a' },
+                              max: 100,
+                              ticks: { display: false }
+                            }
+                          },
+                          maintainAspectRatio: false
+                        }}
+                      />
+                    </div>
+                    <div className="flex-1 mt-6 sm:mt-0 space-y-4">
+                      <Metric label="Coverage" value={data.reliability.coveragePct} />
+                      <Metric label="Evidence" value={data.reliability.evidenceCompletenessPct} />
+                      <Metric label="LLM Agreement" value={data.reliability.llmStaticAgreementPct} />
+                    </div>
                   </div>
-                  <div className="flex-1 mt-6 sm:mt-0 space-y-4">
-                    <Metric label="Coverage" value={data.reliability.coveragePct} />
-                    <Metric
-                      label="Evidence"
-                      value={data.reliability.evidenceCompletenessPct}
-                    />
-                    <Metric
-                      label="LLM Agreement"
-                      value={data.reliability.llmStaticAgreementPct}
-                    />
-                  </div>
-                </div>
-              </Card>
+                </Card>
+              )}
             </div>
           </div>
         )}

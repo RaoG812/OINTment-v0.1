@@ -1,13 +1,11 @@
 'use client'
 import Link from 'next/link'
 import HexBackground from '../components/HexBackground'
-import AnimatedLogo from '../components/AnimatedLogo'
 
 export default function Home() {
   return (
     <main className="relative min-h-screen overflow-hidden">
       <HexBackground />
-      <AnimatedLogo className="fixed top-6 left-6 z-10 w-20 h-auto text-white opacity-80 pointer-events-none" />
       <div className="fixed inset-0 -z-10">
         <div
           className="absolute inset-0"

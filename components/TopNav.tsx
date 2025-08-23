@@ -26,9 +26,12 @@ export default function TopNav() {
         const active = pathname === l.href
         if (l.brand) {
           return (
-            <Link key={l.href} href={l.href} className={`${l.extra ?? ''}`}>
-              <span className="text-emerald-400">OINT</span>
-              <span className="text-white">ment</span>
+            <Link
+              key={l.href}
+              href={l.href}
+              className={`${l.extra ?? ''} text-emerald-400`}
+            >
+              OINTment
             </Link>
           )
         }

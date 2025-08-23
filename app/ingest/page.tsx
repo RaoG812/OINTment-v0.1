@@ -364,11 +364,15 @@ export default function IngestPage() {
                       ))}
                     </select>
                   )}
-                  {repos.length === 0 && (
+                  {repos.length === 0 ? (
                     <p className="text-xs text-zinc-400">
                       {reposError === 'unauthorized'
                         ? 'Login with GitHub to list repos or enter a public repo path.'
                         : 'Enter a public repo path (owner/repo).'}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-zinc-400">
+                      Select a repo or enter any public owner/repo path.
                     </p>
                   )}
                 </div>

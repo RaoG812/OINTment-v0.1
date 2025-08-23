@@ -107,60 +107,32 @@ export default function ToolsetPage() {
         </div>
       </div>
       <div className="relative z-10 p-6 space-y-6 fade-in-fast">
-        <div className="flex items-start justify-between">
-          <h1 className="text-2xl font-semibold">Toolset</h1>
-          <div className="text-right leading-tight">
-            <div className="text-5xl font-bold iridescent-text">Mission Control</div>
-            <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
-            <svg
-              viewBox="0 0 120 80"
-              className="mt-4 ml-auto w-40 opacity-70 text-zinc-500"
-            >
-              <circle cx="60" cy="40" r="10" fill="none" stroke="currentColor" />
-              <text x="60" y="44" textAnchor="middle" fontSize="6" fill="currentColor">OINT</text>
-              <circle cx="20" cy="20" r="6" fill="none" stroke="currentColor" />
-              <text x="20" y="24" textAnchor="middle" fontSize="5" fill="currentColor">Ingest</text>
-              <line x1="20" y1="20" x2="60" y2="40" stroke="currentColor" strokeWidth="0.5" />
-              <circle cx="100" cy="20" r="6" fill="none" stroke="currentColor" />
-              <text x="100" y="24" textAnchor="middle" fontSize="5" fill="currentColor">Matrix</text>
-              <line x1="100" y1="20" x2="60" y2="40" stroke="currentColor" strokeWidth="0.5" />
-              <circle cx="20" cy="60" r="6" fill="none" stroke="currentColor" />
-              <text x="20" y="64" textAnchor="middle" fontSize="5" fill="currentColor">Roaster</text>
-              <line x1="20" y1="60" x2="60" y2="40" stroke="currentColor" strokeWidth="0.5" />
-              <circle cx="100" cy="60" r="6" fill="none" stroke="currentColor" />
-              <text x="100" y="64" textAnchor="middle" fontSize="5" fill="currentColor">Vibe</text>
-              <line x1="100" y1="60" x2="60" y2="40" stroke="currentColor" strokeWidth="0.5" />
-            </svg>
-          </div>
-        </div>
-        {!data && (
-          <>
-            <Card className="max-w-md space-y-2">
-              {creating ? (
-                <div className="flex items-center gap-2">
-                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
-                  <span className="text-sm">Running OINT analysis…</span>
-                </div>
-              ) : (
-                <>
-                  <button
-                    onClick={create}
-                    className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
-                  >
-                    Create OINT
-                  </button>
-                  <p className="text-xs text-zinc-400">
-                    Requires at least one supporting document. More insight available after a roast.
-                  </p>
-                </>
-              )}
-            </Card>
-            {error && <div className="text-xs text-rose-400">{error}</div>}
-          </>
-        )}
-        {data && (
-          <div className="space-y-6">
-            <div>
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-4">
+            <h1 className="text-2xl font-semibold">Toolset</h1>
+            {!data && (
+              <Card className="max-w-md space-y-2">
+                {creating ? (
+                  <div className="flex items-center gap-2">
+                    <div className="h-5 w-5 animate-spin rounded-full border-2 border-zinc-600 border-t-emerald-500" />
+                    <span className="text-sm">Running OINT analysis…</span>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      onClick={create}
+                      className="px-4 py-2 bg-emerald-600 text-sm font-medium rounded-lg hover:bg-emerald-500 transition"
+                    >
+                      Create OINT
+                    </button>
+                    <p className="text-xs text-zinc-400">
+                      Requires at least one supporting document. More insight available after a roast.
+                    </p>
+                  </>
+                )}
+              </Card>
+            )}
+            {data && (
               <button
                 onClick={create}
                 disabled={creating}
@@ -168,7 +140,48 @@ export default function ToolsetPage() {
               >
                 {creating ? 'Recreating…' : 'Recreate OINT'}
               </button>
-            </div>
+            )}
+            {error && <div className="text-xs text-rose-400">{error}</div>}
+          </div>
+          <div className="text-right leading-tight">
+            <div className="text-5xl font-bold iridescent-text">Mission Control</div>
+            <div className="text-sm text-zinc-400">Ingest, Map, Roast & Vibe in sync</div>
+            <svg
+              viewBox="0 0 220 140"
+              className="mt-6 ml-auto w-64 opacity-80 text-zinc-500"
+            >
+              <defs>
+                <marker
+                  id="arrow"
+                  markerWidth="6"
+                  markerHeight="6"
+                  refX="5"
+                  refY="3"
+                  orient="auto"
+                  markerUnits="strokeWidth"
+                >
+                  <path d="M0,0 L6,3 L0,6 Z" fill="currentColor" />
+                </marker>
+              </defs>
+              <circle cx="110" cy="70" r="20" fill="none" stroke="currentColor" strokeWidth="1.5" />
+              <text x="110" y="74" textAnchor="middle" fontSize="8" fill="currentColor">OINT</text>
+              <circle cx="40" cy="20" r="12" fill="none" stroke="currentColor" />
+              <text x="40" y="24" textAnchor="middle" fontSize="6" fill="currentColor">Ingest</text>
+              <line x1="52" y1="26" x2="94" y2="60" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
+              <circle cx="180" cy="20" r="12" fill="none" stroke="currentColor" />
+              <text x="180" y="24" textAnchor="middle" fontSize="6" fill="currentColor">Matrix</text>
+              <line x1="168" y1="26" x2="126" y2="60" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
+              <circle cx="40" cy="120" r="12" fill="none" stroke="currentColor" />
+              <text x="40" y="124" textAnchor="middle" fontSize="6" fill="currentColor">Roaster</text>
+              <line x1="52" y1="114" x2="94" y2="80" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
+              <circle cx="180" cy="120" r="12" fill="none" stroke="currentColor" />
+              <text x="180" y="124" textAnchor="middle" fontSize="6" fill="currentColor">Vibe</text>
+              <line x1="168" y1="114" x2="126" y2="80" stroke="currentColor" strokeWidth="1" markerEnd="url(#arrow)" />
+            </svg>
+          </div>
+        </div>
+        {data && (
+          <div className="space-y-6">
             {!hasRoast && (
               <div className="text-xs text-zinc-400">
                 Run a roast to enrich these insights.

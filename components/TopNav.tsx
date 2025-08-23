@@ -3,7 +3,12 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 const links = [
-  { href: '/', label: 'OINTment', extra: 'font-semibold tracking-tight' },
+  {
+    href: '/',
+    label: 'OINTment',
+    extra: 'font-semibold tracking-tight text-[#00FF85] hover:text-[#00FF85]',
+    brand: true
+  },
   { href: '/ingest', label: 'Ingest' },
   { href: '/matrix', label: 'Matrix' },
   { href: '/roaster', label: 'Roaster' },
@@ -18,6 +23,13 @@ export default function TopNav() {
     <nav className="mx-auto max-w-7xl flex items-center gap-6 px-6 py-4 text-sm overflow-x-auto whitespace-nowrap">
       {links.map(l => {
         const active = pathname === l.href
+        if (l.brand) {
+          return (
+            <Link key={l.href} href={l.href} className={l.extra ?? ''}>
+              {l.label}
+            </Link>
+          )
+        }
         const base = 'hover:text-emerald-400'
         const cls = active ? 'text-emerald-400' : base
         return (

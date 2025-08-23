@@ -44,7 +44,7 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at 50% 50%, rgba(200,0,0,0.7) 40%, rgba(120,0,0,0.25) 65%, transparent 80%);
-  filter: drop-shadow(0 0 16px rgba(255,0,0,0.8));
+  filter: drop-shadow(0 0 16px rgba(255,0,0,0.8)) drop-shadow(0 0 40px rgba(255,0,0,0.4)) saturate(0.95);
   animation: blink 5s infinite;
 }
 
@@ -102,5 +102,18 @@
   to {
     transform: translate(10%, 10%);
   }
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+
+.logo-float {
+  animation: logoFloat 30s ease-in-out infinite;
+}
+
+.logo-float.delay {
+  animation-delay: 15s;
 }
 

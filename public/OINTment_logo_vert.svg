@@ -1,0 +1,11 @@
+<svg version="1.2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2048 2048" width="2048" height="2048">
+  <title>OINTment logo</title>
+  <style>
+    .s0 { fill: #ffffff }
+  </style>
+  <!-- Simplified placeholder logo -->
+  <path class="s0" d="M768 128h512v1792H768z"/>
+  <circle class="s0" cx="1024" cy="512" r="128"/>
+  <circle class="s0" cx="1024" cy="1024" r="128"/>
+  <circle class="s0" cx="1024" cy="1536" r="128"/>
+</svg>

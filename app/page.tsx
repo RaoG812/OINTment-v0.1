@@ -1,5 +1,6 @@
 'use client'
 import Link from 'next/link'
+import Image from 'next/image'
 import HexBackground from '../components/HexBackground'
 
 export default function Home() {
@@ -18,6 +19,10 @@ export default function Home() {
           }}
         />
         <div className="absolute inset-0 bg-black/60" />
+      </div>
+      <div className="pointer-events-none fixed inset-y-0 right-0 flex flex-col items-end justify-between z-0 opacity-20">
+        <Image src="/OINTment_logo_vert.svg" alt="OINTment logo" className="w-64 logo-float" width={2048} height={2048} />
+        <Image src="/OINTment_logo_vert.svg" alt="" className="w-64 logo-float delay" width={2048} height={2048} />
       </div>
       <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6">
         <div>

@@ -228,7 +228,7 @@ function FireLayer() {
           height: 200px;
           pointer-events: none;
           overflow: hidden;
-          z-index: 5;
+          z-index: 20;
         }
         .fire-layer span {
           position: absolute;
@@ -387,17 +387,20 @@ export default function RoasterPage() {
   return (
     <div className="relative overflow-hidden min-h-screen text-zinc-200 p-10">
       <HexBackground />
-      <div className="fixed inset-0 -z-10">
+      <div className="fixed inset-0 -z-30">
         <div className="absolute inset-0" style={gradientStyle} />
         <div className="absolute inset-0 bg-black/60" />
       </div>
       {level > 0.95 && <FireLayer />}
       <div
-        className="absolute -bottom-40 -right-40 opacity-20 z-10 no-hex"
+        className="absolute -bottom-40 -right-40 z-10 no-hex"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >
-        <Face level={level} />
+        <div className="absolute inset-0 bg-black pointer-events-none rounded-full" />
+        <div className="opacity-20">
+          <Face level={level} />
+        </div>
       </div>
       <div className="relative z-30 space-y-8 fade-in-fast">
         <div className="flex items-start justify-between">

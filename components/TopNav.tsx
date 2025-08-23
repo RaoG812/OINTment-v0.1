@@ -2,11 +2,16 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
+import AuthControls from './AuthControls'
 
 const links: { href: string; label: ReactNode; extra?: string; brand?: boolean }[] = [
   {
     href: '/',
-    label: 'OINTment',
+    label: (
+      <>
+        <span className="text-emerald-400">OINT</span>ment
+      </>
+    ),
     extra: 'text-lg font-semibold tracking-tight group',
     brand: true
   },
@@ -18,7 +23,7 @@ const links: { href: string; label: ReactNode; extra?: string; brand?: boolean }
   { href: '/3d-map', label: '3D Map' }
 ]
 
-export default function TopNav() {
+export default function TopNav({ isLoggedIn }: { isLoggedIn: boolean }) {
   const pathname = usePathname()
   return (
     <nav className="mx-auto max-w-7xl flex items-center gap-6 px-6 py-4 text-sm overflow-x-auto whitespace-nowrap fade-in-fast">
@@ -29,24 +34,27 @@ export default function TopNav() {
             <Link
               key={l.href}
               href={l.href}
-              className={`${l.extra ?? ''} text-emerald-400`}
+              className={l.extra ?? ''}
             >
-              OINTment
+              {l.label}
             </Link>
           )
         }
-        const base = 'hover:text-emerald-400'
-        const cls = active ? 'text-emerald-400' : base
+        const base = 'hover:text-emerald-400 hover:border-emerald-400'
+        const cls = active
+          ? 'text-emerald-400 border-b-2 border-emerald-400'
+          : `border-b-2 border-transparent ${base}`
         return (
           <Link
             key={l.href}
             href={l.href}
-            className={`${cls} ${l.extra ?? ''}`}
+            className={`${cls} pb-1 ${l.extra ?? ''}`}
           >
             {l.label}
           </Link>
         )
       })}
+      <AuthControls isLoggedIn={isLoggedIn} />
     </nav>
   )
 }

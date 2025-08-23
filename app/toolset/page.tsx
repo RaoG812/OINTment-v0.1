@@ -19,7 +19,6 @@ import HexBackground from '../../components/HexBackground'
 import { getOintData, setOintData } from '../../lib/toolsetState'
 import { getDocs, type DocItem } from '../../lib/docsState'
 import { getRoasterState } from '../../lib/roasterState'
-import Image from 'next/image'
 
 export default function ToolsetPage() {
   const [data, setData] = useState<DashboardData | null>(getOintData())
@@ -83,7 +82,7 @@ export default function ToolsetPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden fade-in-fast">
+    <main className="relative min-h-screen overflow-hidden">
       <HexBackground />
       <div className="fixed inset-0 -z-10">
         <div
@@ -99,13 +98,15 @@ export default function ToolsetPage() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
       <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-20">
-        <Image
-          src="/OINTment_logo_vert.svg"
-          alt="OINTment logo background"
-          className="h-full w-auto object-contain scale-150 translate-x-1/4 animate-logo-draw"
-          width={2048}
-          height={2048}
-        />
+        <svg
+          className="h-full w-auto object-contain scale-150 translate-x-[35%]"
+          viewBox="0 0 2048 2048"
+        >
+          <use
+            href="/OINTment_logo_vert.svg#outline"
+            className="animate-logo-draw text-white"
+          />
+        </svg>
       </div>
       <div className="relative z-10 p-6 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>

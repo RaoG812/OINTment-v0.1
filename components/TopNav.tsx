@@ -6,12 +6,8 @@ import type { ReactNode } from 'react'
 const links: { href: string; label: ReactNode; extra?: string; brand?: boolean }[] = [
   {
     href: '/',
-    label: (
-      <>
-        <span className="text-emerald-400">OINT</span>ment
-      </>
-    ),
-    extra: 'text-lg font-semibold tracking-tight',
+    label: 'OINTment',
+    extra: 'text-lg font-semibold tracking-tight group',
     brand: true
   },
   { href: '/ingest', label: 'Ingest' },
@@ -30,8 +26,15 @@ export default function TopNav() {
         const active = pathname === l.href
         if (l.brand) {
           return (
-            <Link key={l.href} href={l.href} className={l.extra ?? ''}>
-              {l.label}
+            <Link key={l.href} href={l.href} className={`${l.extra ?? ''} text-white`}>
+              <span
+                className={`${
+                  active ? 'text-emerald-400' : 'text-white transition-colors'
+                } group-hover:text-emerald-400`}
+              >
+                OINT
+              </span>
+              <span className="text-white">ment</span>
             </Link>
           )
         }

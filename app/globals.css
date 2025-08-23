@@ -137,13 +137,17 @@
 }
 
 .animate-logo-draw {
-  clip-path: inset(0 0 100% 0);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-dasharray: 10000;
+  stroke-dashoffset: 10000;
   animation: logoDraw 4s ease forwards;
 }
 
 @keyframes logoDraw {
   to {
-    clip-path: inset(0 0 0 0);
+    stroke-dashoffset: 0;
   }
 }
 

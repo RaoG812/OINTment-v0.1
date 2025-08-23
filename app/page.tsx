@@ -4,7 +4,7 @@ import HexBackground from '../components/HexBackground'
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen overflow-hidden fade-in-fast">
+    <main className="relative min-h-screen overflow-hidden">
       <HexBackground />
       <div className="fixed inset-0 -z-10">
         <div
@@ -21,7 +21,7 @@ export default function Home() {
       </div>
       {/* Stretched background logo with iridescence */}
       <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-30 w-full">
-        <div className="h-full w-full scale-150 translate-x-1/4 iridescent-logo" />
+        <div className="h-full w-full scale-150 translate-x-[35%] iridescent-logo" />
       </div>
       <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6 fade-in-fast">
         <div>

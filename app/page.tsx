@@ -20,10 +20,23 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
-      <div className="pointer-events-none fixed inset-y-0 right-0 flex flex-col items-end justify-between z-0 opacity-20">
-        <Image src="/OINTment_logo_vert.svg" alt="OINTment logo" className="w-64 logo-float" width={2048} height={2048} />
-        <Image src="/OINTment_logo_vert.svg" alt="" className="w-64 logo-float delay" width={2048} height={2048} />
+      {/* Stretched background logo with smaller overlay */}
+      <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-20">
+        <Image
+          src="/OINTment_logo_vert.svg"
+          alt="OINTment logo background"
+          className="h-full w-auto object-contain"
+          width={2048}
+          height={2048}
+        />
       </div>
+      <Image
+        src="/OINTment_logo_vert.svg"
+        alt="OINTment logo"
+        className="pointer-events-none fixed top-4 right-4 w-20 z-20"
+        width={2048}
+        height={2048}
+      />
       <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">OINTment</h1>

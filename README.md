@@ -1,6 +1,8 @@
 # OINTment
 
 OINTment is an onboarding insights toolset built with Next.js and React. It ingests repositories, maps dependencies, and visualizes commit history to highlight integration gaps.
+![Новый проект](https://github.com/user-attachments/assets/fe9c377e-af8e-4306-93b4-d35807dc048b)
+
 
 ## Features
 

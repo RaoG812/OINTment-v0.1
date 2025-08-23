@@ -393,7 +393,7 @@ export default function RoasterPage() {
       </div>
       {level > 0.95 && <FireLayer />}
       <div
-        className="absolute -bottom-40 -right-40 z-10 no-hex"
+        className="absolute -bottom-40 -right-40 -z-10 no-hex"
         aria-hidden="true"
         style={{ transform: 'scale(3)', transformOrigin: 'bottom right' }}
       >

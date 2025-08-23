@@ -296,6 +296,17 @@ export default function MapPage() {
     return view === 'front' && branch !== 'all' ? (time / 100) * totalLength : totalLength
   }, [time, totalLength, branch, view])
 
+  const timeFrame = useMemo(() => {
+    if (branch === 'all' || view !== 'front') return null
+    const branchCommits = sorted.filter(c => c.branch === branch)
+    if (branchCommits.length === 0) return null
+    const idx = Math.min(
+      branchCommits.length - 1,
+      Math.floor((time / 100) * branchCommits.length)
+    )
+    return { start: branchCommits[0].date, end: branchCommits[idx].date }
+  }, [branch, view, sorted, time])
+
   const displayPositions: DisplayPos[] = useMemo(() => {
     return positions
       .filter(p => branch === 'all' || p.commit.branch === branch)
@@ -303,16 +314,11 @@ export default function MapPage() {
       .map(p => {
         const offset = p.commit.offset || { x: 0, y: 0, z: 0 }
         const scale = branch === 'all' ? 1 : 0.3
-        const seed = parseInt(p.commit.sha.slice(0, 4), 16)
-        const jitterX =
-          branch === 'all'
-            ? (((Math.floor(seed / 10000)) % 100) / 100 - 0.5) * 0.2
-            : 0
-        const jitterY = branch === 'all' ? ((seed % 100) / 100 - 0.5) * 0.2 : 0
-        const jitterZ =
-          branch === 'all'
-            ? (((Math.floor(seed / 100)) % 100) / 100 - 0.5) * 0.2
-            : 0
+        const seed = parseInt(p.commit.sha.slice(0, 8), 16)
+        const jitterScale = branch === 'all' ? 0.2 : 0.05
+        const jitterX = (((seed & 0xff) / 255) - 0.5) * jitterScale
+        const jitterY = ((((seed >> 8) & 0xff) / 255) - 0.5) * jitterScale
+        const jitterZ = ((((seed >> 16) & 0xff) / 255) - 0.5) * jitterScale
         const vec = new THREE.Vector3(
           Math.round(p.x / GRID_X) * GRID_X +
             (branch === 'all' ? offset.x * GRID_X * 0.3 : offset.x * GRID_X * 0.3) +
@@ -339,7 +345,7 @@ export default function MapPage() {
           current: p.current
         } as DisplayPos
       })
-  }, [positions, branch, view, laneBounds])
+  }, [positions, branch, view, laneBounds, sliceX])
 
   const branchOrigins = useMemo(() => {
     const map = new Map<string, { x: number; y: number; z: number }>()
@@ -378,6 +384,36 @@ export default function MapPage() {
   const controlsRef = useRef<any>(null)
   const groupRef = useRef<THREE.Group>(null)
 
+  useEffect(() => {
+    const handle = (e: KeyboardEvent) => {
+      if (!controlsRef.current) return
+      const step = 1
+      const dir = new THREE.Vector3()
+      switch (e.key) {
+        case 'ArrowUp':
+          dir.set(0, 0, -1)
+          break
+        case 'ArrowDown':
+          dir.set(0, 0, 1)
+          break
+        case 'ArrowLeft':
+          dir.set(-1, 0, 0)
+          break
+        case 'ArrowRight':
+          dir.set(1, 0, 0)
+          break
+        default:
+          return
+      }
+      dir.multiplyScalar(step)
+      controlsRef.current.target.add(dir)
+      controlsRef.current.object.position.add(dir)
+      controlsRef.current.update()
+    }
+    window.addEventListener('keydown', handle)
+    return () => window.removeEventListener('keydown', handle)
+  }, [])
+
   function CameraRig({
     target,
     view,
@@ -396,27 +432,34 @@ export default function MapPage() {
     slice?: number
   }) {
     const { camera } = useThree()
+    const rangeStart = range?.start
+    const rangeEnd = range?.end
     useEffect(() => {
       const from = camera.position.clone()
       let to: THREE.Vector3
       let tgt: THREE.Vector3
-      if (slice !== undefined && view === 'front') {
-        to = new THREE.Vector3(slice - 10, offset, depth)
-        tgt = new THREE.Vector3(slice, offset, depth)
+      if (slice !== undefined) {
+        if (view === 'front') {
+          to = new THREE.Vector3(slice - 10, offset, depth)
+          tgt = new THREE.Vector3(slice, offset, depth)
+        } else {
+          to = new THREE.Vector3(slice - 10, offset, depth + 20)
+          tgt = new THREE.Vector3(slice, offset, depth)
+        }
         camera.up.set(0, 1, 0)
-      } else if (range) {
-        const center = (range.start + range.end) / 2
+      } else if (rangeStart !== undefined && rangeEnd !== undefined) {
+        const center = (rangeStart + rangeEnd) / 2
         if (view === 'top') {
           to = new THREE.Vector3(center, 40, 0)
           tgt = new THREE.Vector3(center, 0, 0)
           camera.up.set(0, 0, -1)
         } else if (view === 'front') {
-          to = new THREE.Vector3(range.start - 10, offset, depth)
-          tgt = new THREE.Vector3(range.end, offset, depth)
+          to = new THREE.Vector3(rangeStart - 10, offset, depth)
+          tgt = new THREE.Vector3(rangeEnd, offset, depth)
           camera.up.set(0, 1, 0)
         } else {
-          to = new THREE.Vector3(range.start - 10, offset, depth + 5)
-          tgt = new THREE.Vector3(range.end, offset, depth)
+          to = new THREE.Vector3(rangeStart - 10, offset, depth + 5)
+          tgt = new THREE.Vector3(rangeEnd, offset, depth)
           camera.up.set(0, 1, 0)
         }
       } else {
@@ -434,23 +477,16 @@ export default function MapPage() {
           camera.up.set(0, 1, 0)
         }
       }
-      const startRot = groupRef.current?.rotation.clone() || new THREE.Euler()
-      const endRot = new THREE.Euler(0, 0, 0)
       let t = 0
       const anim = () => {
         t += 0.05
         camera.position.lerpVectors(from, to, t)
         controlsRef.current?.target.lerp(tgt, t)
         controlsRef.current?.update()
-        if (groupRef.current) {
-          groupRef.current.rotation.x = THREE.MathUtils.lerp(startRot.x, endRot.x, t)
-          groupRef.current.rotation.y = THREE.MathUtils.lerp(startRot.y, endRot.y, t)
-          groupRef.current.rotation.z = THREE.MathUtils.lerp(startRot.z, endRot.z, t)
-        }
         if (t < 1) requestAnimationFrame(anim)
       }
       anim()
-    }, [view, target, offset, range, branch, camera])
+    }, [view, target, offset, depth, branch, slice, rangeStart, rangeEnd, camera])
     return null
   }
 
@@ -737,6 +773,15 @@ export default function MapPage() {
                   <meshBasicMaterial color="#fde047" />
                 </mesh>
               ))}
+              {view === 'front' && branch !== 'all' && (
+                <mesh
+                  position={[sliceX, selectedPos.y, selectedPos.z]}
+                  rotation={[0, Math.PI / 2, 0]}
+                >
+                  <planeGeometry args={[4, 10]} />
+                  <meshBasicMaterial color="#ffffff" transparent opacity={0.05} />
+                </mesh>
+              )}
               {displayPositions.map(p => (
                 <CommitSphere key={p.commit.sha} p={p} onSelect={selectCommit} />
               ))}
@@ -758,6 +803,11 @@ export default function MapPage() {
                   {l.text}
                 </span>
               ))}
+            </div>
+          )}
+          {view === 'front' && branch !== 'all' && timeFrame && (
+            <div className="absolute top-2 left-1/2 -translate-x-1/2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">
+              {new Date(timeFrame.start).toLocaleDateString()} - {new Date(timeFrame.end).toLocaleDateString()}
             </div>
           )}
           <>

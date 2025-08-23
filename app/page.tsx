@@ -1,11 +1,10 @@
 'use client'
 import Link from 'next/link'
-import Image from 'next/image'
 import HexBackground from '../components/HexBackground'
 
 export default function Home() {
   return (
-    <main className="relative min-h-screen overflow-hidden">
+    <main className="relative min-h-screen overflow-hidden fade-in-fast">
       <HexBackground />
       <div className="fixed inset-0 -z-10">
         <div
@@ -20,26 +19,15 @@ export default function Home() {
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
-      {/* Stretched background logo with smaller overlay */}
-      <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-20">
-        <Image
-          src="/OINTment_logo_vert.svg"
-          alt="OINTment logo background"
-          className="h-full w-auto object-contain scale-150 translate-x-1/4"
-          width={2048}
-          height={2048}
-        />
+      {/* Stretched background logo with iridescence */}
+      <div className="pointer-events-none fixed inset-y-0 right-0 z-0 opacity-30 w-full">
+        <div className="h-full w-full scale-150 translate-x-1/4 iridescent-logo" />
       </div>
-      <Image
-        src="/OINTment_logo_vert.svg"
-        alt="OINTment logo"
-        className="pointer-events-none fixed top-4 left-4 w-20 z-20"
-        width={2048}
-        height={2048}
-      />
-      <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6">
+      <div className="relative z-10 p-6 max-w-3xl mx-auto space-y-6 fade-in-fast">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">OINTment</h1>
+          <h1 className="text-4xl font-semibold tracking-tight">
+            <span className="text-emerald-400">OINT</span>ment
+          </h1>
           <p className="text-sm text-zinc-400">Onboarding Insights Neural Toolset</p>
         </div>
         <div className="flex gap-4">
@@ -61,7 +49,7 @@ export default function Home() {
         </div>
         <div className="pt-8 text-sm text-zinc-400 max-w-prose">
           <p>
-            <span className="font-semibold">OINT</span> stands for
+            <span className="font-semibold text-emerald-400">OINT</span> stands for
             <em> Onboarding Insights Neural Toolset</em>. OINTment smooths project onboarding by exposing integrations,
             risks and recommended next steps.
           </p>

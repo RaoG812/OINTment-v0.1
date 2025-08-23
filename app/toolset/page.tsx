@@ -83,7 +83,7 @@ export default function ToolsetPage() {
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden">
+    <main className="relative min-h-screen overflow-hidden fade-in-fast">
       <HexBackground />
       <div className="fixed inset-0 -z-10">
         <div
@@ -107,7 +107,7 @@ export default function ToolsetPage() {
           height={2048}
         />
       </div>
-      <div className="relative z-10 p-6 space-y-6">
+      <div className="relative z-10 p-6 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>
         {!data && (
           <>

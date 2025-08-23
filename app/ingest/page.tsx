@@ -23,7 +23,7 @@ type Result = {
 
 function Card({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 shadow-xl p-4 backdrop-blur-sm">
+    <div className="rounded-2xl bg-zinc-900/60 border border-zinc-800 shadow-xl p-4 backdrop-blur-sm fade-in-fast">
       {children}
     </div>
   )
@@ -267,7 +267,7 @@ export default function IngestPage() {
         />
         <div className="absolute inset-0 bg-black/60" />
       </div>
-      <div className="relative z-10 p-10 space-y-6">
+      <div className="relative z-10 p-10 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold tracking-tight">Ingest</h1>
         <div className="flex flex-col md:flex-row md:gap-8">
           <div className="space-y-8 max-w-md">

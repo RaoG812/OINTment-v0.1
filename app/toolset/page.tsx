@@ -99,7 +99,12 @@ export default function ToolsetPage() {
         <div className="absolute inset-0 bg-black/60" />
       </div>
       <div className="pointer-events-none fixed inset-0 z-0 opacity-20">
-        <AnimatedLogo className="h-full w-auto object-contain scale-150 text-white" />
+        <div
+          className="absolute top-1/2 h-full -translate-x-1/2 -translate-y-1/2 scale-[1.5]"
+          style={{ left: '16.7%' }}
+        >
+          <AnimatedLogo className="h-full w-auto text-white" />
+        </div>
       </div>
       <div className="relative z-10 p-6 space-y-6 fade-in-fast">
         <h1 className="text-2xl font-semibold">Toolset — OINT Mission Control</h1>

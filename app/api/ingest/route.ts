@@ -1,10 +1,15 @@
 // @ts-nocheck
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import AdmZip from 'adm-zip'
 import { summarizeRepo } from '../../../lib/openai'
 import { githubHeaders } from '../../../lib/github'
 
+export const runtime = 'nodejs'
+
 export async function POST(req: NextRequest) {
+  if (!req.headers.get('content-type')?.includes('multipart/form-data')) {
+    return Response.json({ error: 'multipart/form-data required' }, { status: 400 })
+  }
   try {
     const form = await req.formData()
     const repo = form.get('repo')
@@ -49,13 +54,13 @@ export async function POST(req: NextRequest) {
       const url = `https://codeload.github.com/${repo}/zip/${branch}`
       const res = await fetch(url, { headers: githubHeaders(req) })
       if (!res.ok) {
-        return NextResponse.json({ error: 'failed to fetch repo' }, { status: 500 })
+        return Response.json({ error: 'failed to fetch repo' }, { status: 500 })
       }
       buffer = Buffer.from(await res.arrayBuffer())
     } else {
       const file = form.get('file')
       if (!(file instanceof File)) {
-        return NextResponse.json({ error: 'file field required' }, { status: 400 })
+        return Response.json({ error: 'file field required' }, { status: 400 })
       }
       buffer = Buffer.from(await file.arrayBuffer())
     }
@@ -74,7 +79,7 @@ export async function POST(req: NextRequest) {
     }))
 
     const analysis = await summarizeRepo(files, docs)
-    return NextResponse.json({
+    return Response.json({
       repo,
       branch,
       files,
@@ -85,6 +90,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'analysis failed'
     console.error('analysis failed', err)
-    return NextResponse.json({ error: message }, { status: 500 })
+    return Response.json({ error: message }, { status: 500 })
   }
 }

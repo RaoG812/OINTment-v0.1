@@ -57,7 +57,7 @@
 .evil-eyes {
   opacity: 0;
   animation: eyesFade 2s forwards;
-  filter: brightness(0.22) blur(2px);
+  filter: brightness(0.28) blur(2px);
   transform: scale(0.7);
 }
 
@@ -72,8 +72,8 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(circle at 50% 50%, rgba(220,20,20,0.6) 35%, rgba(150,0,0,0.25) 60%, transparent 80%);
-  filter: blur(10px) drop-shadow(0 0 27.5px rgba(255,0,0,0.6))
-    drop-shadow(0 0 60.5px rgba(255,0,0,0.3)) saturate(1);
+  filter: blur(10px) drop-shadow(0 0 35px rgba(255,0,0,0.6))
+    drop-shadow(0 0 70px rgba(255,0,0,0.3)) saturate(1.2);
   animation: blink 5s infinite;
 }
 
@@ -112,7 +112,7 @@
 
 @keyframes eyesFade {
   to {
-    opacity: 0.385;
+    opacity: 0.45;
   }
 }
 

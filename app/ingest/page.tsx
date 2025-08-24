@@ -417,11 +417,15 @@ export default function IngestPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
                 <div className="text-sm font-semibold mb-2">Takeaways</div>
-                <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
-                  {result.analysis.takeaways.map(t => (
-                    <li key={t}>{t}</li>
-                  ))}
-                </ul>
+                {result.analysis.takeaways.length ? (
+                  <ul className="list-disc list-inside text-xs text-zinc-400 space-y-1">
+                    {result.analysis.takeaways.map(t => (
+                      <li key={t}>{t}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-zinc-500">No takeaways generated.</p>
+                )}
               </Card>
               {(['complexity', 'documentation', 'tests'] as const).map(key => (
                 <Card key={key}>
@@ -430,6 +434,13 @@ export default function IngestPage() {
                   </div>
                   <div className="w-full max-w-[150px] mx-auto">
                     <Gauge value={result.analysis.metrics[key]} />
+                  </div>
+                  <div className="text-xs text-zinc-500 text-center mt-2">
+                    {result.analysis.metrics[key] >= 80
+                      ? 'Looks solid'
+                      : result.analysis.metrics[key] >= 60
+                      ? 'Room for improvement'
+                      : 'Needs attention'}
                   </div>
                 </Card>
               ))}

@@ -64,13 +64,13 @@ export default function DocsUploader({
               {item ? (
                 <div className="flex items-center gap-2">
                   <input
-                    className="flex-1 bg-transparent border-b border-zinc-700 focus:outline-none text-sm"
+                    className="flex-1 px-2 py-1 bg-zinc-800/50 border border-zinc-700 rounded text-sm text-zinc-200 focus:outline-none"
                     value={item.name}
                     onChange={e => handleName(idx, e.target.value)}
                   />
                   <button
                     onClick={() => handleDelete(idx)}
-                    className="text-xs bg-zinc-800 px-2 py-1 rounded"
+                    className="text-xs bg-zinc-800 px-2 py-1 rounded hover:bg-zinc-700"
                   >
                     Delete
                   </button>

@@ -1,6 +1,7 @@
 # OINTment
 
-It's a web app built with Next.js and React. It ingests repositories, maps dependencies, and visualizes commit history to highlight integration gaps.
+It's a web app built with Next.js and React. 
+It ingests repositories, maps dependencies, and visualizes the development flow to highlight integration gaps and develop an action plan.
 ![Новый проект](https://github.com/user-attachments/assets/fe9c377e-af8e-4306-93b4-d35807dc048b)
 
 OINT stands for Onvoarding Insights Neural Toolset. 

@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import AdmZip from 'adm-zip'
 import { summarizeRepo } from '../../../lib/openai'
 import { githubHeaders } from '../../../lib/github'
@@ -8,7 +8,10 @@ export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
   if (!req.headers.get('content-type')?.includes('multipart/form-data')) {
-    return Response.json({ error: 'multipart/form-data required' }, { status: 400 })
+    return NextResponse.json(
+      { error: 'multipart/form-data required' },
+      { status: 400 }
+    )
   }
   try {
     const form = await req.formData()
@@ -36,7 +39,9 @@ export async function POST(req: NextRequest) {
         if (Array.isArray(parsed)) docsMeta = parsed
       } catch {}
     }
-    const docFiles = form.getAll('docs').filter(f => f instanceof File) as File[]
+    const docFiles = (typeof File !== 'undefined'
+      ? form.getAll('docs').filter(f => f instanceof File)
+      : []) as File[]
     const docs = [] as { name: string; type: string; content: string }[]
     for (let i = 0; i < docFiles.length; i++) {
       const file = docFiles[i]
@@ -54,13 +59,19 @@ export async function POST(req: NextRequest) {
       const url = `https://codeload.github.com/${repo}/zip/${branch}`
       const res = await fetch(url, { headers: githubHeaders(req) })
       if (!res.ok) {
-        return Response.json({ error: 'failed to fetch repo' }, { status: 500 })
+        return NextResponse.json(
+          { error: 'failed to fetch repo' },
+          { status: 500 }
+        )
       }
       buffer = Buffer.from(await res.arrayBuffer())
     } else {
       const file = form.get('file')
       if (!(file instanceof File)) {
-        return Response.json({ error: 'file field required' }, { status: 400 })
+        return NextResponse.json(
+          { error: 'file field required' },
+          { status: 400 }
+        )
       }
       buffer = Buffer.from(await file.arrayBuffer())
     }
@@ -79,7 +90,7 @@ export async function POST(req: NextRequest) {
     }))
 
     const analysis = await summarizeRepo(files, docs)
-    return Response.json({
+    return NextResponse.json({
       repo,
       branch,
       files,
@@ -90,6 +101,6 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const message = err instanceof Error ? err.message : 'analysis failed'
     console.error('analysis failed', err)
-    return Response.json({ error: message }, { status: 500 })
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

@@ -54,3 +54,4 @@ LLM_MODEL=gpt-5-chat                    # optional model override
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for design details.
 
+<img width="1349" height="695" alt="image" src="https://github.com/user-attachments/assets/917e65a9-85cf-428b-825a-d049d6a6633c" />

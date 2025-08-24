@@ -56,3 +56,5 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for design details.
 
 <img width="1347" height="694" alt="image" src="https://github.com/user-attachments/assets/155783f0-183c-494f-9eb8-ab07c4634547" />
 
+
+**https://lablab.ai/event/co-creating-with-gpt-5**

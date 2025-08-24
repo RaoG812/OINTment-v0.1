@@ -297,7 +297,7 @@ export default function IngestPage() {
                       type="file"
                       name="file"
                       accept=".zip"
-                      className="block w-full text-sm file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700"
+                      className="block w-full text-sm text-zinc-200 bg-zinc-800/50 border border-zinc-700 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-zinc-800 file:text-zinc-200 hover:file:bg-zinc-700 focus:outline-none"
                     />
                     <button
                       type="submit"

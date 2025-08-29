@@ -41,17 +41,17 @@ async function chat(
     ? models
     : models
     ? [models]
-    : [process.env.LLM_MODEL || 'gpt-5-chat']
-  const modelList = [...base, 'gpt-4o'].filter(
+    : [process.env.LLM_MODEL || 'gpt-4o']
+  const modelList = [...base, 'gpt-4o', 'gpt-5-nano'].filter(
     (v, i, a) => a.indexOf(v) === i
   )
   let lastErr: any
   for (let i = 0; i < modelList.length; i++) {
     const m = modelList[i]
     try {
-      const res = await client.chat.completions.create({
+      const res = await client.responses.create({
         model: m,
-        messages,
+        input: messages,
         reasoning: m.startsWith('gpt-5')
           ? (({ effort: 'medium' } as unknown) as any)
           : undefined,
@@ -60,7 +60,11 @@ async function chat(
       if (i > 0) {
         console.warn(`LLM model fallback: using ${m} after ${modelList[i - 1]} failed`)
       }
-      return res.choices[0]?.message?.content ?? '{}'
+      return (
+        (res as any).output_text ||
+        (res as any).output?.[0]?.content?.[0]?.text ||
+        '{}'
+      )
     } catch (err) {
       console.error(`LLM model ${m} failed`, err)
       lastErr = err

@@ -12,7 +12,7 @@ OINT stands for Onvoarding Insights Neural Toolset.
 - **Integration Matrix** &mdash; Inspect package dependencies and readiness at `/matrix`.
 - **3D Commit Map** &mdash; Explore commit relationships in an interactive three.js scene at `/3d-map`.
 - **GitHub App Integration** &mdash; Authorize a GitHub App to analyze private repositories.
-- **AI‑Powered Analysis** &mdash; Summaries, roast comments, and AI artifact detection using `AIML_API_KEY` or `OPENAI_API_KEY`.
+- **AI‑Powered Analysis** &mdash; Summaries, roast comments, and AI artifact detection using `AIML_API_KEY` or `OPENAI_API_KEY`. Supports OpenAI's latest `gpt-4o` and `gpt-5-nano` models when an `OPENAI_API_KEY` is provided.
 
 ## Tech Stack
 
@@ -43,7 +43,7 @@ AIML_API_KEY=your_aiml_api_key          # or OPENAI_API_KEY
 AIML_API_BASE_URL=https://api.aimlapi.com/v1 # optional
 OPENAI_API_KEY=your_openai_key          # optional
 OPENAI_BASE_URL=https://api.openai.com/v1 # optional
-LLM_MODEL=gpt-5-chat                    # optional model override
+LLM_MODEL=gpt-4o                         # optional model override (e.g., gpt-5-nano)
 ```
 
 ### Scripts
